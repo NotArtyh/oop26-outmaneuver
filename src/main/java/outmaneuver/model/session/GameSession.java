@@ -3,7 +3,7 @@ package outmaneuver.model.session;
 import java.util.Objects;
 
 import outmaneuver.controller.event.GameEventBus;
-import outmaneuver.model.plane.IPlane;
+import outmaneuver.model.area.Plane;
 
 public class GameSession implements IGameSession {
 
@@ -11,7 +11,7 @@ public class GameSession implements IGameSession {
     private final long startTimeMs;
     private final int score;
     private GameState currentState;
-    private IPlane plane;
+    private Plane plane;
 
     public GameSession(final GameEventBus eventBus) {
         this.eventBus = Objects.requireNonNull(eventBus);
@@ -36,7 +36,7 @@ public class GameSession implements IGameSession {
     }
 
     @Override
-    public void equipPlane(final IPlane plane) {
+    public void equipPlane(final Plane plane) {
         this.plane = Objects.requireNonNull(plane);
     }
 }
