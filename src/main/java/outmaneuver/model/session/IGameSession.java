@@ -1,6 +1,6 @@
 package outmaneuver.model.session;
 
-import outmaneuver.model.plane.IPlane;
+import outmaneuver.model.area.Plane;
 
 public interface IGameSession {
 
@@ -14,5 +14,5 @@ public interface IGameSession {
     long getElapsedTimeMillis();
 
     /** Equips the given plane as the player's active aircraft. */
-    void equipPlane(IPlane plane);
+    void equipPlane(Plane plane);
 }
