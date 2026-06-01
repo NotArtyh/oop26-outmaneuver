@@ -1,15 +1,21 @@
 package outmaneuver;
 
+import java.util.EnumMap;
+import java.util.Map;
+
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 import outmaneuver.controller.MasterController;
 import outmaneuver.controller.impl.EntityControllerImpl;
+import outmaneuver.controller.impl.HudControllerImpl;
 import outmaneuver.controller.impl.InputControllerImpl;
 import outmaneuver.controller.impl.MasterControllerImpl;
 import outmaneuver.model.area.Plane;
 import outmaneuver.model.area.PlaneImpl;
 import outmaneuver.model.area.StandardStats;
 import outmaneuver.model.session.GameState;
+import outmaneuver.view.swing.GameKeyListener;
 import outmaneuver.view.swing.SwingGameView;
 import outmaneuver.view.swing.UIManager;
 import outmaneuver.view.swing.gameover.GameOverView;
@@ -26,11 +32,12 @@ public final class AppBootstrapper {
 
         final Plane plane = new PlaneImpl(new StandardStats());
         final InputControllerImpl inputCtrl = new InputControllerImpl();
-        final MasterControllerImpl master = new MasterControllerImpl();
+        final HudControllerImpl hudCtrl = new HudControllerImpl();
+        final MasterControllerImpl master = new MasterControllerImpl(hudCtrl);
         final EntityControllerImpl entity = new EntityControllerImpl(plane, inputCtrl, master);
         master.setEntityController(entity);
 
-        final SwingGameView gameView = new SwingGameView(inputCtrl, master);
+        final SwingGameView gameView = new SwingGameView(new GameKeyListener(inputCtrl, master));
         gameView.init();
         master.attachView(gameView);
 
@@ -42,7 +49,13 @@ public final class AppBootstrapper {
             () -> System.exit(0)
         );
 
-        final UIManager uiManager = new UIManager(mainMenuView, gameOverView, gameView.getPanel());
+        final Map<GameState, JPanel> screens = new EnumMap<>(GameState.class);
+        screens.put(GameState.MENU, mainMenuView);
+        screens.put(GameState.PLAYING, gameView.getPanel());
+        screens.put(GameState.PAUSED, gameView.getPanel());
+        screens.put(GameState.GAME_OVER, gameOverView);
+
+        final UIManager uiManager = new UIManager(screens);
         uiManager.showScreen(GameState.MENU);
         uiManagerRef[0] = uiManager;
 
