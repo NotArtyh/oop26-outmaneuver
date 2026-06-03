@@ -17,11 +17,12 @@ public final class ShieldPowerUp implements Collectible {
     @Override
     public void apply(final Plane plane, final IGameSession session) {
         plane.activateShield();
-        final Thread deactivator = Thread.ofVirtual().start(() -> {
+        Thread.ofVirtual().start(() -> {
             try {
                 Thread.sleep(durationMs);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                return;
             }
             plane.deactivateShield();
         });
