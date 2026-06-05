@@ -2,6 +2,7 @@ package outmaneuver;
 
 import java.nio.file.Path;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.JFrame;
@@ -15,15 +16,20 @@ import outmaneuver.controller.impl.MasterControllerImpl;
 import outmaneuver.model.area.Plane;
 import outmaneuver.model.area.PlaneImpl;
 import outmaneuver.model.area.StandardStats;
-import outmaneuver.model.leaderboard.JsonLeaderboardRepository;
-import outmaneuver.model.leaderboard.Leaderboard;
+import outmaneuver.model.profile.IPlayerProfileRepository;
+import outmaneuver.model.profile.JsonPlayerProfileRepository;
+import outmaneuver.model.profile.PlayerProfile;
 import outmaneuver.model.session.GameState;
+import outmaneuver.model.shop.IShop;
+import outmaneuver.model.shop.Shop;
+import outmaneuver.model.shop.ShopItem;
 import outmaneuver.view.swing.GameKeyListener;
 import outmaneuver.view.swing.SwingGameView;
 import outmaneuver.view.swing.UIManager;
 import outmaneuver.view.swing.gameover.GameOverView;
 import outmaneuver.view.swing.hud.SwingHudView;
 import outmaneuver.view.swing.menu.MainMenuView;
+import outmaneuver.view.swing.shop.ShopView;
 
 public final class AppBootstrapper {
 
@@ -45,30 +51,72 @@ public final class AppBootstrapper {
         gameView.init();
         master.attachView(gameView);
 
-        final Leaderboard leaderboard = new Leaderboard(
-                new JsonLeaderboardRepository(Path.of(System.getProperty("user.home"), ".outmaneuver", "scores.json")));
+        final IPlayerProfileRepository profileRepo =
+                new JsonPlayerProfileRepository(Path.of(System.getProperty("user.home"), ".outmaneuver", "profile.json"));
+        final PlayerProfile profile = new PlayerProfile(profileRepo);
+
+        final IShop shop = new Shop(List.of(
+                new ShopItem(new StandardStats(), 0)
+                // TODO: aggiungere altri PlaneStats quando disponibili
+        ));
 
         final UIManager[] uiManagerRef = { null };
+        final MainMenuView[] mainMenuRef = { null };
+
+        final ShopView shopView = new ShopView(
+                shop.getCatalog(),
+                profile::getCoins,
+                plane::getStats,
+                profile::ownsPlane,
+                item -> {
+                    final String id = item.stats().getId();
+                    if (profile.ownsPlane(id)) {
+                        plane.setStats(item.stats());
+                        return true;
+                    }
+                    if (!profile.spend(item.price())) {
+                        return false;
+                    }
+                    profile.addOwnedPlane(id);
+                    plane.setStats(item.stats());
+                    return true;
+                },
+                () -> {
+                    mainMenuRef[0].refreshCoins(profile.getCoins());
+                    uiManagerRef[0].showScreen(GameState.MENU);
+                }
+        );
 
         final GameOverView gameOverView = new GameOverView(
                 () -> onPlayAgain(uiManagerRef[0], master, gameView),
-                () -> uiManagerRef[0].showScreen(GameState.MENU)
+                () -> {
+                    mainMenuRef[0].refreshCoins(profile.getCoins());
+                    uiManagerRef[0].showScreen(GameState.MENU);
+                }
         );
         final MainMenuView mainMenuView = new MainMenuView(
-            () -> onStart(uiManagerRef[0], master, gameView),
-            () -> System.exit(0)
+                profile.getPlayerName(),
+                () -> onStart(uiManagerRef[0], master, gameView),
+                () -> {
+                    shopView.refreshCoins();
+                    uiManagerRef[0].showScreen(GameState.SHOP);
+                },
+                () -> System.exit(0)
         );
+        mainMenuRef[0] = mainMenuView;
 
         // TODO: sostituire con GameEventBus.GAME_OVER quando Spinaci implementa il bus
-        master.setOnGameOver(() -> onGameOver(uiManagerRef[0], gameOverView, leaderboard, 0, "Player"));
+        master.setOnGameOver(() -> onGameOver(uiManagerRef[0], gameOverView, profile, 0));
 
         final Map<GameState, JPanel> screens = new EnumMap<>(GameState.class);
         screens.put(GameState.MENU, mainMenuView);
         screens.put(GameState.PLAYING, gameView.getPanel());
         screens.put(GameState.PAUSED, gameView.getPanel());
         screens.put(GameState.GAME_OVER, gameOverView);
+        screens.put(GameState.SHOP, shopView);
 
         final UIManager uiManager = new UIManager(screens);
+        mainMenuView.refreshCoins(profile.getCoins());
         uiManager.showScreen(GameState.MENU);
         uiManagerRef[0] = uiManager;
 
@@ -81,11 +129,13 @@ public final class AppBootstrapper {
 
     private static void onGameOver(final UIManager uiManager,
                                     final GameOverView gameOverView,
-                                    final Leaderboard leaderboard,
-                                    final int finalScore,
-                                    final String playerName) {
-        leaderboard.save(finalScore, playerName);
-        gameOverView.show(finalScore, leaderboard.getTopScores());
+                                    final PlayerProfile profile,
+                                    final int finalScore) {
+        if (finalScore > 0) {
+            profile.addCoins(finalScore);
+        }
+        profile.saveScore(finalScore, profile.getPlayerName());
+        gameOverView.show(finalScore, profile.getTopScores());
         uiManager.showScreen(GameState.GAME_OVER);
     }
 
