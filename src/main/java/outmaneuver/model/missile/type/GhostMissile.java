@@ -1,11 +1,11 @@
-package outmaneuver.model.missile;
+package outmaneuver.model.missile.type;
 
 import outmaneuver.model.area.Plane;
+import outmaneuver.model.missile.Missile;
 
 /*
  * Alterna tra visibile e invisibile ogni tot secondi.
  * La hitbox è SEMPRE attiva — anche invisibile può colpire.
- * Il renderer usa isGhostVisible() per decidere l'opacità.
  */
 public final class GhostMissile extends Missile {
 
@@ -27,7 +27,6 @@ public final class GhostMissile extends Missile {
     public void update(final Plane plane, final double dt) {
         if (shouldSkipUpdate(dt)) return;
 
-        // Aggiorna fase visibile/invisibile
         phaseTimer += dt;
         final double phaseDuration = ghostVisible ? VISIBLE_DURATION : INVISIBLE_DURATION;
         if (phaseTimer >= phaseDuration) {
@@ -39,6 +38,7 @@ public final class GhostMissile extends Missile {
         move(dt);
     }
 
+    @Override
     public boolean isGhostVisible() { return ghostVisible; }
 
     @Override

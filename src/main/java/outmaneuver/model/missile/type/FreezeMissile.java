@@ -1,6 +1,9 @@
-package outmaneuver.model.missile;
+package outmaneuver.model.missile.type;
 
 import java.util.List;
+
+import outmaneuver.model.missile.IMissile;
+import outmaneuver.model.missile.Missile;
 
 /*
  * Quando collide con un altro missile congela tutti i missili nel raggio.
@@ -8,8 +11,8 @@ import java.util.List;
  */
 public final class FreezeMissile extends Missile {
 
-    private static final double SPEED    = 350.0;
-    private static final double MAX_TURN = 0.015;
+    private static final double SPEED    = 175.0;
+    private static final double MAX_TURN = 0.042;
     private static final double RADIUS   = 13.0;
     private static final double LIFETIME = 16.0;
 
@@ -20,10 +23,9 @@ public final class FreezeMissile extends Missile {
         super(x, y, SPEED, MAX_TURN, RADIUS, LIFETIME);
     }
 
-    // Chiamato da Spinaci quando rileva la collisione con un altro missile
-    public void triggerFreeze(final List<Missile> others) {
-        for (final Missile other : others) {
-            if (!other.isAlive() || other == this) continue;
+    public void triggerFreeze(final List<IMissile> others) {
+        for (final IMissile other : others) {
+            if (!other.isAlive() || other.equals(this)) continue;
             final double dx = other.getWorldX() - getWorldX();
             final double dy = other.getWorldY() - getWorldY();
             if (dx * dx + dy * dy < FREEZE_RADIUS * FREEZE_RADIUS) {

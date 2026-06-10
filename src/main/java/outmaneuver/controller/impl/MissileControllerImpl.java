@@ -1,21 +1,23 @@
 package outmaneuver.controller.impl;
 
+import outmaneuver.controller.MissileController;
+import outmaneuver.model.area.Plane;
+import outmaneuver.model.missile.IMissile;
+import outmaneuver.model.missile.MissileRenderData;
+import outmaneuver.model.missile.type.BasicMissile;
+import outmaneuver.model.missile.type.BounceMissile;
+import outmaneuver.model.missile.type.ClockMissile;
+import outmaneuver.model.missile.type.FastMissile;
+import outmaneuver.model.missile.type.FreezeMissile;
+import outmaneuver.model.missile.type.GhostMissile;
+import outmaneuver.model.missile.type.ShieldMissile;
+import outmaneuver.model.missile.type.SniperMissile;
+import outmaneuver.model.missile.type.TwinsMissile;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-
-import outmaneuver.controller.MissileController;
-import outmaneuver.model.area.Plane;
-import outmaneuver.model.missile.BasicMissile;
-import outmaneuver.model.missile.BounceMissile;
-import outmaneuver.model.missile.ClockMissile;
-import outmaneuver.model.missile.FreezeMissile;
-import outmaneuver.model.missile.GhostMissile;
-import outmaneuver.model.missile.Missile;
-import outmaneuver.model.missile.MissileRenderData;
-import outmaneuver.model.missile.ShieldMissile;
-import outmaneuver.model.missile.SniperMissile;
 
 public final class MissileControllerImpl implements MissileController {
 
@@ -26,8 +28,8 @@ public final class MissileControllerImpl implements MissileController {
     private static final double INTERVAL_SCALE   = 0.018;
     private static final int    BORDER_MARGIN    = 60;
 
-    private final List<Missile> activeMissiles   = new ArrayList<>();
-    private final List<Missile> pendingAdditions = new ArrayList<>();
+    private final List<IMissile> activeMissiles   = new ArrayList<>();
+    private final List<IMissile> pendingAdditions = new ArrayList<>();
     private final int screenW;
     private final int screenH;
     private final Random rng = new Random();
@@ -56,19 +58,19 @@ public final class MissileControllerImpl implements MissileController {
             spawnTimer = 0;
         }
 
-        for (final Missile m : activeMissiles) {
+        for (final IMissile m : activeMissiles) {
             if (m.isAlive()) m.update(plane, dt);
         }
 
         // checkBounce per BounceMissile
-        for (final Missile m : activeMissiles) {
+        for (final IMissile m : activeMissiles) {
             if (m instanceof final BounceMissile bm) {
                 bm.checkBounce(plane);
             }
         }
 
         // Redirect missili fuori schermo — BounceMissile escluso
-        for (final Missile m : activeMissiles) {
+        for (final IMissile m : activeMissiles) {
             if (m.isAlive() && !(m instanceof BounceMissile)) {
                 m.redirectIfOutOfBounds(plane, screenW, screenH);
             }
@@ -82,8 +84,8 @@ public final class MissileControllerImpl implements MissileController {
 
     private void spawnMissile(final Plane plane) {
         final double[] pos = randomBorderPosition(plane);
-        final Missile m = createRandom(pos[0], pos[1], plane);
-        if (!(m instanceof SniperMissile)) {
+        final IMissile m = createRandom(pos[0], pos[1], plane);
+        if (!(m instanceof SniperMissile) && !(m instanceof TwinsMissile)) {
             m.setInitialDirection(
                     plane.getPosition().getX(),
                     plane.getPosition().getY());
@@ -91,16 +93,17 @@ public final class MissileControllerImpl implements MissileController {
         activeMissiles.add(m);
     }
 
-    // Spawn pesato — Basic più frequente, speciali più rari
-    private Missile createRandom(final double x, final double y, final Plane plane) {
-        return switch (rng.nextInt(8)) {
+    private IMissile createRandom(final double x, final double y, final Plane plane) {
+        return switch (rng.nextInt(11)) {
             case 0, 1, 2 -> new BasicMissile(x, y);
             case 3       -> new SniperMissile(x, y, plane);
             case 4       -> new BounceMissile(x, y, screenW, screenH);
             case 5       -> new GhostMissile(x, y);
             case 6       -> new FreezeMissile(x, y);
-            case 7      -> new ClockMissile(x, y);
-            default      -> new ShieldMissile(x, y);
+            case 7       -> new ClockMissile(x, y);
+            case 8       -> new ShieldMissile(x, y);
+            case 9       -> new FastMissile(x, y);
+            default      -> new TwinsMissile(x, y, plane);
         };
     }
 
@@ -124,10 +127,9 @@ public final class MissileControllerImpl implements MissileController {
         };
     }
 
-    // Solo i missili morti vengono rimossi
     private void processRemovals() {
-        final List<Missile> toRemove = new ArrayList<>();
-        for (final Missile m : activeMissiles) {
+        final List<IMissile> toRemove = new ArrayList<>();
+        for (final IMissile m : activeMissiles) {
             if (!m.isAlive()) {
                 processDeathEffects(m);
                 toRemove.add(m);
@@ -136,22 +138,20 @@ public final class MissileControllerImpl implements MissileController {
         activeMissiles.removeAll(toRemove);
     }
 
-    private void processDeathEffects(final Missile m) {
-        // Figli — SplitMissile, TwinsMissile
+    private void processDeathEffects(final IMissile m) {
         pendingAdditions.addAll(m.getSpawnOnDeath());
-        // FreezeMissile e ClockMissile gestiti da Spinaci via triggerFreeze/triggerSlow
     }
 
     @Override
     public List<MissileRenderData> getRenderData() {
         final List<MissileRenderData> result = new ArrayList<>();
-        for (final Missile m : activeMissiles) {
+        for (final IMissile m : activeMissiles) {
             if (m.isAlive()) result.add(m.getRenderData());
         }
         return result;
     }
 
-    public List<Missile> getActiveMissiles() {
+    public List<IMissile> getActiveMissiles() {
         return Collections.unmodifiableList(activeMissiles);
     }
 

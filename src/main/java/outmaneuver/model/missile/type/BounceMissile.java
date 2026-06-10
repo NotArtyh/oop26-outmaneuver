@@ -1,8 +1,9 @@
-package outmaneuver.model.missile;
+package outmaneuver.model.missile.type;
 
 import java.util.Random;
 
 import outmaneuver.model.area.Plane;
+import outmaneuver.model.missile.Missile;
 
 /*
  * Rimbalza sui bordi dello schermo con direzione casuale.
@@ -23,24 +24,19 @@ public final class BounceMissile extends Missile {
         super(x, y, SPEED, 0.0, RADIUS, -1);
         this.screenW = screenW;
         this.screenH = screenH;
-
-        // Direzione iniziale casuale
         final double angle = new Random().nextDouble() * Math.PI * 2;
         setVelocity(Math.cos(angle) * SPEED, Math.sin(angle) * SPEED);
     }
 
-    // Non sterza — solo movimento e rimbalzo
     @Override
     public void update(final Plane plane, final double dt) {
         if (shouldSkipUpdate(dt)) return;
         move(dt);
     }
 
-    // Chiamato dal MissileControllerImpl ogni frame
     public void checkBounce(final Plane plane) {
         final double cx = plane.getPosition().getX();
         final double cy = plane.getPosition().getY();
-
         final double sx = getWorldX() - cx;
         final double sy = getWorldY() - cy;
 
@@ -57,9 +53,9 @@ public final class BounceMissile extends Missile {
         }
     }
 
-    // Non esce mai dallo schermo
     @Override
-    public boolean isOffScreen(final Plane plane, final int sw, final int sh) {
+    public boolean redirectIfOutOfBounds(final Plane plane,
+                                          final int screenW, final int screenH) {
         return false;
     }
 

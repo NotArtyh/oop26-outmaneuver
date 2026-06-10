@@ -1,15 +1,17 @@
-package outmaneuver.model.missile;
+package outmaneuver.model.missile.type;
+
+import outmaneuver.model.missile.Missile;
 
 /*
  * Richiede due collisioni per essere distrutto.
  * Prima collisione — rompe lo scudo.
  * Seconda collisione — distrugge il missile.
- * La collision detection di Spinaci chiama hit() invece di destroy().
+ * Spinaci chiama hit() invece di destroy().
  */
 public final class ShieldMissile extends Missile {
 
-    private static final double SPEED    = 350.0;
-    private static final double MAX_TURN = 0.015;
+    private static final double SPEED    = 190.0;
+    private static final double MAX_TURN = 0.045;
     private static final double RADIUS   = 11.0;
     private static final double LIFETIME = 14.0;
 
@@ -23,9 +25,9 @@ public final class ShieldMissile extends Missile {
 
     public void hit() {
         if (shielded) {
-            shielded = false; // scudo rotto, sopravvive
+            shielded = false;
         } else {
-            destroy();        // seconda collisione, muore
+            destroy();
         }
     }
 

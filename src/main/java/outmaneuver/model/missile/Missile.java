@@ -5,7 +5,7 @@ import java.util.List;
 
 import outmaneuver.model.area.Plane;
 
-public abstract class Missile {
+public abstract class Missile implements IMissile {
 
     // --- POSIZIONE E MOVIMENTO ---
     protected double worldX;
@@ -17,6 +17,9 @@ public abstract class Missile {
     protected final double speed;
     protected final double maxTurnAngle;
     protected final double hitboxRadius;
+
+    // --- REDIRECT ---
+    private static final double PREDICTION_TIME = 0.8;
 
     // --- STATO ---
     private boolean alive;
@@ -45,6 +48,7 @@ public abstract class Missile {
         this.vy           = 0;
     }
 
+    @Override
     public void update(final Plane plane, final double dt) {
         if (shouldSkipUpdate(dt)) return;
         steer(plane.getPosition().getX(), plane.getPosition().getY());
@@ -84,7 +88,6 @@ public abstract class Missile {
         worldY += vy * dt * factor;
     }
 
-    // Steering standard — vira verso il bersaglio rispettando maxTurnAngle
     protected void steer(final double tx, final double ty) {
         final double dx           = tx - worldX;
         final double dy           = ty - worldY;
@@ -103,6 +106,7 @@ public abstract class Missile {
         return a;
     }
 
+    @Override
     public void setInitialDirection(final double targetX, final double targetY) {
         final double angle = Math.atan2(targetY - worldY, targetX - worldX);
         vx = Math.cos(angle) * speed;
@@ -119,10 +123,7 @@ public abstract class Missile {
         this.worldY = y;
     }
 
-    // Se è fuori dai margini ridireziona verso la posizione predetta dell'aereo
-    // PREDICTION_TIME — secondi in avanti che predice la posizione dell'aereo
-    private static final double PREDICTION_TIME = 0.8;
-
+    @Override
     public boolean redirectIfOutOfBounds(final Plane plane,
                                           final int screenW, final int screenH) {
         final double dx = worldX - plane.getPosition().getX();
@@ -132,7 +133,6 @@ public abstract class Missile {
         final boolean outY = Math.abs(dy) > screenH / 2.0 + margin;
 
         if (outX || outY) {
-            // Predice dove sarà l'aereo tra PREDICTION_TIME secondi
             final double planeVx = plane.getEffectiveSpeed() * Math.cos(plane.getDirection());
             final double planeVy = plane.getEffectiveSpeed() * Math.sin(plane.getDirection());
             final double predictedX = plane.getPosition().getX() + planeVx * PREDICTION_TIME;
@@ -143,11 +143,16 @@ public abstract class Missile {
         return false;
     }
 
-    public List<Missile> getSpawnOnDeath() { return new ArrayList<>(); }
+    @Override
+    public List<IMissile> getSpawnOnDeath() { return new ArrayList<>(); }
 
+    @Override
     public void destroy()        { this.alive = false; }
+
+    @Override
     public boolean isAlive()     { return alive; }
 
+    @Override
     public void freeze(final double duration) {
         this.frozen      = true;
         this.freezeTimer = duration;
@@ -155,6 +160,7 @@ public abstract class Missile {
 
     public boolean isFrozen() { return frozen; }
 
+    @Override
     public void slowDown(final double factor, final double duration) {
         this.slowed     = true;
         this.slowFactor = factor;
@@ -163,6 +169,7 @@ public abstract class Missile {
 
     public boolean isSlowed() { return slowed; }
 
+    @Override
     public boolean collidesWith(final Plane plane) {
         final double dx   = plane.getPosition().getX() - worldX;
         final double dy   = plane.getPosition().getY() - worldY;
@@ -178,17 +185,22 @@ public abstract class Missile {
             || Math.abs(dy) > screenH / 2.0 + margin;
     }
 
+    @Override
     public double getWorldX()       { return worldX; }
+    @Override
     public double getWorldY()       { return worldY; }
     public double getVx()           { return vx; }
     public double getVy()           { return vy; }
     public double getSpeed()        { return speed; }
+    @Override
     public double getHitboxRadius() { return hitboxRadius; }
 
     protected double getMaxLifetime() { return -1; }
 
+    @Override
     public boolean isGhostVisible() { return true; }
 
+    @Override
     public MissileRenderData getRenderData() {
         return new MissileRenderData(
                 worldX, worldY, vx, vy,
@@ -198,5 +210,6 @@ public abstract class Missile {
                 isGhostVisible());
     }
 
+    @Override
     public abstract String getMissileType();
 }

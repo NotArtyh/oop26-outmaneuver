@@ -1,11 +1,11 @@
-package outmaneuver.model.missile;
+package outmaneuver.model.missile.type;
 
 import outmaneuver.model.area.Plane;
+import outmaneuver.model.missile.Missile;
 
 /*
  * Direzione fissa al momento dello spawn — non insegue.
- * Velocissimo, va dritto dove puntava l'aereo al momento dello spawn.
- * Se esce dallo schermo viene eliminato — non viene rediretto.
+ * Se esce dallo schermo viene eliminato, non rediretto.
  */
 public final class SniperMissile extends Missile {
 
@@ -20,14 +20,12 @@ public final class SniperMissile extends Missile {
         setVelocity(Math.cos(angle) * SPEED, Math.sin(angle) * SPEED);
     }
 
-    // Non sterza — va sempre dritto
     @Override
     public void update(final Plane plane, final double dt) {
         if (shouldSkipUpdate(dt)) return;
         move(dt);
     }
 
-    // Se esce dallo schermo viene eliminato, non rediretto
     @Override
     public boolean redirectIfOutOfBounds(final Plane plane,
                                           final int screenW, final int screenH) {

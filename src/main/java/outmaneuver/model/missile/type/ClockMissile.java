@@ -1,6 +1,9 @@
-package outmaneuver.model.missile;
+package outmaneuver.model.missile.type;
 
 import java.util.List;
+
+import outmaneuver.model.missile.IMissile;
+import outmaneuver.model.missile.Missile;
 
 /*
  * Quando collide con un altro missile rallenta tutti i missili attivi.
@@ -8,8 +11,8 @@ import java.util.List;
  */
 public final class ClockMissile extends Missile {
 
-    private static final double SPEED    = 350.0;
-    private static final double MAX_TURN = 0.015;
+    private static final double SPEED    = 160.0;
+    private static final double MAX_TURN = 0.04;
     private static final double RADIUS   = 12.0;
     private static final double LIFETIME = 15.0;
 
@@ -20,10 +23,9 @@ public final class ClockMissile extends Missile {
         super(x, y, SPEED, MAX_TURN, RADIUS, LIFETIME);
     }
 
-    // Chiamato da Spinaci quando rileva la collisione con un altro missile
-    public void triggerSlow(final List<Missile> others) {
-        for (final Missile other : others) {
-            if (!other.isAlive() || other == this) continue;
+    public void triggerSlow(final List<IMissile> others) {
+        for (final IMissile other : others) {
+            if (!other.isAlive() || other.equals(this)) continue;
             other.slowDown(SLOW_FACTOR, SLOW_DURATION);
         }
         destroy();
