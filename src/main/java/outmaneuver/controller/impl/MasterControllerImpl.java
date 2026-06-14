@@ -9,6 +9,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import outmaneuver.controller.CollisionEngine;
 import outmaneuver.controller.EntityController;
 import outmaneuver.controller.HudController;
 import outmaneuver.controller.InternalEvent;
@@ -16,6 +17,7 @@ import outmaneuver.controller.MasterController;
 import outmaneuver.controller.OutmaneuverEvent;
 import outmaneuver.controller.event.InternalEventListener;
 import outmaneuver.model.area.Plane;
+import outmaneuver.model.collision.CollisionData;
 import outmaneuver.view.GameView;
 import outmaneuver.view.RenderState;
 
@@ -27,6 +29,7 @@ public final class MasterControllerImpl implements MasterController, InternalEve
     private final List<GameView> views = new ArrayList<>();
     private final HudController hudController;
     private EntityController entityController;
+    private CollisionEngine collisionEngine;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> tickTask;
     private volatile boolean paused;
@@ -47,6 +50,13 @@ public final class MasterControllerImpl implements MasterController, InternalEve
             throw new IllegalStateException("entityController already set");
         }
         this.entityController = Objects.requireNonNull(entityController, "entityController must not be null");
+    }
+
+    public void setCollisionEngine(final CollisionEngine collisionEngine) {
+        if (this.collisionEngine != null) {
+            throw new IllegalStateException("collisionEngine already set");
+        }
+        this.collisionEngine = Objects.requireNonNull(collisionEngine, "collisionEngine must not be null");
     }
 
     @Override
@@ -81,6 +91,7 @@ public final class MasterControllerImpl implements MasterController, InternalEve
     @Override
     public void start() {
         Objects.requireNonNull(entityController, "entityController must be set before start()");
+        Objects.requireNonNull(collisionEngine, "collisionEngine must be set before start()");
         if (tickTask != null && !tickTask.isCancelled()) {
             return;
         }
@@ -123,6 +134,7 @@ public final class MasterControllerImpl implements MasterController, InternalEve
         }
 
         entityController.updateEntities(deltaMs);
+        collisionEngine.tick();
         pushRenderFrame(false);
     }
 
@@ -141,6 +153,24 @@ public final class MasterControllerImpl implements MasterController, InternalEve
 
     @Override
     public void onInternalEvent(final InternalEvent evt, final Object data) {
-        hudController.onInternalEvent(evt, data);
+        switch (evt) {
+            case STAR_COLLECTED -> {
+                hudController.onInternalEvent(InternalEvent.STAR_COLLECTED, data);
+
+            }
+            case PLANE_HIT -> {
+                final CollisionData cd = (CollisionData) data;
+                //notifyViews(v -> v.onPlaneHit(cd)); da implementare
+            }
+            case COLLECTIBLE_PICKED -> {
+                
+            }
+            case MISSILE_MISSILE_COLLISION -> {
+                // For now, we do nothing on missile-missile collisions
+                final CollisionData cd = (CollisionData) data;
+                // notifyViews(v -> v.onMissileCollision(cd)); da implementare
+                // rimuovi entità coinvolte nella collisione
+            }
+        }
     }
 }
