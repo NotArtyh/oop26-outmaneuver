@@ -2,6 +2,7 @@ package outmaneuver.controller;
 
 public enum InternalEvent {
     STAR_COLLECTED,
-    MISSILE_DESTROYED,
+    MISSILE_MISSILE_COLLISION,
+    PLANE_HIT,
     COLLECTIBLE_PICKED
 }
