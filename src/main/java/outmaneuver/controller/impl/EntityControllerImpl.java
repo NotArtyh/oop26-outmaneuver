@@ -4,21 +4,26 @@ import java.util.Objects;
 
 import outmaneuver.controller.EntityController;
 import outmaneuver.controller.InputController;
+import outmaneuver.controller.InternalEvent;
 import outmaneuver.controller.event.InternalEventListener;
 import outmaneuver.model.area.Plane;
 import outmaneuver.model.area.TurnState;
+import outmaneuver.model.collectibles.Collectible;
 import outmaneuver.util.Vector2;
 
 public final class EntityControllerImpl implements EntityController {
 
     private final Plane plane;
+    private final Collectible collectible;
     private final InputController inputController;
     private final InternalEventListener eventListener;
 
     public EntityControllerImpl(final Plane plane,
+                                final Collectible collectible,
                                 final InputController inputController,
                                 final InternalEventListener eventListener) {
         this.plane = Objects.requireNonNull(plane, "plane must not be null");
+        this.collectible = Objects.requireNonNull(collectible, "collectible must not be null");
         this.inputController = Objects.requireNonNull(inputController, "inputController must not be null");
         this.eventListener = Objects.requireNonNull(eventListener, "eventListener must not be null");
     }
@@ -51,6 +56,11 @@ public final class EntityControllerImpl implements EntityController {
     @Override
     public Plane getPlane() {
         return plane;
+    }
+
+    @Override
+    public void onInternalEvent(final InternalEvent evt, final Object data) {
+        // No entity-specific events to handle for now
     }
 
     private static double normaliseAngle(final double angle) {
