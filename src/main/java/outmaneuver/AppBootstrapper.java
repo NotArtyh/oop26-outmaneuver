@@ -38,12 +38,13 @@ public final class AppBootstrapper {
         final InputControllerImpl inputCtrl = new InputControllerImpl();
         final HudControllerImpl hudCtrl = new HudControllerImpl();
         final MasterControllerImpl master = new MasterControllerImpl(hudCtrl);
-        final EntityControllerImpl entity = new EntityControllerImpl(plane, inputCtrl, master);
-        master.setEntityController(entity);
 
-        // AGGIUNTO — crea e aggancia il missile controller
+        // MissileController creato prima di EntityController
         final MissileControllerImpl missileCtrl = new MissileControllerImpl(SCREEN_W, SCREEN_H);
-        master.setMissileController(missileCtrl);
+
+        // EntityController ora riceve anche il MissileController
+        final EntityControllerImpl entity = new EntityControllerImpl(plane, inputCtrl, master, missileCtrl);
+        master.setEntityController(entity);
 
         final SwingGameView gameView = new SwingGameView(new GameKeyListener(inputCtrl, master));
         gameView.init();

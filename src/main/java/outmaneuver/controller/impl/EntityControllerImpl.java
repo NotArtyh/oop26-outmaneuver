@@ -1,12 +1,15 @@
 package outmaneuver.controller.impl;
 
+import java.util.List;
 import java.util.Objects;
 
 import outmaneuver.controller.EntityController;
 import outmaneuver.controller.InputController;
+import outmaneuver.controller.MissileController;
 import outmaneuver.controller.event.InternalEventListener;
 import outmaneuver.model.area.Plane;
 import outmaneuver.model.area.TurnState;
+import outmaneuver.model.missile.IMissile;
 import outmaneuver.util.Vector2;
 
 public final class EntityControllerImpl implements EntityController {
@@ -14,13 +17,16 @@ public final class EntityControllerImpl implements EntityController {
     private final Plane plane;
     private final InputController inputController;
     private final InternalEventListener eventListener;
+    private final MissileController missileController;
 
     public EntityControllerImpl(final Plane plane,
                                 final InputController inputController,
-                                final InternalEventListener eventListener) {
+                                final InternalEventListener eventListener,
+                                final MissileController missileController) {
         this.plane = Objects.requireNonNull(plane, "plane must not be null");
         this.inputController = Objects.requireNonNull(inputController, "inputController must not be null");
         this.eventListener = Objects.requireNonNull(eventListener, "eventListener must not be null");
+        this.missileController = Objects.requireNonNull(missileController, "missileController must not be null");
     }
 
     @Override
@@ -39,6 +45,8 @@ public final class EntityControllerImpl implements EntityController {
                 .scale(plane.getEffectiveSpeed());
         final Vector2 newPos = plane.getPosition().add(velocity.scale(deltaSec));
         plane.setPosition(newPos);
+
+        missileController.update(plane, deltaSec);
     }
 
     @Override
@@ -46,11 +54,17 @@ public final class EntityControllerImpl implements EntityController {
         plane.setPosition(Vector2.ZERO);
         plane.setDirection(0);
         plane.setTurnState(TurnState.NONE);
+        missileController.reset();
     }
 
     @Override
     public Plane getPlane() {
         return plane;
+    }
+
+    @Override
+    public List<IMissile> getMissiles() {
+        return missileController.getActiveMissiles(); // AGGIUNTO
     }
 
     private static double normaliseAngle(final double angle) {
@@ -63,5 +77,4 @@ public final class EntityControllerImpl implements EntityController {
         }
         return normalised;
     }
-
 }

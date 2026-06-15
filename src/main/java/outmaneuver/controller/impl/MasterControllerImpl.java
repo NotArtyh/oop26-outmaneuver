@@ -13,10 +13,10 @@ import outmaneuver.controller.EntityController;
 import outmaneuver.controller.HudController;
 import outmaneuver.controller.InternalEvent;
 import outmaneuver.controller.MasterController;
-import outmaneuver.controller.MissileController;
 import outmaneuver.controller.OutmaneuverEvent;
 import outmaneuver.controller.event.InternalEventListener;
 import outmaneuver.model.area.Plane;
+import outmaneuver.model.missile.IMissile;
 import outmaneuver.model.missile.MissileRenderData;
 import outmaneuver.view.GameView;
 import outmaneuver.view.RenderState;
@@ -29,7 +29,6 @@ public final class MasterControllerImpl implements MasterController, InternalEve
     private final List<GameView> views = new ArrayList<>();
     private final HudController hudController;
     private EntityController entityController;
-    private MissileController missileController;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> tickTask;
     private volatile boolean paused;
@@ -45,10 +44,6 @@ public final class MasterControllerImpl implements MasterController, InternalEve
             throw new IllegalStateException("entityController already set");
         }
         this.entityController = Objects.requireNonNull(entityController, "entityController must not be null");
-    }
-
-    public void setMissileController(final MissileController missileController) {
-        this.missileController = Objects.requireNonNull(missileController, "missileController must not be null");
     }
 
     @Override
@@ -116,21 +111,16 @@ public final class MasterControllerImpl implements MasterController, InternalEve
 
         entityController.updateEntities(deltaMs);
 
-        // update missili
-        final double deltaSec = deltaMs / 1000.0;
-        if (missileController != null) {
-            missileController.update(entityController.getPlane(), deltaSec);
-        }
-
         pushRenderFrame(false);
     }
 
     private void pushRenderFrame(final boolean isPaused) {
         final Plane plane = entityController.getPlane();
 
-        final List<MissileRenderData> missileData = missileController != null
-                ? missileController.getRenderData()
-                : List.of();
+        final List<MissileRenderData> missileData = entityController.getMissiles()
+                .stream()
+                .map(IMissile::getRenderData)
+                .toList();
 
         final RenderState state = RenderState.builder()
                 .plane(plane)
