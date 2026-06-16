@@ -51,9 +51,10 @@ public class CollisionEngine {
         checkPairs(missiles, missiles, InternalEvent.MISSILE_MISSILE_COLLISION);
 
         // Missile × Plane
-        checkPairs(missiles, planes, InternalEvent.PLANE_HIT);
+     // plane x collectible
+        checkPairs(missiles, planes, InternalEvent.PLANE_MISSILE_COLLISION);
     }
-
+     
     private List<ICollidable> filterByLayer(final CollisionLayer layer) {
         return entities.stream()
                 .filter(e -> e.getCollisionLayer() == layer)

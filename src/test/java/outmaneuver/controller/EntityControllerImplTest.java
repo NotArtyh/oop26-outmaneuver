@@ -203,8 +203,8 @@ class EntityControllerImplTest {
 
         assertFalse(entityCtrl.getEntities().contains(col), "Collectible should be removed on pickup");
         assertTrue(col.applied, "apply() should have been called");
-        assertTrue(listener.events.contains(InternalEvent.COLLECTIBLE_PICKED),
-                "COLLECTIBLE_PICKED event should be fired");
+        assertTrue(listener.events.contains(InternalEvent.PLANE_COLLECTIBLE_COLLISION),
+                "PLANE_COLLECTIBLE_COLLISION event should be fired");
     }
 
     @Test
