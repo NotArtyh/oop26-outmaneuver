@@ -75,12 +75,13 @@ public final class EntityControllerImpl implements EntityController {
         missile.update(deltaMs);
     }
 
+    // sposta in collision engine e rinomina metodo
     private void checkCollectible(final Collectible c, final List<Entity> toRemove) {
         for (final Entity e : entities) {
             if (e instanceof final Plane p && p.getHitbox().intersects(c.getHitbox())) {
                 c.apply(p, session);
                 toRemove.add(c);
-                eventListener.onInternalEvent(InternalEvent.COLLECTIBLE_PICKED, c);
+                eventListener.onInternalEvent(InternalEvent.PLANE_COLLECTIBLE_COLLISION, c);
                 return;
             }
         }

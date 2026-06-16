@@ -18,8 +18,6 @@ import outmaneuver.controller.OutmaneuverEvent;
 import outmaneuver.controller.event.InternalEventListener;
 import outmaneuver.model.area.Plane;
 import outmaneuver.model.collectibles.Collectible;
-import outmaneuver.model.collectibles.StarCollectible;
-import outmaneuver.model.collision.CollisionData;
 import outmaneuver.view.EntityRenderData;
 import outmaneuver.view.GameView;
 import outmaneuver.view.RenderState;
@@ -165,22 +163,14 @@ public final class MasterControllerImpl implements MasterController, InternalEve
     @Override
     public void onInternalEvent(final InternalEvent evt, final Object data) {
         switch (evt) {
-            case PLANE_HIT -> {
-                final CollisionData cd = (CollisionData) data;
-                //notifyViews(v -> v.onPlaneHit(cd)); da implementare
+            case PLANE_MISSILE_COLLISION -> {
+                //notifyViews(v -> v.onPlaneHit((CollisionData) data)); da implementare
             }
-            case COLLECTIBLE_PICKED -> {
-                if (data instanceof StarCollectible c) {
-                    hudController.onInternalEvent(InternalEvent.STAR_COLLECTED, c);
-                }
-            }
+            case PLANE_COLLECTIBLE_COLLISION ->
+                hudController.onInternalEvent(InternalEvent.PLANE_COLLECTIBLE_COLLISION, data);
             case MISSILE_MISSILE_COLLISION -> {
-                // For now, we do nothing on missile-missile collisions
-                final CollisionData cd = (CollisionData) data;
-                // notifyViews(v -> v.onMissileCollision(cd)); da implementare
-                // rimuovi entità coinvolte nella collisione
+                // notifyViews(v -> v.onMissileCollision((CollisionData) data)); da implementare
             }
-            default -> throw new IllegalArgumentException("Unexpected value: " + evt);
         }
     }
 }
