@@ -3,13 +3,11 @@ package outmaneuver.model.missile;
 import java.util.List;
 
 import outmaneuver.model.area.Plane;
+import outmaneuver.model.collision.ICollidable;
 import outmaneuver.view.MissileRenderData;
 
-/*
- * Contratto pubblico per tutti i tipi di missile.
- * Gli altri moduli (collision detection, controller) usano solo questa interfaccia.
- */
-public interface IMissile {
+
+public interface IMissile extends ICollidable {
 
     // --- UPDATE E MOVIMENTO ---
     void update(Plane plane, double dt);

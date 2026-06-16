@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import outmaneuver.model.area.Plane;
+import outmaneuver.model.collision.CollisionLayer;
+import outmaneuver.model.collision.Hitbox;
+import outmaneuver.util.Vector2;
 import outmaneuver.view.MissileRenderData;
 
 public abstract class Missile implements IMissile {
@@ -148,10 +151,10 @@ public abstract class Missile implements IMissile {
     public List<IMissile> getSpawnOnDeath() { return new ArrayList<>(); }
 
     @Override
-    public void destroy()        { this.alive = false; }
+    public void destroy()    { this.alive = false; }
 
     @Override
-    public boolean isAlive()     { return alive; }
+    public boolean isAlive() { return alive; }
 
     @Override
     public void freeze(final double duration) {
@@ -184,6 +187,17 @@ public abstract class Missile implements IMissile {
         final int margin = 150;
         return Math.abs(dx) > screenW / 2.0 + margin
             || Math.abs(dy) > screenH / 2.0 + margin;
+    }
+
+    // --- ICollidable ---
+    @Override
+    public Hitbox getHitbox() {
+        return new Hitbox(new Vector2(worldX, worldY), hitboxRadius);
+    }
+
+    @Override
+    public CollisionLayer getCollisionLayer() {
+        return CollisionLayer.MISSILE;
     }
 
     @Override
