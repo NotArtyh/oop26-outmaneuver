@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import outmaneuver.controller.CollisionEngine;
 import outmaneuver.controller.MasterController;
 import outmaneuver.controller.impl.EntityControllerImpl;
 import outmaneuver.controller.impl.HudControllerImpl;
@@ -15,7 +16,12 @@ import outmaneuver.controller.impl.MissileControllerImpl;
 import outmaneuver.model.area.Plane;
 import outmaneuver.model.area.PlaneImpl;
 import outmaneuver.model.area.StandardStats;
+import outmaneuver.model.missile.data.JsonMissileRepository;
+import outmaneuver.model.missile.data.MissileData;
+import outmaneuver.model.missile.data.MissileRepository;
 import outmaneuver.model.session.GameState;
+import outmaneuver.util.json.GsonProvider;
+import outmaneuver.util.json.JsonResourceLoader;
 import outmaneuver.view.swing.GameKeyListener;
 import outmaneuver.view.swing.SwingGameView;
 import outmaneuver.view.swing.UIManager;
@@ -39,10 +45,17 @@ public final class AppBootstrapper {
         final HudControllerImpl hudCtrl = new HudControllerImpl();
         final MasterControllerImpl master = new MasterControllerImpl(hudCtrl);
 
-        // MissileController creato prima di EntityController
-        final MissileControllerImpl missileCtrl = new MissileControllerImpl(SCREEN_W, SCREEN_H);
+        // TEMPORANEO — CollisionEngine verrà integrato da Spina
+        final CollisionEngine collisionEngine = new CollisionEngine(master);
 
-        // EntityController ora riceve anche il MissileController
+        // Carica i dati dei missili da JSON
+        final MissileRepository missileRepo = new JsonMissileRepository(
+                JsonResourceLoader.forList("missiles.json", MissileData.class, GsonProvider.create()));
+
+        final MissileControllerImpl missileCtrl = new MissileControllerImpl(
+                SCREEN_W, SCREEN_H, collisionEngine, missileRepo);
+        master.setMissileController(missileCtrl);
+
         final EntityControllerImpl entity = new EntityControllerImpl(plane, inputCtrl, master, missileCtrl);
         master.setEntityController(entity);
 

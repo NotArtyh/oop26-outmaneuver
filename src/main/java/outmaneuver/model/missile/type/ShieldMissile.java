@@ -1,26 +1,19 @@
 package outmaneuver.model.missile.type;
 
 import outmaneuver.model.missile.Missile;
+import outmaneuver.model.missile.data.MissileData;
 
 /*
  * Richiede due collisioni per essere distrutto.
- * Prima collisione — rompe lo scudo.
- * Seconda collisione — distrugge il missile.
- * Spinaci chiama hit() invece di destroy().
  */
 public final class ShieldMissile extends Missile {
 
-    private static final double SPEED    = 350.0;
-    private static final double MAX_TURN = 0.015;
-    private static final double RADIUS   = 11.0;
-    private static final double LIFETIME = 14.0;
-
-    public static final double SHIELD_RADIUS = 22.0;
-
+    private final double shieldRadius;
     private boolean shielded = true;
 
-    public ShieldMissile(final double x, final double y) {
-        super(x, y, SPEED, MAX_TURN, RADIUS, LIFETIME);
+    public ShieldMissile(final double x, final double y, final MissileData data) {
+        super(x, y, data.speed(), data.maxTurn(), data.radius(), data.lifetime());
+        this.shieldRadius = data.shieldRadius();
     }
 
     public void hit() {
@@ -32,9 +25,7 @@ public final class ShieldMissile extends Missile {
     }
 
     public boolean isShielded() { return shielded; }
-
-    @Override
-    protected double getMaxLifetime() { return LIFETIME; }
+    public double getShieldRadius() { return shieldRadius; }
 
     @Override
     public String getMissileType() { return "shield"; }

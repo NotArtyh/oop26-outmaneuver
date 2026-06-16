@@ -21,6 +21,7 @@ public abstract class Missile implements IMissile {
     protected final double speed;
     protected final double maxTurnAngle;
     protected final double hitboxRadius;
+    private final double maxLifetime; // valore originale del lifetime
 
     // --- REDIRECT ---
     private static final double PREDICTION_TIME = 0.8;
@@ -47,6 +48,7 @@ public abstract class Missile implements IMissile {
         this.maxTurnAngle = maxTurnAngle;
         this.hitboxRadius = hitboxRadius;
         this.lifetime     = lifetime;
+        this.maxLifetime  = lifetime; // salva il valore originale
         this.alive        = true;
         this.vx           = 0;
         this.vy           = 0;
@@ -210,7 +212,7 @@ public abstract class Missile implements IMissile {
     @Override
     public double getHitboxRadius() { return hitboxRadius; }
 
-    protected double getMaxLifetime() { return -1; }
+    protected double getMaxLifetime() { return maxLifetime; }
 
     @Override
     public boolean isGhostVisible() { return true; }
@@ -220,7 +222,7 @@ public abstract class Missile implements IMissile {
         return new MissileRenderData(
                 worldX, worldY, vx, vy,
                 hitboxRadius,
-                getMaxLifetime() > 0 ? lifetime / getMaxLifetime() : -1,
+                maxLifetime > 0 ? lifetime / maxLifetime : -1,
                 getMissileType(),
                 isGhostVisible());
     }

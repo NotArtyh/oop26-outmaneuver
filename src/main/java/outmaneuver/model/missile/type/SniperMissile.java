@@ -2,22 +2,21 @@ package outmaneuver.model.missile.type;
 
 import outmaneuver.model.area.Plane;
 import outmaneuver.model.missile.Missile;
+import outmaneuver.model.missile.data.MissileData;
 
 /*
- * Direzione fissa al momento dello spawn — non insegue.
+ * Direzione fissa al momento dello spawn.
  * Se esce dallo schermo viene eliminato, non rediretto.
  */
 public final class SniperMissile extends Missile {
 
-    private static final double SPEED  = 580.0;
-    private static final double RADIUS = 6.0;
-
-    public SniperMissile(final double x, final double y, final Plane plane) {
-        super(x, y, SPEED, 0.0, RADIUS, -1);
+    public SniperMissile(final double x, final double y,
+                         final Plane plane, final MissileData data) {
+        super(x, y, data.speed(), data.maxTurn(), data.radius(), data.lifetime());
         final double angle = Math.atan2(
                 plane.getPosition().getY() - y,
                 plane.getPosition().getX() - x);
-        setVelocity(Math.cos(angle) * SPEED, Math.sin(angle) * SPEED);
+        setVelocity(Math.cos(angle) * data.speed(), Math.sin(angle) * data.speed());
     }
 
     @Override

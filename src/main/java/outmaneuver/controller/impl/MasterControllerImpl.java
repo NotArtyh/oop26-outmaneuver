@@ -16,6 +16,7 @@ import outmaneuver.controller.MasterController;
 import outmaneuver.controller.OutmaneuverEvent;
 import outmaneuver.controller.event.InternalEventListener;
 import outmaneuver.model.area.Plane;
+import outmaneuver.model.collision.CollisionData;
 import outmaneuver.model.missile.IMissile;
 import outmaneuver.view.GameView;
 import outmaneuver.view.MissileRenderData;
@@ -29,6 +30,7 @@ public final class MasterControllerImpl implements MasterController, InternalEve
     private final List<GameView> views = new ArrayList<>();
     private final HudController hudController;
     private EntityController entityController;
+    private MissileControllerImpl missileController; // AGGIUNTO per accedere a onMissileMissileCollision
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> tickTask;
     private volatile boolean paused;
@@ -44,6 +46,11 @@ public final class MasterControllerImpl implements MasterController, InternalEve
             throw new IllegalStateException("entityController already set");
         }
         this.entityController = Objects.requireNonNull(entityController, "entityController must not be null");
+    }
+
+    // AGGIUNTO — per gestire gli eventi di collisione
+    public void setMissileController(final MissileControllerImpl missileController) {
+        this.missileController = Objects.requireNonNull(missileController, "missileController must not be null");
     }
 
     @Override
@@ -138,5 +145,22 @@ public final class MasterControllerImpl implements MasterController, InternalEve
     @Override
     public void onInternalEvent(final InternalEvent evt, final Object data) {
         hudController.onInternalEvent(evt, data);
+
+        // Gestione collisioni
+        if (missileController == null) return;
+
+        switch (evt) {
+            case MISSILE_MISSILE_COLLISION -> {
+                if (data instanceof final CollisionData cd) {
+                    missileController.onMissileMissileCollision(cd);
+                }
+            }
+            case PLANE_HIT -> {
+                if (data instanceof final CollisionData cd) {
+                    missileController.onPlaneHit(cd);
+                }
+            }
+            default -> { }
+        }
     }
 }

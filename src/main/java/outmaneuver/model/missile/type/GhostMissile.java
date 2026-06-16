@@ -2,25 +2,24 @@ package outmaneuver.model.missile.type;
 
 import outmaneuver.model.area.Plane;
 import outmaneuver.model.missile.Missile;
+import outmaneuver.model.missile.data.MissileData;
 
 /*
  * Alterna tra visibile e invisibile ogni tot secondi.
- * La hitbox è SEMPRE attiva — anche invisibile può colpire.
+ * Durate caricate da missiles.json.
  */
 public final class GhostMissile extends Missile {
 
-    private static final double SPEED              = 350.0;
-    private static final double MAX_TURN           = 0.015;
-    private static final double RADIUS             = 10.0;
-    private static final double LIFETIME           = 18.0;
-    private static final double VISIBLE_DURATION   = 1.5;
-    private static final double INVISIBLE_DURATION = 2.0;
+    private final double visibleDuration;
+    private final double invisibleDuration;
 
     private double  phaseTimer   = 0;
     private boolean ghostVisible = true;
 
-    public GhostMissile(final double x, final double y) {
-        super(x, y, SPEED, MAX_TURN, RADIUS, LIFETIME);
+    public GhostMissile(final double x, final double y, final MissileData data) {
+        super(x, y, data.speed(), data.maxTurn(), data.radius(), data.lifetime());
+        this.visibleDuration   = data.visibleDuration();
+        this.invisibleDuration = data.invisibleDuration();
     }
 
     @Override
@@ -28,7 +27,7 @@ public final class GhostMissile extends Missile {
         if (shouldSkipUpdate(dt)) return;
 
         phaseTimer += dt;
-        final double phaseDuration = ghostVisible ? VISIBLE_DURATION : INVISIBLE_DURATION;
+        final double phaseDuration = ghostVisible ? visibleDuration : invisibleDuration;
         if (phaseTimer >= phaseDuration) {
             ghostVisible = !ghostVisible;
             phaseTimer   = 0;
@@ -40,9 +39,6 @@ public final class GhostMissile extends Missile {
 
     @Override
     public boolean isGhostVisible() { return ghostVisible; }
-
-    @Override
-    protected double getMaxLifetime() { return LIFETIME; }
 
     @Override
     public String getMissileType() { return "ghost"; }

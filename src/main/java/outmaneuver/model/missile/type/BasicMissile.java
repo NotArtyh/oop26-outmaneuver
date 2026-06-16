@@ -1,23 +1,17 @@
 package outmaneuver.model.missile.type;
 
 import outmaneuver.model.missile.Missile;
+import outmaneuver.model.missile.data.MissileData;
 
 /*
  * Missile base — seek steering standard.
+ * Parametri caricati da missiles.json.
  */
 public final class BasicMissile extends Missile {
 
-    private static final double SPEED    = 350.0;
-    private static final double MAX_TURN = 0.015;
-    private static final double RADIUS   = 10.0;
-    private static final double LIFETIME = 12.0;
-
-    public BasicMissile(final double x, final double y) {
-        super(x, y, SPEED, MAX_TURN, RADIUS, LIFETIME);
+    public BasicMissile(final double x, final double y, final MissileData data) {
+        super(x, y, data.speed(), data.maxTurn(), data.radius(), data.lifetime());
     }
-
-    @Override
-    protected double getMaxLifetime() { return LIFETIME; }
 
     @Override
     public String getMissileType() { return "basic"; }

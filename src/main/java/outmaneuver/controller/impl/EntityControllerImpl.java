@@ -46,6 +46,7 @@ public final class EntityControllerImpl implements EntityController {
         final Vector2 newPos = plane.getPosition().add(velocity.scale(deltaSec));
         plane.setPosition(newPos);
 
+        // tick() viene chiamato dentro missileController.update()
         missileController.update(plane, deltaSec);
     }
 
@@ -64,7 +65,7 @@ public final class EntityControllerImpl implements EntityController {
 
     @Override
     public List<IMissile> getMissiles() {
-        return missileController.getActiveMissiles(); // AGGIUNTO
+        return missileController.getActiveMissiles();
     }
 
     private static double normaliseAngle(final double angle) {
