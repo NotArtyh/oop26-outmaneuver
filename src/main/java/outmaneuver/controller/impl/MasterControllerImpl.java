@@ -17,7 +17,10 @@ import outmaneuver.controller.MasterController;
 import outmaneuver.controller.OutmaneuverEvent;
 import outmaneuver.controller.event.InternalEventListener;
 import outmaneuver.model.area.Plane;
+import outmaneuver.model.collectibles.Collectible;
+import outmaneuver.model.collectibles.StarCollectible;
 import outmaneuver.model.collision.CollisionData;
+import outmaneuver.view.EntityRenderData;
 import outmaneuver.view.GameView;
 import outmaneuver.view.RenderState;
 
@@ -30,6 +33,7 @@ public final class MasterControllerImpl implements MasterController, InternalEve
     private final HudController hudController;
     private EntityController entityController;
     private CollisionEngine collisionEngine;
+    private CollectibleSpawner collectibleSpawner;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> tickTask;
     private volatile boolean paused;
@@ -50,6 +54,7 @@ public final class MasterControllerImpl implements MasterController, InternalEve
             throw new IllegalStateException("entityController already set");
         }
         this.entityController = Objects.requireNonNull(entityController, "entityController must not be null");
+        this.collectibleSpawner = new CollectibleSpawner(this.entityController);
     }
 
     public void setCollisionEngine(final CollisionEngine collisionEngine) {
@@ -134,15 +139,21 @@ public final class MasterControllerImpl implements MasterController, InternalEve
         }
 
         entityController.updateEntities(deltaMs);
+        collectibleSpawner.tick(deltaMs, entityController.getPlane());
         collisionEngine.tick();
         pushRenderFrame(false);
     }
 
     private void pushRenderFrame(final boolean isPaused) {
         final Plane plane = entityController.getPlane();
+        final List<EntityRenderData> collectibles = entityController.getEntities().stream()
+                .filter(e -> e instanceof Collectible)
+                .map(e -> new EntityRenderData(e.getPosition().getX(), e.getPosition().getY(), 0, "collectible"))
+                .toList();
         final RenderState state = RenderState.builder()
                 .plane(plane)
                 .hud(hudController.buildSnapshot(plane, isPaused))
+                .collectibles(collectibles)
                 .build();
         notifyViews(v -> v.renderFrame(state));
     }
@@ -154,16 +165,14 @@ public final class MasterControllerImpl implements MasterController, InternalEve
     @Override
     public void onInternalEvent(final InternalEvent evt, final Object data) {
         switch (evt) {
-            case STAR_COLLECTED -> {
-                hudController.onInternalEvent(InternalEvent.STAR_COLLECTED, data);
-
-            }
             case PLANE_HIT -> {
                 final CollisionData cd = (CollisionData) data;
                 //notifyViews(v -> v.onPlaneHit(cd)); da implementare
             }
             case COLLECTIBLE_PICKED -> {
-                
+                if (data instanceof StarCollectible c) {
+                    hudController.onInternalEvent(InternalEvent.STAR_COLLECTED, c);
+                }
             }
             case MISSILE_MISSILE_COLLISION -> {
                 // For now, we do nothing on missile-missile collisions
@@ -171,6 +180,7 @@ public final class MasterControllerImpl implements MasterController, InternalEve
                 // notifyViews(v -> v.onMissileCollision(cd)); da implementare
                 // rimuovi entità coinvolte nella collisione
             }
+            default -> throw new IllegalArgumentException("Unexpected value: " + evt);
         }
     }
 }
