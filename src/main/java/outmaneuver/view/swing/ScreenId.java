@@ -1,6 +1,7 @@
 package outmaneuver.view.swing;
 
 public enum ScreenId {
+    SETUP,
     MENU,
     PLAYING,
     PAUSED,
