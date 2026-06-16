@@ -5,31 +5,28 @@ import java.util.List;
 import outmaneuver.model.missile.IMissile;
 import outmaneuver.model.missile.Missile;
 import outmaneuver.model.missile.data.MissileData;
+import outmaneuver.util.Vector2;
 
 /*
  * Quando collide rallenta tutti i missili attivi.
  */
 public final class ClockMissile extends Missile {
 
-    private final double slowFactor;
-    private final double slowDuration;
+    private final MissileData data;
 
-    public ClockMissile(final double x, final double y, final MissileData data) {
-        super(x, y, data.speed(), data.maxTurn(), data.radius(), data.lifetime());
-        this.slowFactor   = data.slowFactor();
-        this.slowDuration = data.slowDuration();
+    public ClockMissile(final Vector2 spawnPos, final MissileData data) {
+        super(spawnPos, data.speed(), data.maxTurn(), data.radius(), data.lifetime(), data.predictionTime(), (int) data.outOfBoundsMargin());
+        this.data = data;
     }
 
-    public void triggerSlow(final List<IMissile> others) {
-        for (final IMissile other : others) {
+    @Override
+    public void onCollision(final List<IMissile> activeMissiles) {
+        for (final IMissile other : activeMissiles) {
             if (!other.isAlive() || other.equals(this)) continue;
-            other.slowDown(slowFactor, slowDuration);
+            other.slowDown(data.slowFactor(), data.slowDuration());
         }
         destroy();
     }
-
-    public double getSlowFactor()   { return slowFactor; }
-    public double getSlowDuration() { return slowDuration; }
 
     @Override
     public String getMissileType() { return "clock"; }

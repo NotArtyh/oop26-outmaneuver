@@ -2,6 +2,7 @@ package outmaneuver.model.missile.type;
 
 import outmaneuver.model.missile.Missile;
 import outmaneuver.model.missile.data.MissileData;
+import outmaneuver.util.Vector2;
 
 /*
  * Missile base — seek steering standard.
@@ -9,8 +10,8 @@ import outmaneuver.model.missile.data.MissileData;
  */
 public final class BasicMissile extends Missile {
 
-    public BasicMissile(final double x, final double y, final MissileData data) {
-        super(x, y, data.speed(), data.maxTurn(), data.radius(), data.lifetime());
+    public BasicMissile(final Vector2 spawnPos, final MissileData data) {
+        super(spawnPos, data.speed(), data.maxTurn(), data.radius(), data.lifetime(), data.predictionTime(), (int) data.outOfBoundsMargin());
     }
 
     @Override

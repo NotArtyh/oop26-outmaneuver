@@ -3,6 +3,8 @@ package outmaneuver.model.missile;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.awt.Dimension;
+
 import outmaneuver.model.area.Plane;
 import outmaneuver.model.collision.CollisionLayer;
 import outmaneuver.model.collision.Hitbox;
@@ -12,19 +14,18 @@ import outmaneuver.view.MissileRenderData;
 public abstract class Missile implements IMissile {
 
     // --- POSIZIONE E MOVIMENTO ---
-    protected double worldX;
-    protected double worldY;
-    protected double vx;
-    protected double vy;
+    private Vector2 position;
+    private Vector2 velocity;
 
     // --- PARAMETRI BASE ---
     protected final double speed;
     protected final double maxTurnAngle;
     protected final double hitboxRadius;
-    private final double maxLifetime; // valore originale del lifetime
+    private final double maxLifetime;
 
     // --- REDIRECT ---
-    private static final double PREDICTION_TIME = 0.8;
+    private final double predictionTime;
+    private final int outOfBoundsMargin;
 
     // --- STATO ---
     private boolean alive;
@@ -39,25 +40,26 @@ public abstract class Missile implements IMissile {
     private double  slowTimer  = 0;
     private double  slowFactor = 1.0;
 
-    protected Missile(final double worldX, final double worldY,
+    protected Missile(final Vector2 spawnPos,
                       final double speed, final double maxTurnAngle,
-                      final double hitboxRadius, final double lifetime) {
-        this.worldX       = worldX;
-        this.worldY       = worldY;
-        this.speed        = speed;
-        this.maxTurnAngle = maxTurnAngle;
-        this.hitboxRadius = hitboxRadius;
-        this.lifetime     = lifetime;
-        this.maxLifetime  = lifetime; // salva il valore originale
-        this.alive        = true;
-        this.vx           = 0;
-        this.vy           = 0;
+                      final double hitboxRadius, final double lifetime,
+                      final double predictionTime, final int outOfBoundsMargin) {
+        this.position           = spawnPos;
+        this.velocity           = Vector2.ZERO;
+        this.speed              = speed;
+        this.maxTurnAngle       = maxTurnAngle;
+        this.hitboxRadius       = hitboxRadius;
+        this.lifetime           = lifetime;
+        this.maxLifetime        = lifetime;
+        this.predictionTime     = predictionTime;
+        this.outOfBoundsMargin  = outOfBoundsMargin;
+        this.alive              = true;
     }
 
     @Override
     public void update(final Plane plane, final double dt) {
         if (shouldSkipUpdate(dt)) return;
-        steer(plane.getPosition().getX(), plane.getPosition().getY());
+        steer(plane.getPosition());
         move(dt);
     }
 
@@ -90,20 +92,15 @@ public abstract class Missile implements IMissile {
 
     protected final void move(final double dt) {
         final double factor = slowed ? slowFactor : 1.0;
-        worldX += vx * dt * factor;
-        worldY += vy * dt * factor;
+        position = position.add(velocity.scale(dt * factor));
     }
 
-    protected void steer(final double tx, final double ty) {
-        final double dx           = tx - worldX;
-        final double dy           = ty - worldY;
-        final double desiredAngle = Math.atan2(dy, dx);
-        final double currentAngle = Math.atan2(vy, vx);
+    protected void steer(final Vector2 target) {
+        final double desiredAngle = target.add(position.scale(-1)).angle();
+        final double currentAngle = velocity.angle();
         final double diff         = normalizeAngle(desiredAngle - currentAngle);
         final double turn         = Math.max(-maxTurnAngle, Math.min(maxTurnAngle, diff));
-        final double newAngle     = currentAngle + turn;
-        vx = Math.cos(newAngle) * speed;
-        vy = Math.sin(newAngle) * speed;
+        velocity = Vector2.fromAngle(currentAngle + turn).scale(speed);
     }
 
     protected final double normalizeAngle(double a) {
@@ -113,44 +110,54 @@ public abstract class Missile implements IMissile {
     }
 
     @Override
-    public void setInitialDirection(final double targetX, final double targetY) {
-        final double angle = Math.atan2(targetY - worldY, targetX - worldX);
-        vx = Math.cos(angle) * speed;
-        vy = Math.sin(angle) * speed;
+    public void setInitialDirection(final Vector2 target) {
+        velocity = Vector2.fromAngle(target.add(position.scale(-1)).angle()).scale(speed);
     }
 
     public void setVelocity(final double vx, final double vy) {
-        this.vx = vx;
-        this.vy = vy;
+        this.velocity = new Vector2(vx, vy);
+    }
+
+    public void setVelocity(final Vector2 vel) {
+        this.velocity = vel;
+    }
+
+    public Vector2 getPosition() {
+        return position;
     }
 
     public void setWorldPosition(final double x, final double y) {
-        this.worldX = x;
-        this.worldY = y;
+        this.position = new Vector2(x, y);
     }
 
     @Override
-    public boolean redirectIfOutOfBounds(final Plane plane,
-                                          final int screenW, final int screenH) {
-        final double dx = worldX - plane.getPosition().getX();
-        final double dy = worldY - plane.getPosition().getY();
-        final int margin = 150;
-        final boolean outX = Math.abs(dx) > screenW / 2.0 + margin;
-        final boolean outY = Math.abs(dy) > screenH / 2.0 + margin;
+    public boolean redirectIfOutOfBounds(final Plane plane, final Dimension screenSize) {
+        final Vector2 delta = position.add(plane.getPosition().scale(-1));
+        final boolean outX = Math.abs(delta.getX()) > screenSize.width  / 2.0 + outOfBoundsMargin;
+        final boolean outY = Math.abs(delta.getY()) > screenSize.height / 2.0 + outOfBoundsMargin;
 
         if (outX || outY) {
-            final double planeVx = plane.getEffectiveSpeed() * Math.cos(plane.getDirection());
-            final double planeVy = plane.getEffectiveSpeed() * Math.sin(plane.getDirection());
-            final double predictedX = plane.getPosition().getX() + planeVx * PREDICTION_TIME;
-            final double predictedY = plane.getPosition().getY() + planeVy * PREDICTION_TIME;
-            setInitialDirection(predictedX, predictedY);
+            final Vector2 planeVel = Vector2.fromAngle(plane.getDirection())
+                    .scale(plane.getEffectiveSpeed());
+            final Vector2 predicted = plane.getPosition().add(planeVel.scale(predictionTime));
+            setInitialDirection(predicted);
             return true;
         }
         return false;
     }
 
+    public int getOutOfBoundsMargin() { return outOfBoundsMargin; }
+
     @Override
-    public List<IMissile> getSpawnOnDeath() { return new ArrayList<>(); }
+    public void onCollision(final List<IMissile> activeMissiles) { destroy(); }
+
+    @Override
+    public void checkBounce(final Vector2 planePos, final Dimension screenSize) { }
+
+    protected double getFreezeRadius() { return 0; }
+
+    @Override
+    public List<IMissile> getSpawnOnInit() { return new ArrayList<>(); }
 
     @Override
     public void destroy()    { this.alive = false; }
@@ -177,24 +184,27 @@ public abstract class Missile implements IMissile {
 
     @Override
     public boolean collidesWith(final Plane plane) {
-        final double dx   = plane.getPosition().getX() - worldX;
-        final double dy   = plane.getPosition().getY() - worldY;
-        final double dist = Math.sqrt(dx * dx + dy * dy);
+        final double dist = plane.getPosition().add(position.scale(-1)).magnitude();
         return dist < hitboxRadius + plane.getStats().getHitboxRadius();
     }
 
-    public boolean isOffScreen(final Plane plane, final int screenW, final int screenH) {
-        final double dx = worldX - plane.getPosition().getX();
-        final double dy = worldY - plane.getPosition().getY();
-        final int margin = 150;
-        return Math.abs(dx) > screenW / 2.0 + margin
-            || Math.abs(dy) > screenH / 2.0 + margin;
+    protected final boolean destroyIfOffScreen(final Plane plane, final Dimension screenSize) {
+        if (isOffScreen(plane, screenSize)) {
+            destroy();
+        }
+        return false;
+    }
+
+    public boolean isOffScreen(final Plane plane, final Dimension screenSize) {
+        final Vector2 delta = position.add(plane.getPosition().scale(-1));
+        return Math.abs(delta.getX()) > screenSize.width  / 2.0 + outOfBoundsMargin
+            || Math.abs(delta.getY()) > screenSize.height / 2.0 + outOfBoundsMargin;
     }
 
     // --- ICollidable ---
     @Override
     public Hitbox getHitbox() {
-        return new Hitbox(new Vector2(worldX, worldY), hitboxRadius);
+        return new Hitbox(position, hitboxRadius);
     }
 
     @Override
@@ -203,11 +213,12 @@ public abstract class Missile implements IMissile {
     }
 
     @Override
-    public double getWorldX()       { return worldX; }
+    public double getWorldX()       { return position.getX(); }
     @Override
-    public double getWorldY()       { return worldY; }
-    public double getVx()           { return vx; }
-    public double getVy()           { return vy; }
+    public double getWorldY()       { return position.getY(); }
+    public Vector2 getVelocity()    { return velocity; }
+    public double getVx()           { return velocity.getX(); }
+    public double getVy()           { return velocity.getY(); }
     public double getSpeed()        { return speed; }
     @Override
     public double getHitboxRadius() { return hitboxRadius; }
@@ -220,11 +231,13 @@ public abstract class Missile implements IMissile {
     @Override
     public MissileRenderData getRenderData() {
         return new MissileRenderData(
-                worldX, worldY, vx, vy,
+                position.getX(), position.getY(),
+                velocity.getX(), velocity.getY(),
                 hitboxRadius,
                 maxLifetime > 0 ? lifetime / maxLifetime : -1,
                 getMissileType(),
-                isGhostVisible());
+                isGhostVisible(),
+                getFreezeRadius());
     }
 
     @Override

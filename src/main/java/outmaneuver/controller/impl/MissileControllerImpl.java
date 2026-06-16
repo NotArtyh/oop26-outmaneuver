@@ -1,13 +1,20 @@
 package outmaneuver.controller.impl;
 
+import java.awt.Dimension;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+import java.util.function.IntSupplier;
+
 import outmaneuver.controller.CollisionEngine;
 import outmaneuver.controller.MissileController;
 import outmaneuver.model.area.Plane;
-import outmaneuver.model.collision.CollisionData;
 import outmaneuver.model.collision.ICollidable;
 import outmaneuver.model.missile.IMissile;
 import outmaneuver.model.missile.data.MissileData;
 import outmaneuver.model.missile.data.MissileRepository;
+import outmaneuver.util.Vector2;
 import outmaneuver.model.missile.type.BasicMissile;
 import outmaneuver.model.missile.type.BounceMissile;
 import outmaneuver.model.missile.type.ClockMissile;
@@ -19,11 +26,6 @@ import outmaneuver.model.missile.type.SniperMissile;
 import outmaneuver.model.missile.type.TwinsMissile;
 import outmaneuver.view.MissileRenderData;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
-
 public final class MissileControllerImpl implements MissileController {
 
     // --- COSTANTI SPAWN ---
@@ -33,10 +35,14 @@ public final class MissileControllerImpl implements MissileController {
     private static final double INTERVAL_SCALE   = 0.018;
     private static final int    BORDER_MARGIN    = 60;
 
+    // --- SOGLIE DIFFICOLTA' (secondi) ---
+    private static final double TIER1_TIME = 15.0;
+    private static final double TIER2_TIME = 30.0;
+    private static final double TIER3_TIME = 60.0;
+
     private final List<IMissile> activeMissiles   = new ArrayList<>();
-    private final List<IMissile> pendingAdditions = new ArrayList<>();
-    private final int screenW;
-    private final int screenH;
+    private final IntSupplier screenWSupplier;
+    private final IntSupplier screenHSupplier;
     private final Random rng = new Random();
     private final CollisionEngine collisionEngine;
     private final MissileRepository missileRepo;
@@ -46,11 +52,12 @@ public final class MissileControllerImpl implements MissileController {
     private double spawnInterval = INITIAL_INTERVAL;
     private double elapsedTime   = 0;
 
-    public MissileControllerImpl(final int screenW, final int screenH,
+    public MissileControllerImpl(final IntSupplier screenWSupplier,
+                                 final IntSupplier screenHSupplier,
                                  final CollisionEngine collisionEngine,
                                  final MissileRepository missileRepo) {
-        this.screenW         = screenW;
-        this.screenH         = screenH;
+        this.screenWSupplier = screenWSupplier;
+        this.screenHSupplier = screenHSupplier;
         this.collisionEngine = collisionEngine;
         this.missileRepo     = missileRepo;
     }
@@ -63,7 +70,7 @@ public final class MissileControllerImpl implements MissileController {
         spawnTimer  += dt;
 
         if (spawnTimer >= spawnInterval) {
-            spawnMissile(plane);
+            spawnMissile(plane.getPosition());
             spawnInterval = Math.max(MIN_INTERVAL,
                     INITIAL_INTERVAL - elapsedTime * INTERVAL_SCALE);
             spawnTimer = 0;
@@ -73,123 +80,121 @@ public final class MissileControllerImpl implements MissileController {
             if (m.isAlive()) m.update(plane, dt);
         }
 
-        // checkBounce per BounceMissile
-        for (final IMissile m : activeMissiles) {
-            if (m instanceof final BounceMissile bm) {
-                bm.checkBounce(plane);
-            }
-        }
+        final Dimension screen = new Dimension(screenWSupplier.getAsInt(), screenHSupplier.getAsInt());
 
-        // Redirect missili fuori schermo — BounceMissile escluso
         for (final IMissile m : activeMissiles) {
-            if (m.isAlive() && !(m instanceof BounceMissile)) {
-                m.redirectIfOutOfBounds(plane, screenW, screenH);
-            }
+            if (!m.isAlive()) continue;
+            m.checkBounce(plane.getPosition(), screen);
+            m.redirectIfOutOfBounds(plane, screen);
         }
 
         // Controlla collisioni ogni frame
         collisionEngine.tick();
 
         processRemovals();
-
-        for (final IMissile m : pendingAdditions) {
-            activeMissiles.add(m);
-            collisionEngine.register(m);
-        }
-        pendingAdditions.clear();
     }
 
     // Chiamato da MasterControllerImpl quando arriva MISSILE_MISSILE_COLLISION
-    public void onMissileMissileCollision(final CollisionData data) {
-        handleCollisionSide(data.getEntityA());
-        handleCollisionSide(data.getEntityB());
+    public void onMissileMissileCollision(final ICollidable a, final ICollidable b) {
+        handleCollisionSide(a);
+        handleCollisionSide(b);
     }
 
     // Chiamato da MasterControllerImpl quando arriva PLANE_HIT
-    public void onPlaneHit(final CollisionData data) {
+    public void onPlaneHit(final ICollidable a, final ICollidable b) {
         // Il game over viene gestito da MasterControllerImpl
         // Qui distruggiamo solo il missile
-        if (data.getEntityA() instanceof IMissile m) {
+        if (a instanceof IMissile m) {
             m.destroy();
         }
-        if (data.getEntityB() instanceof IMissile m) {
+        if (b instanceof IMissile m) {
             m.destroy();
         }
     }
 
     private void handleCollisionSide(final ICollidable entity) {
-        if (entity instanceof final FreezeMissile fm) {
-            fm.triggerFreeze(activeMissiles);
-        } else if (entity instanceof final ClockMissile cm) {
-            cm.triggerSlow(activeMissiles);
-        } else if (entity instanceof final ShieldMissile sm) {
-            sm.hit();
-        } else if (entity instanceof IMissile m) {
-            m.destroy();
+        if (entity instanceof final IMissile m) {
+            m.onCollision(activeMissiles);
         }
     }
 
-    private void spawnMissile(final Plane plane) {
-        final double[] pos = randomBorderPosition(plane);
-        final IMissile m = createRandom(pos[0], pos[1], plane);
-        if (!(m instanceof SniperMissile) && !(m instanceof TwinsMissile)) {
-            m.setInitialDirection(
-                    plane.getPosition().getX(),
-                    plane.getPosition().getY());
-        }
+    private void spawnMissile(final Vector2 planePos) {
+        final Vector2 spawnPos = randomBorderPosition(planePos);
+        final IMissile m = createRandom(spawnPos);
+        m.setInitialDirection(planePos);
+        addMissile(m);
+        m.getSpawnOnInit().forEach(this::addMissile);
+    }
+
+    private void addMissile(final IMissile m) {
         activeMissiles.add(m);
         collisionEngine.register(m);
     }
 
-    private IMissile createRandom(final double x, final double y, final Plane plane) {
+    private IMissile createRandom(final Vector2 spawnPos) {
         final String type = randomType();
         final MissileData data = missileRepo.loadByType(type).orElseThrow(
                 () -> new IllegalStateException("Missile type not found: " + type));
         return switch (type) {
-            case "basic"  -> new BasicMissile(x, y, data);
-            case "fast"   -> new FastMissile(x, y, data);
-            case "sniper" -> new SniperMissile(x, y, plane, data);
-            case "bounce" -> new BounceMissile(x, y, screenW, screenH, data);
-            case "ghost"  -> new GhostMissile(x, y, data);
-            case "freeze" -> new FreezeMissile(x, y, data);
-            case "clock"  -> new ClockMissile(x, y, data);
-            case "shield" -> new ShieldMissile(x, y, data);
-            case "twins"  -> new TwinsMissile(x, y, plane, data);
-            default -> new BasicMissile(x, y, data);
+            case "basic"  -> new BasicMissile(spawnPos, data);
+            case "fast"   -> new FastMissile(spawnPos, data);
+            case "sniper" -> new SniperMissile(spawnPos, data);
+            case "bounce" -> new BounceMissile(spawnPos, data);
+            case "ghost"  -> new GhostMissile(spawnPos, data);
+            case "freeze" -> new FreezeMissile(spawnPos, data);
+            case "clock"  -> new ClockMissile(spawnPos, data);
+            case "shield" -> new ShieldMissile(spawnPos, data);
+            case "twins"  -> new TwinsMissile(spawnPos, data);
+            default -> new BasicMissile(spawnPos, data);
         };
     }
 
     private String randomType() {
-        return switch (rng.nextInt(11)) {
-            case 0, 1, 2 -> "basic";
-            case 3       -> "sniper";
-            case 4       -> "bounce";
-            case 5       -> "ghost";
-            case 6       -> "freeze";
-            case 7       -> "clock";
-            case 8       -> "shield";
-            case 9       -> "fast";
-            default      -> "twins";
-        };
+        if (elapsedTime < TIER1_TIME) {
+            // Solo basic
+            return "basic";
+        } else if (elapsedTime < TIER2_TIME) {
+            // basic, fast, sniper
+            return switch (rng.nextInt(5)) {
+                case 0, 1, 2 -> "basic";
+                case 3       -> "fast";
+                default      -> "sniper";
+            };
+        } else if (elapsedTime < TIER3_TIME) {
+            // Aggiunge bounce, ghost
+            return switch (rng.nextInt(7)) {
+                case 0, 1, 2 -> "basic";
+                case 3       -> "fast";
+                case 4       -> "sniper";
+                case 5       -> "bounce";
+                default      -> "ghost";
+            };
+        } else {
+            // Tutti i tipi
+            return switch (rng.nextInt(11)) {
+                case 0, 1, 2 -> "basic";
+                case 3       -> "sniper";
+                case 4       -> "bounce";
+                case 5       -> "ghost";
+                case 6       -> "freeze";
+                case 7       -> "clock";
+                case 8       -> "shield";
+                case 9       -> "fast";
+                default      -> "twins";
+            };
+        }
     }
 
-    private double[] randomBorderPosition(final Plane plane) {
-        final double cx = plane.getPosition().getX();
-        final double cy = plane.getPosition().getY();
-        final int side  = rng.nextInt(4);
+    private Vector2 randomBorderPosition(final Vector2 planePos) {
+        final Dimension screen = new Dimension(screenWSupplier.getAsInt(), screenHSupplier.getAsInt());
+        final double cx = planePos.getX();
+        final double cy = planePos.getY();
+        final int side = rng.nextInt(4);
         return switch (side) {
-            case 0 -> new double[]{
-                cx + rng.nextDouble() * screenW - screenW / 2.0,
-                cy - screenH / 2.0 - BORDER_MARGIN };
-            case 1 -> new double[]{
-                cx + rng.nextDouble() * screenW - screenW / 2.0,
-                cy + screenH / 2.0 + BORDER_MARGIN };
-            case 2 -> new double[]{
-                cx - screenW / 2.0 - BORDER_MARGIN,
-                cy + rng.nextDouble() * screenH - screenH / 2.0 };
-            default -> new double[]{
-                cx + screenW / 2.0 + BORDER_MARGIN,
-                cy + rng.nextDouble() * screenH - screenH / 2.0 };
+            case 0 -> new Vector2(cx + rng.nextDouble() * screen.width  - screen.width  / 2.0, cy - screen.height / 2.0 - BORDER_MARGIN);
+            case 1 -> new Vector2(cx + rng.nextDouble() * screen.width  - screen.width  / 2.0, cy + screen.height / 2.0 + BORDER_MARGIN);
+            case 2 -> new Vector2(cx - screen.width  / 2.0 - BORDER_MARGIN, cy + rng.nextDouble() * screen.height - screen.height / 2.0);
+            default -> new Vector2(cx + screen.width  / 2.0 + BORDER_MARGIN, cy + rng.nextDouble() * screen.height - screen.height / 2.0);
         };
     }
 
@@ -197,7 +202,6 @@ public final class MissileControllerImpl implements MissileController {
         final List<IMissile> toRemove = new ArrayList<>();
         for (final IMissile m : activeMissiles) {
             if (!m.isAlive()) {
-                processDeathEffects(m);
                 collisionEngine.unregister(m);
                 toRemove.add(m);
             }
@@ -205,11 +209,7 @@ public final class MissileControllerImpl implements MissileController {
         activeMissiles.removeAll(toRemove);
     }
 
-    private void processDeathEffects(final IMissile m) {
-        pendingAdditions.addAll(m.getSpawnOnDeath());
-    }
-
-    @Override
+@Override
     public List<MissileRenderData> getRenderData() {
         final List<MissileRenderData> result = new ArrayList<>();
         for (final IMissile m : activeMissiles) {
@@ -229,7 +229,7 @@ public final class MissileControllerImpl implements MissileController {
             collisionEngine.unregister(m);
         }
         activeMissiles.clear();
-        pendingAdditions.clear();
+
         spawnTimer    = 0;
         elapsedTime   = 0;
         startDelay    = START_DELAY;

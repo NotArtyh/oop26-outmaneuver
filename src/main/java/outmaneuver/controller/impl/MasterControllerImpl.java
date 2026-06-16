@@ -152,12 +152,12 @@ public final class MasterControllerImpl implements MasterController, InternalEve
         switch (evt) {
             case MISSILE_MISSILE_COLLISION -> {
                 if (data instanceof final CollisionData cd) {
-                    missileController.onMissileMissileCollision(cd);
+                    missileController.onMissileMissileCollision(cd.getEntityA(), cd.getEntityB());
                 }
             }
             case PLANE_HIT -> {
                 if (data instanceof final CollisionData cd) {
-                    missileController.onPlaneHit(cd);
+                    missileController.onPlaneHit(cd.getEntityA(), cd.getEntityB());
                 }
             }
             default -> { }

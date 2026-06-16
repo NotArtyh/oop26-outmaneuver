@@ -1,8 +1,11 @@
 package outmaneuver.model.missile.type;
 
+import java.awt.Dimension;
+
 import outmaneuver.model.area.Plane;
 import outmaneuver.model.missile.Missile;
 import outmaneuver.model.missile.data.MissileData;
+import outmaneuver.util.Vector2;
 
 /*
  * Direzione fissa al momento dello spawn.
@@ -10,13 +13,8 @@ import outmaneuver.model.missile.data.MissileData;
  */
 public final class SniperMissile extends Missile {
 
-    public SniperMissile(final double x, final double y,
-                         final Plane plane, final MissileData data) {
-        super(x, y, data.speed(), data.maxTurn(), data.radius(), data.lifetime());
-        final double angle = Math.atan2(
-                plane.getPosition().getY() - y,
-                plane.getPosition().getX() - x);
-        setVelocity(Math.cos(angle) * data.speed(), Math.sin(angle) * data.speed());
+    public SniperMissile(final Vector2 spawnPos, final MissileData data) {
+        super(spawnPos, data.speed(), data.maxTurn(), data.radius(), data.lifetime(), data.predictionTime(), (int) data.outOfBoundsMargin());
     }
 
     @Override
@@ -26,12 +24,8 @@ public final class SniperMissile extends Missile {
     }
 
     @Override
-    public boolean redirectIfOutOfBounds(final Plane plane,
-                                          final int screenW, final int screenH) {
-        if (isOffScreen(plane, screenW, screenH)) {
-            destroy();
-        }
-        return false;
+    public boolean redirectIfOutOfBounds(final Plane plane, final Dimension screenSize) {
+        return destroyIfOffScreen(plane, screenSize);
     }
 
     @Override

@@ -31,12 +31,14 @@ public record MissileData(
         // TwinsMissile
         double spread,
 
-        // BounceMissile — niente di extra
-
-        // SniperMissile — niente di extra
+        // BounceMissile
+        double bounceMargin,
 
         // Predizione redirect
-        double predictionTime
+        double predictionTime,
+
+        // Margine fuori schermo (redirect / destroy)
+        double outOfBoundsMargin
 ) {
     public MissileData {
         Objects.requireNonNull(type, "type must not be null");

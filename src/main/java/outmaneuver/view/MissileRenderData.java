@@ -14,11 +14,13 @@ public final class MissileRenderData {
     private final double lifetimeRatio;
     private final String missileType;
     private final boolean ghostVisible;
+    private final double freezeRadius;
 
     public MissileRenderData(final double worldX, final double worldY,
                              final double vx, final double vy,
                              final double hitboxRadius, final double lifetimeRatio,
-                             final String missileType, final boolean ghostVisible) {
+                             final String missileType, final boolean ghostVisible,
+                             final double freezeRadius) {
         this.worldX        = worldX;
         this.worldY        = worldY;
         this.vx            = vx;
@@ -27,6 +29,7 @@ public final class MissileRenderData {
         this.lifetimeRatio = lifetimeRatio;
         this.missileType   = missileType;
         this.ghostVisible  = ghostVisible;
+        this.freezeRadius  = freezeRadius;
     }
 
     public double getWorldX()        { return worldX; }
@@ -37,4 +40,5 @@ public final class MissileRenderData {
     public double getLifetimeRatio() { return lifetimeRatio; }
     public String getMissileType()   { return missileType; }
     public boolean isGhostVisible()  { return ghostVisible; }
+    public double getFreezeRadius()  { return freezeRadius; }
 }

@@ -30,9 +30,6 @@ import outmaneuver.view.swing.menu.MainMenuView;
 
 public final class AppBootstrapper {
 
-    private static final int SCREEN_W = 800;
-    private static final int SCREEN_H = 600;
-
     private AppBootstrapper() { }
 
     public static void launch() {
@@ -52,15 +49,17 @@ public final class AppBootstrapper {
         final MissileRepository missileRepo = new JsonMissileRepository(
                 JsonResourceLoader.forList("missiles.json", MissileData.class, GsonProvider.create()));
 
+        final SwingGameView gameView = new SwingGameView(new GameKeyListener(inputCtrl, master));
+        gameView.init();
+
         final MissileControllerImpl missileCtrl = new MissileControllerImpl(
-                SCREEN_W, SCREEN_H, collisionEngine, missileRepo);
+                gameView.getPanel()::getWidth,
+                gameView.getPanel()::getHeight,
+                collisionEngine, missileRepo);
         master.setMissileController(missileCtrl);
 
         final EntityControllerImpl entity = new EntityControllerImpl(plane, inputCtrl, master, missileCtrl);
         master.setEntityController(entity);
-
-        final SwingGameView gameView = new SwingGameView(new GameKeyListener(inputCtrl, master));
-        gameView.init();
         master.attachView(gameView);
 
         final UIManager[] uiManagerRef = { null };

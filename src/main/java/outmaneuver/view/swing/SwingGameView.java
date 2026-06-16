@@ -150,6 +150,21 @@ public final class SwingGameView implements GameView {
                 final Composite saved = g2d.getComposite();
                 g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
 
+                // Cerchio freeze tratteggiato — solo per FreezeMissile
+                if ("freeze".equals(m.getMissileType()) && m.getFreezeRadius() > 0) {
+                    final int fr = (int) m.getFreezeRadius();
+                    g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+                    g2d.setColor(new Color(130, 230, 255, 40));
+                    g2d.fillOval(sx - fr, sy - fr, fr * 2, fr * 2);
+                    g2d.setColor(new Color(130, 230, 255, 150));
+                    final float[] dash = { 8.0f, 4.0f };
+                    g2d.setStroke(new BasicStroke(1.5f, BasicStroke.CAP_BUTT,
+                            BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f));
+                    g2d.drawOval(sx - fr, sy - fr, fr * 2, fr * 2);
+                    g2d.setStroke(new BasicStroke(1.5f));
+                    g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+                }
+
                 // Alone
                 g2d.setColor(new Color(220, 60, 60, 60));
                 g2d.fillOval(sx - r * 2, sy - r * 2, r * 4, r * 4);

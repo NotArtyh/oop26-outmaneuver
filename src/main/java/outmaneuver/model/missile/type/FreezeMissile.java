@@ -1,37 +1,39 @@
 package outmaneuver.model.missile.type;
 
+import java.util.List;
+
 import outmaneuver.model.missile.IMissile;
 import outmaneuver.model.missile.Missile;
 import outmaneuver.model.missile.data.MissileData;
-import java.util.List;
+import outmaneuver.util.Vector2;
 
 /*
  * Quando collide congela tutti i missili nel raggio.
  */
 public final class FreezeMissile extends Missile {
 
-    private final double freezeRadius;
-    private final double freezeDuration;
+    private final MissileData data;
 
-    public FreezeMissile(final double x, final double y, final MissileData data) {
-        super(x, y, data.speed(), data.maxTurn(), data.radius(), data.lifetime());
-        this.freezeRadius   = data.freezeRadius();
-        this.freezeDuration = data.freezeDuration();
+    public FreezeMissile(final Vector2 spawnPos, final MissileData data) {
+        super(spawnPos, data.speed(), data.maxTurn(), data.radius(), data.lifetime(), data.predictionTime(), (int) data.outOfBoundsMargin());
+        this.data = data;
     }
 
-    public void triggerFreeze(final List<IMissile> others) {
-        for (final IMissile other : others) {
+    @Override
+    public void onCollision(final List<IMissile> activeMissiles) {
+        for (final IMissile other : activeMissiles) {
             if (!other.isAlive() || other.equals(this)) continue;
-            final double dx = other.getWorldX() - getWorldX();
-            final double dy = other.getWorldY() - getWorldY();
-            if (dx * dx + dy * dy < freezeRadius * freezeRadius) {
-                other.freeze(freezeDuration);
+            final Vector2 delta = other.getHitbox().getCenter()
+                    .add(getHitbox().getCenter().scale(-1));
+            if (delta.magnitude() < data.freezeRadius()) {
+                other.freeze(data.freezeDuration());
             }
         }
         destroy();
     }
 
-    public double getFreezeRadius() { return freezeRadius; }
+    @Override
+    protected double getFreezeRadius() { return data.freezeRadius(); }
 
     @Override
     public String getMissileType() { return "freeze"; }
