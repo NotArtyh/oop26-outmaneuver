@@ -68,6 +68,9 @@ public final class SwingGameView implements GameView {
                 final var planeData = state.getPlane();
                 final double cameraX = planeData.getX();
                 final double cameraY = planeData.getY();
+                for (final var col : state.getCollectibles()) {
+                    drawCollectible(g2d, col, cameraX, cameraY);
+                }
                 drawPlane(g2d, planeData, cameraX, cameraY);
                 if (state.getHud() != null) {
                     hudView.render(g2d, state.getHud(), getWidth(), getHeight());
@@ -75,6 +78,14 @@ public final class SwingGameView implements GameView {
             }
 
             g2d.dispose();
+        }
+
+        private void drawCollectible(final Graphics2D g2d, final EntityRenderData data,
+                                     final double cameraX, final double cameraY) {
+            final int screenX = (int) Math.round(data.getX() - cameraX + getWidth() / 2.0);
+            final int screenY = (int) Math.round(data.getY() - cameraY + getHeight() / 2.0);
+            g2d.setColor(Color.YELLOW);
+            g2d.fillOval(screenX - 10, screenY - 10, 20, 20);
         }
 
         private void drawPlane(final Graphics2D g2d, final EntityRenderData data,
