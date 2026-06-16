@@ -8,11 +8,13 @@ import java.util.Map;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import outmaneuver.controller.CollisionEngine;
 import outmaneuver.controller.MasterController;
 import outmaneuver.controller.impl.EntityControllerImpl;
 import outmaneuver.controller.impl.HudControllerImpl;
 import outmaneuver.controller.impl.InputControllerImpl;
 import outmaneuver.controller.impl.MasterControllerImpl;
+import outmaneuver.model.session.GameSession;
 import outmaneuver.model.area.Plane;
 import outmaneuver.model.area.PlaneImpl;
 import outmaneuver.model.area.StandardStats;
@@ -45,8 +47,12 @@ public final class AppBootstrapper {
         final InputControllerImpl inputCtrl = new InputControllerImpl();
         final HudControllerImpl hudCtrl = new HudControllerImpl();
         final MasterControllerImpl master = new MasterControllerImpl(hudCtrl);
-        final EntityControllerImpl entity = new EntityControllerImpl(plane, inputCtrl, master);
+        final CollisionEngine collisionEngine = new CollisionEngine(master);
+        final GameSession session = new GameSession();
+        final EntityControllerImpl entity = new EntityControllerImpl(inputCtrl, master, collisionEngine, session);
+        entity.spawnPlane(plane);
         master.setEntityController(entity);
+        master.setCollisionEngine(collisionEngine);
 
         final SwingGameView gameView = new SwingGameView(new GameKeyListener(inputCtrl, master), new SwingHudView());
         gameView.init();
