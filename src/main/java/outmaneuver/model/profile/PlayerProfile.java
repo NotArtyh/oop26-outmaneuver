@@ -20,7 +20,7 @@ public final class PlayerProfile implements IWallet {
     private static final int MAX_SCORES = 10;
 
     private final IPlayerProfileRepository repository;
-    private final String playerName;
+    private String playerName;
     private int coins;
     private final Set<String> ownedPlaneIds;
     private final List<ScoreEntry> scores;
@@ -36,6 +36,15 @@ public final class PlayerProfile implements IWallet {
 
     public String getPlayerName() {
         return playerName;
+    }
+
+    public void setPlayerName(final String name) {
+        Objects.requireNonNull(name, "name must not be null");
+        if (name.isBlank()) {
+            throw new IllegalArgumentException("name must not be blank");
+        }
+        this.playerName = name;
+        save();
     }
 
     // ── IWallet ──────────────────────────────────────────────────────────
