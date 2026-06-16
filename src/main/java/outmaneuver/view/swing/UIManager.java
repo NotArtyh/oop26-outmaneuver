@@ -7,7 +7,6 @@ import java.util.Objects;
 
 import javax.swing.JPanel;
 
-import outmaneuver.view.swing.ScreenId;
 
 public final class UIManager extends JPanel {
 
