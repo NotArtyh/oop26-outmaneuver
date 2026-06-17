@@ -14,31 +14,23 @@ import outmaneuver.controller.impl.EntityControllerImpl;
 import outmaneuver.controller.impl.HudControllerImpl;
 import outmaneuver.controller.impl.InputControllerImpl;
 import outmaneuver.controller.impl.MasterControllerImpl;
-import outmaneuver.model.area.Plane;
-import outmaneuver.model.area.PlaneImpl;
-import outmaneuver.model.area.StandardStats;
-import outmaneuver.model.missile.IMissile;
+import outmaneuver.model.session.GameSession;
+import outmaneuver.model.area.entity.plane.Plane;
+import outmaneuver.model.area.entity.plane.PlaneData;
+import outmaneuver.model.area.entity.plane.PlaneImpl;
 import outmaneuver.util.Vector2;
 import outmaneuver.view.GameView;
-import outmaneuver.view.MissileRenderData;
 import outmaneuver.view.RenderState;
 
 class MasterControllerImplTest {
 
     private static final long TICK_WAIT_MS = 100;
 
-    // Mock minimale di MissileController per i test
-    private static final MissileController DUMMY_MISSILE_CTRL = new MissileController() {
-        @Override public void update(outmaneuver.model.area.Plane p, double dt) { }
-        @Override public List<MissileRenderData> getRenderData() { return List.of(); }
-        @Override public List<IMissile> getActiveMissiles() { return List.of(); }
-        @Override public void reset() { }
-    };
-
     private Plane plane;
     private InputControllerImpl input;
     private EntityControllerImpl entityCtrl;
     private MasterControllerImpl master;
+    private CollisionEngine collisionEngine;
     private SpyView spyView;
 
     private static class SpyView implements GameView {
@@ -52,12 +44,15 @@ class MasterControllerImplTest {
 
     @BeforeEach
     void setUp() {
-        plane = new PlaneImpl(new StandardStats());
+        plane = new PlaneImpl(new PlaneData("standard", 200, 3, 20, "aircraft_standard", 0));
         input = new InputControllerImpl();
         spyView = new SpyView();
         master = new MasterControllerImpl(new HudControllerImpl());
-        entityCtrl = new EntityControllerImpl(plane, input, master, DUMMY_MISSILE_CTRL);
+        collisionEngine = new CollisionEngine(master);
+        entityCtrl = new EntityControllerImpl(input, master, collisionEngine, new GameSession());
+        entityCtrl.spawnPlane(plane);
         master.setEntityController(entityCtrl);
+        master.setCollisionEngine(collisionEngine);
     }
 
     @Test

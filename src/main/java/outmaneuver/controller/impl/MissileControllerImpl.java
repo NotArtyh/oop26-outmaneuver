@@ -9,21 +9,21 @@ import java.util.function.IntSupplier;
 
 import outmaneuver.controller.CollisionEngine;
 import outmaneuver.controller.MissileController;
-import outmaneuver.model.area.Plane;
-import outmaneuver.model.collision.ICollidable;
-import outmaneuver.model.missile.IMissile;
-import outmaneuver.model.missile.data.MissileData;
-import outmaneuver.model.missile.data.MissileRepository;
+import outmaneuver.model.area.entity.plane.Plane;
+import outmaneuver.model.area.collision.ICollidable;
+import outmaneuver.model.area.entity.missile.Missile;
+import outmaneuver.model.area.entity.missile.data.MissileData;
+import outmaneuver.model.area.entity.missile.data.MissileRepository;
 import outmaneuver.util.Vector2;
-import outmaneuver.model.missile.type.BasicMissile;
-import outmaneuver.model.missile.type.BounceMissile;
-import outmaneuver.model.missile.type.ClockMissile;
-import outmaneuver.model.missile.type.FastMissile;
-import outmaneuver.model.missile.type.FreezeMissile;
-import outmaneuver.model.missile.type.GhostMissile;
-import outmaneuver.model.missile.type.ShieldMissile;
-import outmaneuver.model.missile.type.SniperMissile;
-import outmaneuver.model.missile.type.TwinsMissile;
+import outmaneuver.model.area.entity.missile.type.BasicMissile;
+import outmaneuver.model.area.entity.missile.type.BounceMissile;
+import outmaneuver.model.area.entity.missile.type.ClockMissile;
+import outmaneuver.model.area.entity.missile.type.FastMissile;
+import outmaneuver.model.area.entity.missile.type.FreezeMissile;
+import outmaneuver.model.area.entity.missile.type.GhostMissile;
+import outmaneuver.model.area.entity.missile.type.ShieldMissile;
+import outmaneuver.model.area.entity.missile.type.SniperMissile;
+import outmaneuver.model.area.entity.missile.type.TwinsMissile;
 import outmaneuver.view.MissileRenderData;
 
 public final class MissileControllerImpl implements MissileController {
@@ -40,7 +40,7 @@ public final class MissileControllerImpl implements MissileController {
     private static final double TIER2_TIME = 30.0;
     private static final double TIER3_TIME = 60.0;
 
-    private final List<IMissile> activeMissiles   = new ArrayList<>();
+    private final List<Missile> activeMissiles   = new ArrayList<>();
     private final IntSupplier screenWSupplier;
     private final IntSupplier screenHSupplier;
     private final Random rng = new Random();
@@ -76,13 +76,13 @@ public final class MissileControllerImpl implements MissileController {
             spawnTimer = 0;
         }
 
-        for (final IMissile m : activeMissiles) {
+        for (final Missile m : activeMissiles) {
             if (m.isAlive()) m.update(plane, dt);
         }
 
         final Dimension screen = new Dimension(screenWSupplier.getAsInt(), screenHSupplier.getAsInt());
 
-        for (final IMissile m : activeMissiles) {
+        for (final Missile m : activeMissiles) {
             if (!m.isAlive()) continue;
             m.checkBounce(plane.getPosition(), screen);
             m.redirectIfOutOfBounds(plane, screen);
@@ -104,34 +104,34 @@ public final class MissileControllerImpl implements MissileController {
     public void onPlaneHit(final ICollidable a, final ICollidable b) {
         // Il game over viene gestito da MasterControllerImpl
         // Qui distruggiamo solo il missile
-        if (a instanceof IMissile m) {
+        if (a instanceof Missile m) {
             m.destroy();
         }
-        if (b instanceof IMissile m) {
+        if (b instanceof Missile m) {
             m.destroy();
         }
     }
 
     private void handleCollisionSide(final ICollidable entity) {
-        if (entity instanceof final IMissile m) {
+        if (entity instanceof final Missile m) {
             m.onCollision(activeMissiles);
         }
     }
 
     private void spawnMissile(final Vector2 planePos) {
         final Vector2 spawnPos = randomBorderPosition(planePos);
-        final IMissile m = createRandom(spawnPos);
+        final Missile m = createRandom(spawnPos);
         m.setInitialDirection(planePos);
         addMissile(m);
         m.getSpawnOnInit().forEach(this::addMissile);
     }
 
-    private void addMissile(final IMissile m) {
+    private void addMissile(final Missile m) {
         activeMissiles.add(m);
         collisionEngine.register(m);
     }
 
-    private IMissile createRandom(final Vector2 spawnPos) {
+    private Missile createRandom(final Vector2 spawnPos) {
         final String type = randomType();
         final MissileData data = missileRepo.loadByType(type).orElseThrow(
                 () -> new IllegalStateException("Missile type not found: " + type));
@@ -199,8 +199,8 @@ public final class MissileControllerImpl implements MissileController {
     }
 
     private void processRemovals() {
-        final List<IMissile> toRemove = new ArrayList<>();
-        for (final IMissile m : activeMissiles) {
+        final List<Missile> toRemove = new ArrayList<>();
+        for (final Missile m : activeMissiles) {
             if (!m.isAlive()) {
                 collisionEngine.unregister(m);
                 toRemove.add(m);
@@ -212,20 +212,20 @@ public final class MissileControllerImpl implements MissileController {
 @Override
     public List<MissileRenderData> getRenderData() {
         final List<MissileRenderData> result = new ArrayList<>();
-        for (final IMissile m : activeMissiles) {
+        for (final Missile m : activeMissiles) {
             if (m.isAlive()) result.add(m.getRenderData());
         }
         return result;
     }
 
     @Override
-    public List<IMissile> getActiveMissiles() {
+    public List<Missile> getActiveMissiles() {
         return Collections.unmodifiableList(activeMissiles);
     }
 
     @Override
     public void reset() {
-        for (final IMissile m : activeMissiles) {
+        for (final Missile m : activeMissiles) {
             collisionEngine.unregister(m);
         }
         activeMissiles.clear();

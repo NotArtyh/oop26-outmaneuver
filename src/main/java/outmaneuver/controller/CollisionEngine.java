@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Objects;
 
 import outmaneuver.controller.event.InternalEventListener;
-import outmaneuver.model.collision.CollisionData;
-import outmaneuver.model.collision.CollisionLayer;
-import outmaneuver.model.collision.Hitbox;
-import outmaneuver.model.collision.ICollidable;
+import outmaneuver.model.area.collision.CollisionData;
+import outmaneuver.model.area.collision.CollisionLayer;
+import outmaneuver.model.area.collision.Hitbox;
+import outmaneuver.model.area.collision.ICollidable;
 import outmaneuver.util.Vector2;
 
 public class CollisionEngine {
@@ -24,7 +24,7 @@ public class CollisionEngine {
     }
 
     // Registrazione entità (chiamato da EntityController / GameScene)
-    
+
     public void register(final ICollidable entity) {
         entities.add(Objects.requireNonNull(entity));
     }
@@ -51,7 +51,7 @@ public class CollisionEngine {
         checkPairs(missiles, missiles, InternalEvent.MISSILE_MISSILE_COLLISION);
 
         // Missile × Plane
-        checkPairs(missiles, planes, InternalEvent.PLANE_HIT);
+        checkPairs(missiles, planes, InternalEvent.PLANE_MISSILE_COLLISION);
     }
 
     private List<ICollidable> filterByLayer(final CollisionLayer layer) {
@@ -83,7 +83,7 @@ public class CollisionEngine {
 
                 if (ha.intersects(hb)) {
                     final Vector2 point = ha.collisionPoint(hb);
-                   
+
                     eventListener.onInternalEvent(eventType,
                             new CollisionData(a, b, point));
                 }

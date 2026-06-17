@@ -2,8 +2,8 @@ package outmaneuver.controller;
 
 import java.util.List;
 
-import outmaneuver.model.area.Plane;
-import outmaneuver.model.missile.IMissile;
+import outmaneuver.model.area.entity.plane.Plane;
+import outmaneuver.model.area.entity.missile.Missile;
 import outmaneuver.view.MissileRenderData;
 
 public interface MissileController {
@@ -12,7 +12,7 @@ public interface MissileController {
 
     List<MissileRenderData> getRenderData();
 
-    List<IMissile> getActiveMissiles();
+    List<Missile> getActiveMissiles();
 
     void reset();
 }

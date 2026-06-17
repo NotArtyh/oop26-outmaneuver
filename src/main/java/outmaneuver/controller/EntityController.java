@@ -1,18 +1,27 @@
 package outmaneuver.controller;
 
+import outmaneuver.model.area.entity.Entity;
+import outmaneuver.model.area.entity.plane.Plane;
 import java.util.List;
 
-import outmaneuver.model.area.Plane;
-import outmaneuver.model.missile.IMissile;
+import outmaneuver.controller.event.InternalEventListener;
 
-public interface EntityController {
+
+public interface EntityController extends InternalEventListener {
 
     void updateEntities(long deltaMs);
 
     void clearAll();
 
-    Plane getPlane();
+    void spawnPlane(Entity plane);
 
-    // restituisce la lista dei missili che sono attualmente vivi a schermo in quel momento.
-    List<IMissile> getMissiles();
+    void spawnMissile(Entity missile);
+
+    void spawnCollectible(Entity collectible);
+
+    void removeEntity(Entity entity);
+
+    List<Entity> getEntities();
+
+    Plane getPlane();
 }
