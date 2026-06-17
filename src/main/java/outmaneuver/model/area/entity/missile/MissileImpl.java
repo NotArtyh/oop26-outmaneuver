@@ -7,7 +7,7 @@ import outmaneuver.model.area.collision.CollisionLayer;
 import outmaneuver.model.area.collision.Hitbox;
 import outmaneuver.model.area.entity.plane.Plane;
 import outmaneuver.util.Vector2;
-import outmaneuver.view.MissileRenderData;
+import outmaneuver.view.EntityRenderData;
 
 public abstract class MissileImpl implements Missile {
 
@@ -19,7 +19,6 @@ public abstract class MissileImpl implements Missile {
     private final double speed;
     private final double maxTurnAngle;
     private final double hitboxRadius;
-    private final double maxLifetime;
 
     // --- REDIRECT ---
     private final double predictionTime;
@@ -44,7 +43,6 @@ public abstract class MissileImpl implements Missile {
         this.maxTurnAngle       = maxTurnAngle;
         this.hitboxRadius       = hitboxRadius;
         this.lifetime           = lifetime;
-        this.maxLifetime        = lifetime;
         this.predictionTime     = predictionTime;
         this.outOfBoundsMargin  = outOfBoundsMargin;
         this.alive              = true;
@@ -196,12 +194,10 @@ public abstract class MissileImpl implements Missile {
     public double getHitboxRadius() { return hitboxRadius; }
 
     @Override
-    public MissileRenderData getRenderData() {
-        return new MissileRenderData(
+    public EntityRenderData getRenderData() {
+        return new EntityRenderData(
                 position.getX(), position.getY(),
-                velocity.getX(), velocity.getY(),
-                hitboxRadius,
-                maxLifetime > 0 ? lifetime / maxLifetime : -1,
+                velocity.angle(),
                 getMissileType());
     }
 

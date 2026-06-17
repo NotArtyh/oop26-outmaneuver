@@ -5,13 +5,13 @@ import java.util.List;
 import outmaneuver.model.area.collision.ICollidable;
 import outmaneuver.model.area.entity.plane.Plane;
 import outmaneuver.model.area.entity.missile.Missile;
-import outmaneuver.view.MissileRenderData;
+import outmaneuver.view.EntityRenderData;
 
 public interface MissileController {
 
     void update(Plane plane, double dt);
 
-    List<MissileRenderData> getRenderData();
+    List<EntityRenderData> getRenderData();
 
     List<Missile> getActiveMissiles();
 

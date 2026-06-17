@@ -24,7 +24,6 @@ import outmaneuver.model.area.collision.CollisionData;
 import outmaneuver.model.area.entity.missile.Missile;
 import outmaneuver.view.EntityRenderData;
 import outmaneuver.view.GameView;
-import outmaneuver.view.MissileRenderData;
 import outmaneuver.view.RenderState;
 
 public final class MasterControllerImpl implements MasterController, InternalEventListener {
@@ -179,7 +178,7 @@ public final class MasterControllerImpl implements MasterController, InternalEve
     private void pushRenderFrame(final boolean isPaused) {
         final Plane plane = entityController.getPlane();
 
-        final List<MissileRenderData> missileData = missileController != null
+        final List<EntityRenderData> missileData = missileController != null
                 ? missileController.getRenderData()
                 : List.of();
 

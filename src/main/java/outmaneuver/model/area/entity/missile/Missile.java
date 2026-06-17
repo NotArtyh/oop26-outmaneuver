@@ -6,7 +6,7 @@ import java.util.List;
 import outmaneuver.model.area.entity.Entity;
 import outmaneuver.model.area.entity.plane.Plane;
 import outmaneuver.util.Vector2;
-import outmaneuver.view.MissileRenderData;
+import outmaneuver.view.EntityRenderData;
 
 public interface Missile extends Entity {
 
@@ -28,7 +28,7 @@ public interface Missile extends Entity {
     void slowDown(double factor, double duration);
 
     // --- RENDER ---
-    MissileRenderData getRenderData();
+    EntityRenderData getRenderData();
 
     // --- GETTERS ---
     Vector2 getPosition();

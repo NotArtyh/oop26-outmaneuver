@@ -16,7 +16,6 @@ import outmaneuver.util.Vector2;
 
 import outmaneuver.view.EntityRenderData;
 import outmaneuver.view.GameView;
-import outmaneuver.view.MissileRenderData;
 import outmaneuver.view.RenderState;
 import outmaneuver.view.swing.hud.IHudView;
 
@@ -102,52 +101,39 @@ public final class SwingGameView extends JPanel implements GameView {
     }
 
     private void drawMissiles(final Graphics2D g2d,
-                              final List<MissileRenderData> missiles,
+                              final List<EntityRenderData> missiles,
                               final double cameraX, final double cameraY) {
-        for (final MissileRenderData m : missiles) {
-            final int sx = toScreenX(m.getWorldX(), cameraX);
-            final int sy = toScreenY(m.getWorldY(), cameraY);
-            final int r  = (int) m.getHitboxRadius();
+        for (final EntityRenderData m : missiles) {
+            final int sx = toScreenX(m.getX(), cameraX);
+            final int sy = toScreenY(m.getY(), cameraY);
+            final int r  = missileRadius(m.getSpriteId());
 
             // Alone
             g2d.setColor(new Color(220, 60, 60, 60));
             g2d.fillOval(sx - r * 2, sy - r * 2, r * 4, r * 4);
 
             // Corpo
-            g2d.setColor(getMissileColor(m.getMissileType()));
+            g2d.setColor(getMissileColor(m.getSpriteId()));
             g2d.fillOval(sx - r, sy - r, r * 2, r * 2);
 
             // Linea direzione
-            final Vector2 vel = new Vector2(m.getVx(), m.getVy());
-            if (vel.magnitude() > 0) {
-                final Vector2 dir = vel.normalize();
-                g2d.setColor(Color.WHITE);
-                g2d.setStroke(new BasicStroke(1.5f));
-                g2d.drawLine(sx, sy,
-                        (int) (sx + dir.getX() * r * 1.8),
-                        (int) (sy + dir.getY() * r * 1.8));
-            }
-
-            // Barra lifetime
-            if (m.getLifetimeRatio() >= 0) {
-                drawLifetimeBar(g2d, sx, sy, r, m.getLifetimeRatio());
-            }
-
+            final Vector2 dir = Vector2.fromAngle(m.getDirectionRad());
+            g2d.setColor(Color.WHITE);
+            g2d.setStroke(new BasicStroke(1.5f));
+            g2d.drawLine(sx, sy,
+                    (int) (sx + dir.getX() * r * 1.8),
+                    (int) (sy + dir.getY() * r * 1.8));
         }
     }
 
-    private void drawLifetimeBar(final Graphics2D g2d, final int sx, final int sy,
-                                 final int r, final double ratio) {
-        final int barW = r * 2;
-        final int barX = sx - r;
-        final int barY = sy - r - 7;
-        g2d.setColor(new Color(40, 40, 40, 180));
-        g2d.fillRect(barX, barY, barW, 3);
-        final Color c = ratio > 0.5 ? new Color(80, 220, 80)
-                      : ratio > 0.2 ? new Color(220, 200, 0)
-                      : new Color(220, 60, 60);
-        g2d.setColor(c);
-        g2d.fillRect(barX, barY, (int) (barW * ratio), 3);
+    private int missileRadius(final String type) {
+        return switch (type) {
+            case "fast"   -> 8;
+            case "sniper" -> 6;
+            case "bounce", "shield" -> 11;
+            case "clock"  -> 12;
+            default       -> 10;
+        };
     }
 
     private Color getMissileColor(final String type) {

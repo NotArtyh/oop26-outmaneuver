@@ -7,12 +7,12 @@ public final class RenderState {
 
     private final EntityRenderData plane;
     private final HudSnapshot hud;
-    private final List<MissileRenderData> missiles;
+    private final List<EntityRenderData> missiles;
     private final List<EntityRenderData> collectibles;
 
     private RenderState(final EntityRenderData plane,
                         final HudSnapshot hud,
-                        final List<MissileRenderData> missiles,
+                        final List<EntityRenderData> missiles,
                         final List<EntityRenderData> collectibles) {
         this.plane = plane;
         this.hud = hud;
@@ -24,7 +24,7 @@ public final class RenderState {
 
     public HudSnapshot getHud() { return hud; }
 
-    public List<MissileRenderData> getMissiles() { return missiles; }
+    public List<EntityRenderData> getMissiles() { return missiles; }
 
     public List<EntityRenderData> getCollectibles() {
         return collectibles;
@@ -38,7 +38,7 @@ public final class RenderState {
 
         private Plane plane;
         private HudSnapshot hud;
-        private List<MissileRenderData> missiles = List.of();
+        private List<EntityRenderData> missiles = List.of();
         private List<EntityRenderData> collectibles = List.of();
 
         private Builder() { }
@@ -53,7 +53,7 @@ public final class RenderState {
             return this;
         }
 
-        public Builder missiles(final List<MissileRenderData> missiles) {
+        public Builder missiles(final List<EntityRenderData> missiles) {
             this.missiles = missiles;
             return this;
         }

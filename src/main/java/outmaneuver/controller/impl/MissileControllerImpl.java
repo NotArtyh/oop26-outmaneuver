@@ -22,7 +22,7 @@ import outmaneuver.model.area.entity.missile.type.ClockMissile;
 import outmaneuver.model.area.entity.missile.type.FastMissile;
 import outmaneuver.model.area.entity.missile.type.ShieldMissile;
 import outmaneuver.model.area.entity.missile.type.SniperMissile;
-import outmaneuver.view.MissileRenderData;
+import outmaneuver.view.EntityRenderData;
 
 public final class MissileControllerImpl implements MissileController {
 
@@ -196,8 +196,8 @@ public final class MissileControllerImpl implements MissileController {
     }
 
     @Override
-    public List<MissileRenderData> getRenderData() {
-        final List<MissileRenderData> result = new ArrayList<>();
+    public List<EntityRenderData> getRenderData() {
+        final List<EntityRenderData> result = new ArrayList<>();
         for (final Missile m : activeMissiles) {
             if (m.isAlive()) result.add(m.getRenderData());
         }
