@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import outmaneuver.controller.CollisionEngine;
+import outmaneuver.controller.MissileSpawnDirector;
 import outmaneuver.controller.impl.CollectibleControllerImpl;
 import outmaneuver.controller.impl.HudControllerImpl;
 import outmaneuver.controller.impl.InputControllerImpl;
@@ -53,7 +54,7 @@ public final class ControllerAssembler {
         final MissileRepository missileRepo = new JsonMissileRepository(
                 JsonResourceLoader.forList("missiles.json", MissileData.class, GsonProvider.create()));
         final MissileControllerImpl missileCtrl = new MissileControllerImpl(
-                sharedEntities, collision, session, missileRepo);
+                sharedEntities, collision, session, missileRepo, new MissileSpawnDirector());
         planeCtrl.spawnEntity(plane); //tetnzione TODO: QUESTO NON VA BENE QUI, IL PLANE VA SPAWNATO ALTROVE
 
         master.addEntityController(planeCtrl);

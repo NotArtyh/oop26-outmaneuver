@@ -3,23 +3,20 @@ package outmaneuver.controller.impl;
 import java.awt.Dimension;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
 
 import outmaneuver.controller.CollisionEngine;
 import outmaneuver.controller.InternalEvent;
 import outmaneuver.controller.MissileController;
+import outmaneuver.controller.MissileKind;
+import outmaneuver.controller.MissileSpawnDirector;
 import outmaneuver.model.area.collision.CollisionData;
 import outmaneuver.model.area.collision.ICollidable;
 import outmaneuver.model.area.entity.Entity;
 import outmaneuver.model.area.entity.missile.Missile;
 import outmaneuver.model.area.entity.missile.data.MissileData;
 import outmaneuver.model.area.entity.missile.data.MissileRepository;
-import outmaneuver.model.area.entity.missile.type.BasicMissile;
-import outmaneuver.model.area.entity.missile.type.BounceMissile;
-import outmaneuver.model.area.entity.missile.type.ClockMissile;
-import outmaneuver.model.area.entity.missile.type.FastMissile;
-import outmaneuver.model.area.entity.missile.type.ShieldMissile;
-import outmaneuver.model.area.entity.missile.type.SniperMissile;
 import outmaneuver.model.area.entity.plane.Plane;
 import outmaneuver.model.session.IGameSession;
 import outmaneuver.util.Vector2;
@@ -32,18 +29,18 @@ import outmaneuver.util.Vector2;
 public final class MissileControllerImpl extends EntityControllerImpl implements MissileController {
 
     // --- COSTANTI SPAWN ---
+    // L'intervallo tra due spawn parte da INITIAL_INTERVAL e cala nel tempo
+    // (INITIAL_INTERVAL - elapsedTime * INTERVAL_SCALE) fino a MIN_INTERVAL.
+    // Curva tarata per una partita di ~5 minuti a chi gioca bene: inizio morbido,
+    // rampa lenta, ritmo massimo raggiunto solo verso i 5 minuti.
     private static final double START_DELAY      = 3.0;
-    private static final double INITIAL_INTERVAL = 2.5;
-    private static final double MIN_INTERVAL     = 0.35;
-    private static final double INTERVAL_SCALE   = 0.018;
+    private static final double INITIAL_INTERVAL = 6.5;
+    private static final double MIN_INTERVAL     = 0.4;
+    private static final double INTERVAL_SCALE   = 0.020;
     private static final int    BORDER_MARGIN    = 60;
 
-    // --- SOGLIE DIFFICOLTA' (secondi) ---
-    private static final double TIER1_TIME = 15.0;
-    private static final double TIER2_TIME = 30.0;
-    private static final double TIER3_TIME = 60.0;
-
     private final MissileRepository missileRepo;
+    private final MissileSpawnDirector spawnDirector;
     private final Random rng = new Random();
 
     private double startDelay    = START_DELAY;
@@ -54,9 +51,11 @@ public final class MissileControllerImpl extends EntityControllerImpl implements
     public MissileControllerImpl(final List<Entity> entities,
                                  final CollisionEngine collisionEngine,
                                  final IGameSession session,
-                                 final MissileRepository missileRepo) {
+                                 final MissileRepository missileRepo,
+                                 final MissileSpawnDirector spawnDirector) {
         super(entities, collisionEngine, session);
         this.missileRepo = Objects.requireNonNull(missileRepo, "missileRepo must not be null");
+        this.spawnDirector = Objects.requireNonNull(spawnDirector, "spawnDirector must not be null");
     }
 
     @Override
@@ -66,10 +65,11 @@ public final class MissileControllerImpl extends EntityControllerImpl implements
             startDelay -= dt;
             return;
         }
-        final Plane plane = findPlane();
-        if (plane == null || getView() == null) {
+        final Optional<Plane> planeOpt = findPlane();
+        if (planeOpt.isEmpty() || getView() == null) {
             return;
         }
+        final Plane plane = planeOpt.get();
         final Dimension screen = new Dimension(getView().getWidth(), getView().getHeight());
 
         elapsedTime += dt;
@@ -114,7 +114,7 @@ public final class MissileControllerImpl extends EntityControllerImpl implements
         spawnTimer = 0;
         spawnInterval = Math.max(MIN_INTERVAL, INITIAL_INTERVAL - elapsedTime * INTERVAL_SCALE);
 
-        final Missile m = createRandom(randomBorderPosition(planePos, screen));
+        final Missile m = createMissile(randomBorderPosition(planePos, screen));
         m.setInitialDirection(planePos);
         spawnEntity(m);
     }
@@ -153,55 +153,19 @@ public final class MissileControllerImpl extends EntityControllerImpl implements
                 .toList();
     }
 
-    private Plane findPlane() {
+    private Optional<Plane> findPlane() {
         return getEntities().stream()
                 .filter(e -> e instanceof Plane)
                 .map(e -> (Plane) e)
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
-    private Missile createRandom(final Vector2 spawnPos) {
-        final String type = randomType();
-        final MissileData data = missileRepo.loadByType(type).orElseThrow(
-                () -> new IllegalStateException("Missile type not found: " + type));
-        return switch (type) {
-            case "basic"  -> new BasicMissile(spawnPos, data);
-            case "fast"   -> new FastMissile(spawnPos, data);
-            case "sniper" -> new SniperMissile(spawnPos, data);
-            case "bounce" -> new BounceMissile(spawnPos, data);
-            case "clock"  -> new ClockMissile(spawnPos, data);
-            case "shield" -> new ShieldMissile(spawnPos, data);
-            default       -> new BasicMissile(spawnPos, data);
-        };
-    }
-
-    private String randomType() {
-        if (elapsedTime < TIER1_TIME) {
-            return "basic";
-        } else if (elapsedTime < TIER2_TIME) {
-            return switch (rng.nextInt(5)) {
-                case 0, 1, 2 -> "basic";
-                case 3       -> "fast";
-                default      -> "sniper";
-            };
-        } else if (elapsedTime < TIER3_TIME) {
-            return switch (rng.nextInt(6)) {
-                case 0, 1, 2 -> "basic";
-                case 3       -> "fast";
-                case 4       -> "sniper";
-                default      -> "bounce";
-            };
-        } else {
-            return switch (rng.nextInt(8)) {
-                case 0, 1, 2 -> "basic";
-                case 3       -> "sniper";
-                case 4       -> "bounce";
-                case 5       -> "clock";
-                case 6       -> "shield";
-                default      -> "fast";
-            };
-        }
+    private Missile createMissile(final Vector2 spawnPos) {
+        // Il tipo lo decide il director in base a tempo e missili a schermo; qui si istanzia.
+        final MissileKind kind = spawnDirector.nextKind(elapsedTime, activeMissiles());
+        final MissileData data = missileRepo.loadByType(kind.id()).orElseThrow(
+                () -> new IllegalStateException("Missile type not found: " + kind.id()));
+        return kind.create(spawnPos, data);
     }
 
     private Vector2 randomBorderPosition(final Vector2 planePos, final Dimension screen) {
