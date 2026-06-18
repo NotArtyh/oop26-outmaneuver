@@ -1,6 +1,8 @@
 package outmaneuver.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,22 +12,28 @@ import org.junit.jupiter.api.Test;
 
 import outmaneuver.controller.event.InternalEventListener;
 import outmaneuver.controller.impl.EntityControllerImpl;
-import outmaneuver.controller.impl.InputControllerImpl;
+import outmaneuver.model.area.collision.CollisionData;
+import outmaneuver.model.area.entity.Entity;
+import outmaneuver.model.area.entity.collectibles.AbstractCollectible;
+import outmaneuver.model.area.entity.missile.MissileImpl;
 import outmaneuver.model.area.entity.plane.Plane;
 import outmaneuver.model.area.entity.plane.PlaneData;
 import outmaneuver.model.area.entity.plane.PlaneImpl;
 import outmaneuver.model.area.entity.plane.TurnState;
-import outmaneuver.model.area.entity.collectibles.AbstractCollectible;
-import outmaneuver.model.area.entity.missile.MissileImpl;
 import outmaneuver.model.session.GameState;
 import outmaneuver.model.session.IGameSession;
 import outmaneuver.util.Vector2;
 
 class EntityControllerImplTest {
 
-    private static final double EPS = 1e-9;
-
     // ── Test doubles ─────────────────────────────────────────────────
+
+    private static final class ConcreteEntityController extends EntityControllerImpl {
+        ConcreteEntityController(final List<Entity> entities, final CollisionEngine collisionEngine,
+                                  final IGameSession session) {
+            super(entities, collisionEngine, session);
+        }
+    }
 
     private static class RecordingListener implements InternalEventListener {
         final List<InternalEvent> events = new ArrayList<>();
@@ -61,170 +69,74 @@ class EntityControllerImplTest {
     // ── Fixtures ─────────────────────────────────────────────────────
 
     private PlaneImpl plane;
-    private InputControllerImpl input;
     private RecordingListener listener;
     private CollisionEngine collisionEngine;
-    private EntityControllerImpl entityCtrl;
+    private ConcreteEntityController entityCtrl;
 
     @BeforeEach
     void setUp() {
         plane = new PlaneImpl(new PlaneData("standard", 200, 3, 20, "aircraft_standard", 0));
-        input = new InputControllerImpl();
         listener = new RecordingListener();
         collisionEngine = new CollisionEngine(listener);
-        entityCtrl = new EntityControllerImpl(input, listener, collisionEngine, NO_OP_SESSION);
+        entityCtrl = new ConcreteEntityController(new ArrayList<>(), collisionEngine, NO_OP_SESSION);
     }
 
-    // ── spawnPlane ───────────────────────────────────────────────────
+    // ── spawnEntity ──────────────────────────────────────────────────
 
     @Test
-    void spawnPlane_addsToEntities() {
-        entityCtrl.spawnPlane(plane);
+    void spawnEntity_addsToEntities() {
+        entityCtrl.spawnEntity(plane);
         assertTrue(entityCtrl.getEntities().contains(plane));
     }
 
-    // ── spawnMissile ─────────────────────────────────────────────────
-
     @Test
-    void spawnMissile_addsToEntities() {
-        final MissileImpl missile = new MissileImpl(Vector2.ZERO, 0, 100);
-        entityCtrl.spawnMissile(missile);
-        assertTrue(entityCtrl.getEntities().contains(missile));
+    void spawnEntity_missileRegistersWithCollisionEngine() {
+        final MissileImpl a = new MissileImpl(new Vector2(0, 0), 0, 0);
+        final MissileImpl b = new MissileImpl(new Vector2(5, 0), 0, 0);
+
+        entityCtrl.spawnEntity(a);
+        entityCtrl.spawnEntity(b);
+        collisionEngine.tick();
+
+        assertTrue(listener.events.contains(InternalEvent.MISSILE_MISSILE_COLLISION),
+                "Missiles spawned through the controller should be registered with the collision engine");
     }
 
-    // ── spawnCollectible ─────────────────────────────────────────────
+    // ── removeEntity ─────────────────────────────────────────────────
 
     @Test
-    void spawnCollectible_addsToEntities() {
-        final StubCollectible col = new StubCollectible(new Vector2(500, 500));
-        entityCtrl.spawnCollectible(col);
-        assertTrue(entityCtrl.getEntities().contains(col));
-    }
-
-    // ── updateEntities – plane movement ──────────────────────────────
-
-    @Test
-    void noInput_doesNotChangeDirection() {
-        entityCtrl.spawnPlane(plane);
-        final double initialDir = plane.getDirection();
-        entityCtrl.updateEntities(16);
-        assertEquals(initialDir, plane.getDirection(), EPS);
+    void removeEntity_removesCollectible() {
+        final StubCollectible col = new StubCollectible(Vector2.ZERO);
+        entityCtrl.spawnEntity(col);
+        entityCtrl.removeEntity(col);
+        assertFalse(entityCtrl.getEntities().contains(col));
     }
 
     @Test
-    void noInput_planeStillMovesForward() {
-        entityCtrl.spawnPlane(plane);
-        plane.setDirection(0);
-        final Vector2 before = plane.getPosition();
-        entityCtrl.updateEntities(100);
-        assertNotEquals(before, plane.getPosition());
+    void removeEntity_unregistersMissileFromCollisionEngine() {
+        final MissileImpl a = new MissileImpl(new Vector2(0, 0), 0, 0);
+        final MissileImpl b = new MissileImpl(new Vector2(5, 0), 0, 0);
+        entityCtrl.spawnEntity(a);
+        entityCtrl.spawnEntity(b);
+
+        entityCtrl.removeEntity(b);
+        collisionEngine.tick();
+
+        assertTrue(listener.events.isEmpty(), "Removed missile should no longer participate in collisions");
     }
 
     @Test
-    void leftInput_rotatesLeft() {
-        entityCtrl.spawnPlane(plane);
-        input.onKeyPressed(37); // VK_LEFT
-        entityCtrl.updateEntities(100);
-        assertTrue(plane.getDirection() < 0, "Direction should be negative after left turn");
+    void removeEntity_doesNotRemovePlane() {
+        entityCtrl.spawnEntity(plane);
+        entityCtrl.removeEntity(plane);
+        assertTrue(entityCtrl.getEntities().contains(plane), "Plane must never be removed");
     }
 
-    @Test
-    void rightInput_rotatesRight() {
-        entityCtrl.spawnPlane(plane);
-        input.onKeyPressed(39); // VK_RIGHT
-        entityCtrl.updateEntities(100);
-        assertTrue(plane.getDirection() > 0, "Direction should be positive after right turn");
-    }
+    // ── clearAll ─────────────────────────────────────────────────────
 
     @Test
-    void leftInput_setsTurnStateLeft() {
-        entityCtrl.spawnPlane(plane);
-        input.onKeyPressed(37);
-        entityCtrl.updateEntities(16);
-        assertEquals(TurnState.LEFT, plane.getTurnState());
-    }
-
-    @Test
-    void rightInput_setsTurnStateRight() {
-        entityCtrl.spawnPlane(plane);
-        input.onKeyPressed(39);
-        entityCtrl.updateEntities(16);
-        assertEquals(TurnState.RIGHT, plane.getTurnState());
-    }
-
-    @Test
-    void noInput_setsTurnStateNone() {
-        entityCtrl.spawnPlane(plane);
-        entityCtrl.updateEntities(16);
-        assertEquals(TurnState.NONE, plane.getTurnState());
-    }
-
-    @Test
-    void planeMovesForwardAlongXAxis() {
-        entityCtrl.spawnPlane(plane);
-        plane.setPosition(new Vector2(100, 100));
-        plane.setDirection(0);
-        entityCtrl.updateEntities(1000);
-        assertTrue(plane.getPosition().getX() > 100, "Plane should advance in +X");
-        assertEquals(100, plane.getPosition().getY(), EPS, "Y should stay unchanged");
-    }
-
-    @Test
-    void directionStaysWithinMinusPiToPi() {
-        entityCtrl.spawnPlane(plane);
-        input.onKeyPressed(37);
-        for (int i = 0; i < 1000; i++) {
-            entityCtrl.updateEntities(100);
-        }
-        final double dir = plane.getDirection();
-        assertTrue(dir >= -Math.PI - EPS && dir <= Math.PI + EPS,
-                "Direction out of [-PI, PI]: " + dir);
-    }
-
-    // ── updateEntities – missile movement ────────────────────────────
-
-    @Test
-    void missileUpdateAdvancesPosition() {
-        final MissileImpl missile = new MissileImpl(Vector2.ZERO, 0, 200);
-        entityCtrl.spawnMissile(missile);
-        entityCtrl.updateEntities(1000);
-        assertTrue(missile.getPosition().getX() > 0, "Missile should move in +X direction");
-    }
-
-    // ── collectible pickup ────────────────────────────────────────────
-
-    @Test
-    void overlappingCollectible_isRemovedAppliedAndFiresEvent() {
-        entityCtrl.spawnPlane(plane);
-        // Same position as plane → hitboxes overlap
-        final StubCollectible col = new StubCollectible(plane.getPosition());
-        entityCtrl.spawnCollectible(col);
-
-        entityCtrl.updateEntities(16);
-
-        assertFalse(entityCtrl.getEntities().contains(col), "Collectible should be removed on pickup");
-        assertTrue(col.applied, "apply() should have been called");
-        assertTrue(listener.events.contains(InternalEvent.PLANE_COLLECTIBLE_COLLISION),
-                "PLANE_COLLECTIBLE_COLLISION event should be fired");
-    }
-
-    @Test
-    void distantCollectible_isNotPickedUp() {
-        entityCtrl.spawnPlane(plane);
-        final StubCollectible col = new StubCollectible(new Vector2(99999, 99999));
-        entityCtrl.spawnCollectible(col);
-
-        entityCtrl.updateEntities(16);
-
-        assertTrue(entityCtrl.getEntities().contains(col), "Distant collectible should remain");
-        assertFalse(col.applied, "apply() should not have been called");
-    }
-
-    // ── clearAll ──────────────────────────────────────────────────────
-
-    @Test
-    void clearAll_keepsPlanAndResetsState() {
-        entityCtrl.spawnPlane(plane);
+    void clearAll_keepsPlaneAndResetsState() {
+        entityCtrl.spawnEntity(plane);
         plane.setDirection(Math.PI / 2);
         plane.setPosition(new Vector2(300, 400));
 
@@ -232,52 +144,72 @@ class EntityControllerImplTest {
 
         assertTrue(entityCtrl.getEntities().contains(plane), "Plane should stay after clearAll");
         assertEquals(Vector2.ZERO, plane.getPosition());
-        assertEquals(0, plane.getDirection(), EPS);
+        assertEquals(0, plane.getDirection(), 1e-9);
         assertEquals(TurnState.NONE, plane.getTurnState());
     }
 
     @Test
-    void clearAll_removesMissiles() {
-        final MissileImpl missile = new MissileImpl(Vector2.ZERO, 0, 0);
-        entityCtrl.spawnMissile(missile);
+    void clearAll_removesMissilesAndUnregistersFromCollisionEngine() {
+        final MissileImpl a = new MissileImpl(new Vector2(0, 0), 0, 0);
+        final MissileImpl b = new MissileImpl(new Vector2(5, 0), 0, 0);
+        entityCtrl.spawnEntity(a);
+        entityCtrl.spawnEntity(b);
 
         entityCtrl.clearAll();
+        collisionEngine.tick();
 
-        assertFalse(entityCtrl.getEntities().contains(missile), "Missile should be gone after clearAll");
+        assertFalse(entityCtrl.getEntities().contains(a), "Missile should be gone after clearAll");
+        assertTrue(listener.events.isEmpty(), "Cleared missiles should no longer participate in collisions");
     }
 
     @Test
     void clearAll_removesCollectibles() {
         final StubCollectible col = new StubCollectible(new Vector2(200, 200));
-        entityCtrl.spawnCollectible(col);
+        entityCtrl.spawnEntity(col);
 
         entityCtrl.clearAll();
 
         assertFalse(entityCtrl.getEntities().contains(col), "Collectible should be gone after clearAll");
     }
 
-    // ── removeEntity ──────────────────────────────────────────────────
+    // ── onInternalEvent ──────────────────────────────────────────────
 
     @Test
-    void removeEntity_removesCollectible() {
-        final StubCollectible col = new StubCollectible(Vector2.ZERO);
-        entityCtrl.spawnCollectible(col);
-        entityCtrl.removeEntity(col);
-        assertFalse(entityCtrl.getEntities().contains(col));
+    void onInternalEvent_planeMissileCollision_removesMissile() {
+        final MissileImpl missile = new MissileImpl(plane.getPosition(), 0, 0);
+        entityCtrl.spawnEntity(plane);
+        entityCtrl.spawnEntity(missile);
+
+        final CollisionData data = new CollisionData(missile, plane, plane.getPosition());
+        entityCtrl.onInternalEvent(InternalEvent.PLANE_MISSILE_COLLISION, data);
+
+        assertFalse(entityCtrl.getEntities().contains(missile), "Missile should be removed on plane hit");
     }
 
     @Test
-    void removeEntity_removesMissile() {
-        final MissileImpl missile = new MissileImpl(Vector2.ZERO, 0, 0);
-        entityCtrl.spawnMissile(missile);
-        entityCtrl.removeEntity(missile);
-        assertFalse(entityCtrl.getEntities().contains(missile));
+    void onInternalEvent_planeCollectibleCollision_appliesAndRemoves() {
+        final StubCollectible col = new StubCollectible(plane.getPosition());
+        entityCtrl.spawnEntity(plane);
+        entityCtrl.spawnEntity(col);
+
+        final CollisionData data = new CollisionData(plane, col, plane.getPosition());
+        entityCtrl.onInternalEvent(InternalEvent.PLANE_COLLECTIBLE_COLLISION, data);
+
+        assertFalse(entityCtrl.getEntities().contains(col), "Collectible should be removed on pickup");
+        assertTrue(col.applied, "apply() should have been called");
     }
 
     @Test
-    void removeEntity_doesNotRemovePlane() {
-        entityCtrl.spawnPlane(plane);
-        entityCtrl.removeEntity(plane);
-        assertTrue(entityCtrl.getEntities().contains(plane), "Plane must never be removed");
+    void onInternalEvent_missileMissileCollision_removesBothMissiles() {
+        final MissileImpl a = new MissileImpl(new Vector2(0, 0), 0, 0);
+        final MissileImpl b = new MissileImpl(new Vector2(5, 0), 0, 0);
+        entityCtrl.spawnEntity(a);
+        entityCtrl.spawnEntity(b);
+
+        final CollisionData data = new CollisionData(a, b, Vector2.ZERO);
+        entityCtrl.onInternalEvent(InternalEvent.MISSILE_MISSILE_COLLISION, data);
+
+        assertFalse(entityCtrl.getEntities().contains(a), "First missile should be removed");
+        assertFalse(entityCtrl.getEntities().contains(b), "Second missile should be removed");
     }
 }
