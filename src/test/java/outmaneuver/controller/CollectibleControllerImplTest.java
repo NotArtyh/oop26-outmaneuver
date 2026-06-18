@@ -20,6 +20,8 @@ import outmaneuver.model.area.entity.plane.PlaneImpl;
 import outmaneuver.model.session.GameState;
 import outmaneuver.model.session.IGameSession;
 import outmaneuver.util.Vector2;
+import outmaneuver.view.GameView;
+import outmaneuver.view.RenderState;
 
 class CollectibleControllerImplTest {
 
@@ -53,6 +55,20 @@ class CollectibleControllerImplTest {
         @Override public void reset() { }
     };
 
+    private static final class StubGameView implements GameView {
+        private final int width;
+        private final int height;
+
+        StubGameView(final int width, final int height) {
+            this.width = width;
+            this.height = height;
+        }
+
+        @Override public void renderFrame(final RenderState state) { }
+        @Override public int getWidth() { return width; }
+        @Override public int getHeight() { return height; }
+    };
+
     private CollisionEngine collisionEngine;
     private PlaneImpl plane;
     private CollectibleControllerImpl collectibleCtrl;
@@ -62,7 +78,8 @@ class CollectibleControllerImplTest {
         plane = new PlaneImpl(new PlaneData("standard", 200, 3, 20, "aircraft_standard", 0));
         collisionEngine = new CollisionEngine(new NoOpListener());
         collectibleCtrl = new CollectibleControllerImpl(
-                new ArrayList<>(), collisionEngine, NO_OP_SESSION, () -> 800, () -> 600);
+                new ArrayList<>(), collisionEngine, NO_OP_SESSION);
+        collectibleCtrl.setView(new StubGameView(800, 600));
     }
 
     // ── spawnEntity / removeEntity (inherited from EntityControllerImpl) ──
@@ -162,7 +179,8 @@ class CollectibleControllerImplTest {
     @Test
     void updateEntities_doesNotSpawnWithZeroViewSize() {
         final CollectibleControllerImpl zeroViewCtrl =
-                new CollectibleControllerImpl(new ArrayList<>(), collisionEngine, NO_OP_SESSION, () -> 0, () -> 0);
+                new CollectibleControllerImpl(new ArrayList<>(), collisionEngine, NO_OP_SESSION);
+        zeroViewCtrl.setView(new StubGameView(0, 0));
         zeroViewCtrl.spawnEntity(plane);
         zeroViewCtrl.updateEntities(SPAWN_INTERVAL_MS);
 
