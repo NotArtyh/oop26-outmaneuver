@@ -40,6 +40,16 @@ public final class SwingGameView extends JPanel implements GameView {
     }
 
     @Override
+    public int getWidth() {
+        return super.getWidth();
+    }
+
+    @Override
+    public int getHeight() {
+        return super.getHeight();
+    }
+
+    @Override
     public void renderFrame(final RenderState state) {
         this.latestState = state;
         SwingUtilities.invokeLater(this::repaint);
@@ -70,7 +80,7 @@ public final class SwingGameView extends JPanel implements GameView {
             drawPlane(g2d, planeData, cameraX, cameraY);
 
             if (state.getHud() != null) {
-                hudView.render(g2d, state.getHud(), getWidth(), getHeight());
+                hudView.render(g2d, state.getHud(), this);
             }
         }
         g2d.dispose();

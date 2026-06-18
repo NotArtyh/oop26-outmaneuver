@@ -10,11 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import outmaneuver.controller.impl.EntityControllerImpl;
 import outmaneuver.controller.impl.HudControllerImpl;
-import outmaneuver.controller.impl.InputControllerImpl;
 import outmaneuver.controller.impl.MasterControllerImpl;
-import outmaneuver.model.session.GameSession;
+import outmaneuver.model.area.entity.Entity;
 import outmaneuver.model.area.entity.plane.Plane;
 import outmaneuver.model.area.entity.plane.PlaneData;
 import outmaneuver.model.area.entity.plane.PlaneImpl;
@@ -26,11 +24,50 @@ class MasterControllerImplTest {
 
     private static final long TICK_WAIT_MS = 100;
 
+    /**
+     * Minimal EntityController double: advances any spawned plane along +X by
+     * deltaMs on every updateEntities() call, so tests can observe movement
+     * without depending on a concrete EntityControllerImpl subclass.
+     */
+    private static final class FakeEntityController implements EntityController {
+        private final List<Entity> entities = new ArrayList<>();
+
+        @Override
+        public void updateEntities(final long deltaMs) {
+            entities.stream()
+                    .filter(e -> e instanceof Plane)
+                    .map(e -> (Plane) e)
+                    .forEach(p -> p.setPosition(p.getPosition().add(new Vector2(deltaMs, 0))));
+        }
+
+        @Override
+        public void clearAll() {
+            entities.removeIf(e -> !(e instanceof Plane));
+        }
+
+        @Override
+        public void spawnEntity(final Entity entity) {
+            entities.add(entity);
+        }
+
+        @Override
+        public void removeEntity(final Entity entity) {
+            entities.remove(entity);
+        }
+
+        @Override
+        public List<Entity> getEntities() {
+            return List.copyOf(entities);
+        }
+
+        @Override
+        public void onInternalEvent(final InternalEvent evt, final Object data) {
+        }
+    }
+
     private Plane plane;
-    private InputControllerImpl input;
-    private EntityControllerImpl entityCtrl;
+    private FakeEntityController entityCtrl;
     private MasterControllerImpl master;
-    private CollisionEngine collisionEngine;
     private SpyView spyView;
 
     private static class SpyView implements GameView {
@@ -40,19 +77,27 @@ class MasterControllerImplTest {
         public void renderFrame(final RenderState state) {
             frames.add(state);
         }
+
+        @Override
+        public int getWidth() {
+            return 0;
+        }
+
+        @Override
+        public int getHeight() {
+            return 0;
+        }
     }
 
     @BeforeEach
     void setUp() {
         plane = new PlaneImpl(new PlaneData("standard", 200, 3, 20, "aircraft_standard", 0));
-        input = new InputControllerImpl();
         spyView = new SpyView();
         master = new MasterControllerImpl(new HudControllerImpl());
-        collisionEngine = new CollisionEngine(master);
-        entityCtrl = new EntityControllerImpl(input, master, collisionEngine, new GameSession());
-        entityCtrl.spawnPlane(plane);
-        master.setEntityController(entityCtrl);
-        master.setCollisionEngine(collisionEngine);
+        entityCtrl = new FakeEntityController();
+        entityCtrl.spawnEntity(plane);
+        master.addEntityController(entityCtrl);
+        master.setCollisionEngine(new CollisionEngine(master));
     }
 
     @Test
@@ -77,7 +122,6 @@ class MasterControllerImplTest {
     @Test
     void testPauseStopsMovement() throws InterruptedException {
         plane.setPosition(new Vector2(400, 300));
-        input.onKeyPressed(39);
 
         master.attachView(spyView);
         master.start();
@@ -87,6 +131,7 @@ class MasterControllerImplTest {
         master.handleEvent(OutmaneuverEvent.TOGGLE_PAUSE);
         final Vector2 posBefore = plane.getPosition();
         Thread.sleep(TICK_WAIT_MS);
+        master.stop();
         final Vector2 posAfter = plane.getPosition();
         assertEquals(posBefore.getX(), posAfter.getX(), 1e-6,
                 "Position should not change while paused");
@@ -95,7 +140,6 @@ class MasterControllerImplTest {
     @Test
     void testResumeResumesMovement() throws InterruptedException {
         plane.setPosition(new Vector2(200, 300));
-        input.onKeyPressed(39);
 
         master.attachView(spyView);
         master.start();

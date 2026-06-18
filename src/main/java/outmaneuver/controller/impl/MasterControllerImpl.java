@@ -17,27 +17,28 @@ import outmaneuver.controller.MasterController;
 import outmaneuver.controller.MissileController;
 import outmaneuver.controller.OutmaneuverEvent;
 import outmaneuver.controller.ScoreController;
-import outmaneuver.controller.event.InternalEventListener;
-import outmaneuver.model.area.entity.collectibles.Collectible;
+
 import outmaneuver.model.area.entity.plane.Plane;
 import outmaneuver.model.area.collision.CollisionData;
+import outmaneuver.model.area.entity.Entity;
+import outmaneuver.model.area.entity.collectibles.Collectible;
 import outmaneuver.model.area.entity.missile.Missile;
 import outmaneuver.view.EntityRenderData;
 import outmaneuver.view.GameView;
 import outmaneuver.view.RenderState;
 
-public final class MasterControllerImpl implements MasterController, InternalEventListener {
+public final class MasterControllerImpl implements MasterController {
 
     private static final long TICK_PERIOD_MS = 16;
-    private static final long MAX_DELTA_MS   = 50;
+    private static final long MAX_DELTA_MS = 50;
 
     private final List<GameView> views = new ArrayList<>();
+    private final List<EntityController> entityControllers = new ArrayList<>();
     private final HudController hudController;
     private ScoreController scoreController;
-    private EntityController entityController;
+    private EntityController primaryEntityController;
     private MissileController missileController;
     private CollisionEngine collisionEngine;
-    private CollectibleSpawner collectibleSpawner;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> tickTask;
     private volatile boolean paused;
@@ -63,12 +64,12 @@ public final class MasterControllerImpl implements MasterController, InternalEve
         this.onResume = Objects.requireNonNull(onResume);
     }
 
-    public void setEntityController(final EntityController entityController) {
-        if (this.entityController != null) {
-            throw new IllegalStateException("entityController already set");
+    public void addEntityController(final EntityController entityController) {
+        Objects.requireNonNull(entityController, "entityController must not be null");
+        if (primaryEntityController == null) {
+            primaryEntityController = entityController;
         }
-        this.entityController = Objects.requireNonNull(entityController, "entityController must not be null");
-        this.collectibleSpawner = new CollectibleSpawner(this.entityController);
+        entityControllers.add(entityController);
     }
 
     public void setCollisionEngine(final CollisionEngine collisionEngine) {
@@ -119,11 +120,14 @@ public final class MasterControllerImpl implements MasterController, InternalEve
     @Override
     public void attachView(final GameView view) {
         views.add(Objects.requireNonNull(view, "view must not be null"));
+        entityControllers.forEach(ec -> ec.setView(view));
     }
 
     @Override
     public void start() {
-        Objects.requireNonNull(entityController, "entityController must be set before start()");
+        if (entityControllers.isEmpty()) {
+            throw new IllegalStateException("at least one entityController must be added before start()");
+        }
         Objects.requireNonNull(collisionEngine, "collisionEngine must be set before start()");
         if (tickTask != null && !tickTask.isCancelled()) {
             return;
@@ -134,9 +138,9 @@ public final class MasterControllerImpl implements MasterController, InternalEve
         if (scoreController != null) {
             scoreController.reset();
         }
-        entityController.clearAll();
+        primaryEntityController.clearAll();
         if (missileController != null) {
-            missileController.reset();
+            missileController.clearAll();
         }
         tickTask = scheduler.scheduleAtFixedRate(
                 this::tick, 0, TICK_PERIOD_MS, TimeUnit.MILLISECONDS);
@@ -167,14 +171,15 @@ public final class MasterControllerImpl implements MasterController, InternalEve
         long deltaMs = (now - lastTickTime) / 1_000_000;
         lastTickTime = now;
 
-        if (deltaMs > MAX_DELTA_MS) deltaMs = MAX_DELTA_MS;
-        if (deltaMs <= 0) return;
-
-        entityController.updateEntities(deltaMs);
-        if (missileController != null) {
-            missileController.update(entityController.getPlane(), deltaMs / 1000.0);
+        if (deltaMs > MAX_DELTA_MS) {
+            deltaMs = MAX_DELTA_MS;
         }
-        collectibleSpawner.tick(deltaMs, entityController.getPlane());
+        if (deltaMs <= 0) {
+            return;
+        }
+
+        final long frameDeltaMs = deltaMs;
+        entityControllers.forEach(ec -> ec.updateEntities(frameDeltaMs));
         collisionEngine.tick();
         if (scoreController != null) {
             scoreController.onTick(deltaMs);
@@ -183,24 +188,26 @@ public final class MasterControllerImpl implements MasterController, InternalEve
     }
 
     private void pushRenderFrame(final boolean isPaused) {
-        final Plane plane = entityController.getPlane();
-
-        final List<EntityRenderData> missileData = missileController != null
-                ? missileController.getRenderData()
-                : List.of();
-
-        final List<EntityRenderData> collectibles = entityController.getEntities().stream()
+        final List<Entity> entities = primaryEntityController.getEntities();
+        final Plane plane = entities.stream()
+                .filter(e -> e instanceof Plane)
+                .map(e -> (Plane) e)
+                .findFirst()
+                .orElse(null);
+        final List<EntityRenderData> collectibles = entities.stream()
                 .filter(e -> e instanceof Collectible)
                 .map(e -> new EntityRenderData(e.getPosition().getX(), e.getPosition().getY(), 0, "collectible"))
                 .toList();
-
+        final List<EntityRenderData> missiles = entities.stream()
+                .filter(e -> e instanceof Missile)
+                .map(e -> ((Missile) e).getRenderData())
+                .toList();
         final RenderState state = RenderState.builder()
                 .plane(plane)
                 .hud(hudController.buildSnapshot(plane, isPaused))
-                .missiles(missileData)
+                .missiles(missiles)
                 .collectibles(collectibles)
                 .build();
-
         notifyViews(v -> v.renderFrame(state));
     }
 
@@ -210,28 +217,41 @@ public final class MasterControllerImpl implements MasterController, InternalEve
 
     @Override
     public void onInternalEvent(final InternalEvent evt, final Object data) {
+        if (!(data instanceof final CollisionData collisionData)) {
+            return;
+        }
         switch (evt) {
-            case PLANE_MISSILE_COLLISION -> {
-                if (missileController != null && data instanceof final CollisionData cd) {
-                    missileController.onPlaneHit(cd.getEntityA(), cd.getEntityB());
-                }
-                // notifyViews(v -> v.onPlaneHit((CollisionData) data)); da implementare
-            }
             case PLANE_COLLECTIBLE_COLLISION -> {
-                hudController.onInternalEvent(InternalEvent.PLANE_COLLECTIBLE_COLLISION, data);
-                if (scoreController != null) {
-                    scoreController.onInternalEvent(InternalEvent.PLANE_COLLECTIBLE_COLLISION, data);
+                // Il controller del piano/collectible applica e rimuove il collectible.
+                if (primaryEntityController != null) {
+                    primaryEntityController.onInternalEvent(evt, collisionData);
+                }
+                if (collisionData.getEntityB() instanceof final Collectible collectible) {
+                    hudController.onInternalEvent(InternalEvent.PLANE_COLLECTIBLE_COLLISION, collectible);
+                    if (scoreController != null) {
+                        scoreController.onInternalEvent(InternalEvent.PLANE_COLLECTIBLE_COLLISION, collectible);
+                    }
+                }
+            }
+            case PLANE_MISSILE_COLLISION -> {
+                // Il missile reagisce (shield/destroy); il piano va in game over se non ha lo scudo.
+                if (missileController != null) {
+                    missileController.onInternalEvent(evt, collisionData);
+                }
+                final Plane plane = (Plane) collisionData.getEntityB();
+                if (!plane.isShieldActive()) {
+                    handleEvent(OutmaneuverEvent.GAME_OVER);
                 }
             }
             case MISSILE_MISSILE_COLLISION -> {
-                if (missileController != null && data instanceof final CollisionData cd) {
-                    missileController.onMissileMissileCollision(cd.getEntityA(), cd.getEntityB());
+                // I missili reagiscono in modo polimorfico (shield/clock/destroy); il master assegna il punteggio.
+                if (missileController != null) {
+                    missileController.onInternalEvent(evt, collisionData);
                 }
                 if (scoreController != null) {
-                    scoreController.onInternalEvent(InternalEvent.MISSILE_MISSILE_COLLISION, data);
+                    scoreController.onInternalEvent(InternalEvent.MISSILE_MISSILE_COLLISION, collisionData);
                 }
             }
-            default -> { }
         }
     }
 }

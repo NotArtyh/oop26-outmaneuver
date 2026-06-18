@@ -1,107 +1,66 @@
 package outmaneuver.controller.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import outmaneuver.controller.CollisionEngine;
 import outmaneuver.controller.EntityController;
-import outmaneuver.controller.InputController;
 import outmaneuver.controller.InternalEvent;
-import outmaneuver.controller.event.InternalEventListener;
-import outmaneuver.model.area.collision.ICollidable;
+import outmaneuver.model.area.entity.plane.Plane;
+import outmaneuver.model.area.entity.plane.TurnState;
+import outmaneuver.model.area.collision.CollisionData;
 import outmaneuver.model.area.entity.Entity;
 import outmaneuver.model.area.entity.collectibles.Collectible;
 import outmaneuver.model.area.entity.missile.Missile;
-import outmaneuver.model.area.entity.plane.Plane;
-import outmaneuver.model.area.entity.plane.TurnState;
 import outmaneuver.model.session.IGameSession;
 import outmaneuver.util.Vector2;
+import outmaneuver.view.GameView;
 
-public final class EntityControllerImpl implements EntityController {
+public abstract class EntityControllerImpl implements EntityController {
 
-    private final List<Entity> entities = new ArrayList<>();
-    private final InputController inputController;
-    private final InternalEventListener eventListener;
+    private final List<Entity> entities;
     private final CollisionEngine collisionEngine;
     private final IGameSession session;
+    private GameView view;
 
-    public EntityControllerImpl(final InputController inputController,
-                                final InternalEventListener eventListener,
+    protected EntityControllerImpl(final List<Entity> entities,
                                 final CollisionEngine collisionEngine,
                                 final IGameSession session) {
-        this.inputController = Objects.requireNonNull(inputController, "inputController must not be null");
-        this.eventListener = Objects.requireNonNull(eventListener, "eventListener must not be null");
+        this.entities = Objects.requireNonNull(entities, "entities must not be null");
         this.collisionEngine = Objects.requireNonNull(collisionEngine, "collisionEngine must not be null");
         this.session = Objects.requireNonNull(session, "session must not be null");
     }
 
+    public void setView(final GameView view) {
+        this.view = view;
+    }
+
+    protected GameView getView() {
+        return view;
+    }
+
     @Override
     public void updateEntities(final long deltaMs) {
-        final List<Entity> toRemove = new ArrayList<>();
-
-        for (final Entity e : entities) {
-            if (e instanceof final Plane plane) {
-                updatePlane(plane, deltaMs);
-            } else if (e instanceof final Collectible c) {
-                checkCollectible(c, toRemove);
-            }
-        }
-
-        toRemove.forEach(this::removeEntity);
-    }
-
-
-    private void updatePlane(final Plane plane, final long deltaMs) {
-        final double deltaSec = deltaMs / 1000.0;
-        final double turnDir = inputController.getTurnDirection();
-
-        plane.setTurnState(turnDir < 0 ? TurnState.LEFT
-                : turnDir > 0 ? TurnState.RIGHT
-                : TurnState.NONE);
-
-        final double newDir = plane.getDirection() + turnDir * plane.getStats().getTurnRate() * deltaSec;
-        plane.setDirection(normaliseAngle(newDir));
-
-        final Vector2 velocity = Vector2.fromAngle(plane.getDirection())
-                .scale(plane.getEffectiveSpeed());
-        final Vector2 newPos = plane.getPosition().add(velocity.scale(deltaSec));
-        plane.setPosition(newPos);
-    }
-
-    private void checkCollectible(final Collectible c, final List<Entity> toRemove) {
-        for (final Entity e : entities) {
-            if (e instanceof final Plane p && p.getHitbox().intersects(c.getHitbox())) {
-                c.apply(p, session);
-                toRemove.add(c);
-                eventListener.onInternalEvent(InternalEvent.PLANE_COLLECTIBLE_COLLISION, c);
-                return;
-            }
-        }
+        // ogni controller implementa il proprio updateEntities
     }
 
     @Override
-    public void spawnPlane(final Entity plane) {
-        addEntity(plane);
-    }
-
-    @Override
-    public void spawnMissile(final Entity missile) {
-        addEntity(missile);
-    }
-
-    @Override
-    public void spawnCollectible(final Entity collectible) {
-        addEntity(collectible);
-    }
-
-    private void addEntity(final Entity entity) {
-        Objects.requireNonNull(entity);
+    public void spawnEntity(final Entity entity) {
+        Objects.requireNonNull(entity, "entity must not be null");
         entities.add(entity);
-        if ((entity instanceof Missile || entity instanceof Plane)
-                && entity instanceof ICollidable collidable) {
-            collisionEngine.register(collidable);
+        collisionEngine.register(entity);
+    }
+    
+
+    // Rimozione
+
+    @Override
+    public void removeEntity(final Entity entity) {
+        if (!(entity instanceof Plane)) {
+            collisionEngine.unregister(entity);
+            entities.remove(entity);
         }
+        // PLANE non viene mai rimosso
     }
 
     @Override
@@ -111,9 +70,7 @@ public final class EntityControllerImpl implements EntityController {
                 planeReset((Plane) e);
                 return false; // tieni il piano
             }
-            if (e instanceof Missile && e instanceof ICollidable collidable) {
-                collisionEngine.unregister(collidable);
-            }
+            if (!(e instanceof Plane)) collisionEngine.unregister(e);
             return true; // rimuovi tutto il resto
         });
     }
@@ -125,41 +82,42 @@ public final class EntityControllerImpl implements EntityController {
     }
 
     @Override
-    public void removeEntity(final Entity entity) {
-        if (entity instanceof Missile && entity instanceof ICollidable collidable) {
-            collisionEngine.unregister(collidable);
-        }
-        // PLANE non viene mai rimosso
-        if (!(entity instanceof Plane)) {
-            entities.remove(entity);
-        }
-    }
-
-    @Override
     public List<Entity> getEntities() { return List.copyOf(entities); }
 
-    @Override
-    public Plane getPlane() {
-        return entities.stream()
-                .filter(e -> e instanceof Plane)
-                .map(e -> (Plane) e)
-                .findFirst()
-                .orElse(null);
-    }
 
     @Override
     public void onInternalEvent(final InternalEvent evt, final Object data) {
         // No entity-specific events to handle for now
-    }
-
-    private static double normaliseAngle(final double angle) {
-        final double twoPi = 2 * Math.PI;
-        double normalised = angle % twoPi;
-        if (normalised > Math.PI) {
-            normalised -= twoPi;
-        } else if (normalised < -Math.PI) {
-            normalised += twoPi;
+        switch (evt) {
+            case PLANE_MISSILE_COLLISION -> {
+                if (data instanceof final CollisionData collisionData) {
+                    if (collisionData.getEntityA() instanceof Missile && collisionData.getEntityB() instanceof Plane) {
+                        removeEntity((Missile) collisionData.getEntityA());
+                        // Notify views or other controllers if needed
+                    }
+                }
+            }
+            case PLANE_COLLECTIBLE_COLLISION -> {
+                if (data instanceof final CollisionData collisionData) {
+                    if (collisionData.getEntityA() instanceof Plane && collisionData.getEntityB() instanceof Collectible) {
+                        final Plane plane = (Plane) collisionData.getEntityA();
+                        final Collectible collectible = (Collectible) collisionData.getEntityB();
+                        collectible.apply(plane, session);
+                        removeEntity(collectible);
+                        // Notify views or other controllers if needed
+                    }
+                }
+            }
+            case MISSILE_MISSILE_COLLISION -> {
+                if (data instanceof final CollisionData collisionData) {
+                    if (collisionData.getEntityA() instanceof Missile && collisionData.getEntityB() instanceof Missile) {
+                        removeEntity((Missile) collisionData.getEntityA());
+                        removeEntity((Missile) collisionData.getEntityB());
+                        // Notify views or other controllers if needed
+                    }
+                }
+            }
+            
         }
-        return normalised;
     }
 }

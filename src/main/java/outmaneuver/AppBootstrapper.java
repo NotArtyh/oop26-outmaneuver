@@ -5,12 +5,8 @@ import java.nio.file.Path;
 
 import javax.swing.JFrame;
 
-import outmaneuver.controller.impl.MissileControllerImpl;
 import outmaneuver.factory.ControllerAssembler;
 import outmaneuver.factory.ScreenFactory;
-import outmaneuver.model.area.entity.missile.data.JsonMissileRepository;
-import outmaneuver.model.area.entity.missile.data.MissileData;
-import outmaneuver.model.area.entity.missile.data.MissileRepository;
 import outmaneuver.model.area.entity.plane.JsonPlaneRepository;
 import outmaneuver.model.area.entity.plane.Plane;
 import outmaneuver.model.area.entity.plane.PlaneData;
@@ -52,16 +48,6 @@ public final class AppBootstrapper {
 
         final UIManager[] uiRef = { null };
         final ScreenFactory.Result result = ScreenFactory.build(ctrl, profile, plane, shop, session, uiRef);
-
-        // Missile controller: collegato al master. Usa le dimensioni live della view e il collision engine.
-        final MissileRepository missileRepo = new JsonMissileRepository(
-                JsonResourceLoader.forList("missiles.json", MissileData.class, GsonProvider.create()));
-        final MissileControllerImpl missileCtrl = new MissileControllerImpl(
-                result.gameView()::getWidth,
-                result.gameView()::getHeight,
-                ctrl.collision(),
-                missileRepo);
-        ctrl.master().setMissileController(missileCtrl);
 
         final UIManager uiManager = new UIManager(result.screens());
         uiRef[0] = uiManager;
