@@ -46,13 +46,17 @@ public class CollisionEngine {
     public void tick() {
         final List<ICollidable> missiles = filterByLayer(CollisionLayer.MISSILE);
         final List<ICollidable> planes   = filterByLayer(CollisionLayer.PLANE);
+        final List<ICollidable> collectibles = filterByLayer(CollisionLayer.COLLECTIBLE);
 
         // Missile × Missile
         checkPairs(missiles, missiles, InternalEvent.MISSILE_MISSILE_COLLISION);
 
         // Missile × Plane
-     // plane x collectible
+     
         checkPairs(missiles, planes, InternalEvent.PLANE_MISSILE_COLLISION);
+
+        // Plane × Collectible
+        checkPairs(planes, collectibles, InternalEvent.PLANE_COLLECTIBLE_COLLISION);
     }
      
     private List<ICollidable> filterByLayer(final CollisionLayer layer) {
