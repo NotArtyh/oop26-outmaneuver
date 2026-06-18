@@ -1,8 +1,9 @@
 package outmaneuver.controller;
 
+import outmaneuver.controller.event.InternalEventListener;
 import outmaneuver.view.GameView;
 
-public interface MasterController {
+public interface MasterController extends InternalEventListener {
 
     void handleEvent(OutmaneuverEvent event);
 
