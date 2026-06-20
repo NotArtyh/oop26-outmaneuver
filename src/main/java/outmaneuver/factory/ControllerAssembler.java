@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import outmaneuver.controller.CollisionEngine;
-import outmaneuver.controller.MissileSpawnDirector;
+import outmaneuver.controller.impl.missile.MissileSpawnDirector;
 import outmaneuver.controller.impl.CollectibleControllerImpl;
 import outmaneuver.controller.impl.HudControllerImpl;
 import outmaneuver.controller.impl.InputControllerImpl;
 import outmaneuver.controller.impl.MasterControllerImpl;
-import outmaneuver.controller.impl.MissileControllerImpl;
+import outmaneuver.controller.impl.missile.MissileControllerImpl;
 import outmaneuver.controller.impl.PlaneControllerImpl;
 import outmaneuver.controller.impl.ScoreControllerImpl;
 import outmaneuver.model.area.entity.Entity;
