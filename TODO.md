@@ -71,3 +71,7 @@ private Vector2 randomEdgePosition() {
     };
 }
 Risultato: Rimossi 7 righe di stream/filter/map/findFirst + dipendenza da entity Plane. Stesso comportamento esatto.
+
+
+
+- AGGIUSTARE PROBLEMA CHE QUANDO PREMO PLAY AGAIN MI GIRA DA SOLO L'AEREO
