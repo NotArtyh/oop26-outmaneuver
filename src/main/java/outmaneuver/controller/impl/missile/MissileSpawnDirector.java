@@ -56,7 +56,7 @@ public final class MissileSpawnDirector {
         this(new Random());
     }
 
-    MissileSpawnDirector(final Random rng) {
+    public MissileSpawnDirector(final Random rng) {
         this.rng = rng;
     }
 
