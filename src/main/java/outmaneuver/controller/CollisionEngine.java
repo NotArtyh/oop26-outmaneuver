@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import outmaneuver.controller.event.CollisionEvent;
 import outmaneuver.controller.event.InternalEventListener;
 import outmaneuver.model.area.collision.CollisionData;
 import outmaneuver.model.area.collision.CollisionLayer;
@@ -71,7 +72,7 @@ public class CollisionEngine {
      */
     private void checkPairs(final List<ICollidable> listA,
                             final List<ICollidable> listB,
-                            final CollisionEvent eventType) {
+                            final CollisionEvent CollisionType) {
 
         final boolean sameLists = listA == listB;
 
@@ -89,7 +90,7 @@ public class CollisionEngine {
                 if (ha.intersects(hb)) {
                     final Vector2 point = ha.collisionPoint(hb);
                    
-                    eventListener.onInternalEvent(eventType,
+                    eventListener.onInternalEvent(CollisionType,
                             new CollisionData(a, b, point));
                 }
             }

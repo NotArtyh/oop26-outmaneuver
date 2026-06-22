@@ -4,14 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import outmaneuver.controller.CollisionEngine;
-import outmaneuver.controller.impl.missile.MissileSpawnDirector;
-import outmaneuver.controller.OutmaneuverEvent;
+import outmaneuver.controller.event.GameEvent;
 import outmaneuver.controller.impl.CollectibleControllerImpl;
 import outmaneuver.controller.impl.GameEventControllerImpl;
 import outmaneuver.controller.impl.HudControllerImpl;
 import outmaneuver.controller.impl.InputControllerImpl;
 import outmaneuver.controller.impl.MasterControllerImpl;
 import outmaneuver.controller.impl.missile.MissileControllerImpl;
+import outmaneuver.controller.impl.missile.MissileSpawnDirector;
 import outmaneuver.controller.impl.PlaneControllerImpl;
 import outmaneuver.controller.impl.RenderStateAssemblerImpl;
 import outmaneuver.controller.impl.ScoreControllerImpl;
@@ -73,7 +73,7 @@ public final class ControllerAssembler {
         master.setStateAssembler(new RenderStateAssemblerImpl(hud)); // TODO: prender Hud, fix temporaneo, spostare
         master.setEventController(new GameEventControllerImpl(
                 planeCtrl, hud, score,
-                () -> master.handleEvent(OutmaneuverEvent.GAME_OVER)));
+                () -> master.handleEvent(GameEvent.GAME_OVER)));
         return new Controllers(input, hud, master);
     }
 }

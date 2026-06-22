@@ -7,7 +7,8 @@ import java.util.Optional;
 import java.util.Random;
 
 import outmaneuver.controller.CollisionEngine;
-import outmaneuver.controller.CollisionEvent;
+import outmaneuver.controller.event.CollisionEvent;
+import outmaneuver.controller.event.Event;
 import outmaneuver.controller.impl.EntityControllerImpl;
 import outmaneuver.model.area.collision.CollisionData;
 import outmaneuver.model.area.collision.ICollidable;
@@ -83,11 +84,11 @@ public final class MissileControllerImpl extends EntityControllerImpl {
 
     // TODO: sistemare la logica collisioni non va qui (fatta solo per fare funzionare)
     @Override
-    public void onInternalEvent(final CollisionEvent evt, final Object data) {
+    public void onInternalEvent(final Event evt, final Object data) {
         if (!(data instanceof final CollisionData cd)) {
             return;
         }
-        switch (evt) {
+        switch ((CollisionEvent) evt) {
             case PLANE_MISSILE_COLLISION -> {
                 // Se l'aereo ha lo scudo l'impatto e' assorbito (niente game over, lo decide il master):
                 // il missile reagisce come in una collisione normale (clock rallenta, shield regge...).

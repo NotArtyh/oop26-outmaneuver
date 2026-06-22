@@ -9,6 +9,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import outmaneuver.controller.event.InternalEventListener;
+import outmaneuver.controller.event.CollisionEvent;
+import outmaneuver.controller.event.Event;
 import outmaneuver.model.area.collision.CollisionData;
 import outmaneuver.model.area.entity.missile.MissileImpl;
 import outmaneuver.util.Vector2;
@@ -16,11 +18,11 @@ import outmaneuver.util.Vector2;
 class CollisionEngineTest {
 
     private static class RecordingListener implements InternalEventListener {
-        final List<CollisionEvent> events = new ArrayList<>();
+        final List<Event> events = new ArrayList<>();
         final List<Object> payloads = new ArrayList<>();
 
         @Override
-        public void onInternalEvent(final CollisionEvent evt, final Object data) {
+        public void onInternalEvent(final Event evt, final Object data) {
             events.add(evt);
             payloads.add(data);
         }

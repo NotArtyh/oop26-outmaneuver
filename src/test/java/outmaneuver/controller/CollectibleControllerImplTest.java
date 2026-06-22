@@ -10,6 +10,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import outmaneuver.controller.event.InternalEventListener;
+import outmaneuver.controller.event.CollisionEvent;
+import outmaneuver.controller.event.Event;
 import outmaneuver.controller.impl.CollectibleControllerImpl;
 import outmaneuver.model.area.collision.CollisionData;
 import outmaneuver.model.area.entity.collectibles.AbstractCollectible;
@@ -29,7 +31,7 @@ class CollectibleControllerImplTest {
 
     private static class NoOpListener implements InternalEventListener {
         @Override
-        public void onInternalEvent(final CollisionEvent evt, final Object data) {
+        public void onInternalEvent(final Event evt, final Object data) {
         }
     }
 

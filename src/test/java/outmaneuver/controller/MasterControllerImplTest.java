@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import outmaneuver.controller.impl.MasterControllerImpl;
+import outmaneuver.controller.event.Event;
 import outmaneuver.model.area.entity.Entity;
 import outmaneuver.model.area.entity.plane.Plane;
 import outmaneuver.model.area.entity.plane.PlaneData;
@@ -20,6 +21,7 @@ import outmaneuver.view.EntityRenderData;
 import outmaneuver.view.GameView;
 import outmaneuver.view.HudSnapshot;
 import outmaneuver.view.RenderState;
+import outmaneuver.controller.event.GameEvent;
 
 class MasterControllerImplTest {
 
@@ -66,7 +68,7 @@ class MasterControllerImplTest {
         }
 
         @Override
-        public void onInternalEvent(final CollisionEvent evt, final Object data) {
+        public void onInternalEvent(final Event evt, final Object data) {
         }
     }
 
@@ -161,7 +163,7 @@ class MasterControllerImplTest {
         Thread.sleep(50);
         spyView.frames.clear();
 
-        master.handleEvent(OutmaneuverEvent.TOGGLE_PAUSE);
+        master.handleEvent(GameEvent.PAUSED);
         final Vector2 posBefore = plane.getPosition();
         Thread.sleep(TICK_WAIT_MS);
         master.stop();
@@ -177,11 +179,11 @@ class MasterControllerImplTest {
         master.attachView(spyView);
         master.start();
         Thread.sleep(30);
-        master.handleEvent(OutmaneuverEvent.TOGGLE_PAUSE);
+        master.handleEvent(GameEvent.PAUSED);
         Thread.sleep(30);
 
         final Vector2 posBefore = plane.getPosition();
-        master.handleEvent(OutmaneuverEvent.TOGGLE_PAUSE);
+        master.handleEvent(GameEvent.PAUSED);
         Thread.sleep(50);
         master.stop();
 
@@ -197,7 +199,7 @@ class MasterControllerImplTest {
         Thread.sleep(30);
 
         spyView.frames.clear();
-        master.handleEvent(OutmaneuverEvent.TOGGLE_PAUSE);
+        master.handleEvent(GameEvent.PAUSED);
         final Vector2 posDuringPause1 = plane.getPosition();
         Thread.sleep(TICK_WAIT_MS);
         final Vector2 posDuringPause2 = plane.getPosition();
@@ -206,7 +208,7 @@ class MasterControllerImplTest {
                 "Plane should not move while paused");
 
         spyView.frames.clear();
-        master.handleEvent(OutmaneuverEvent.TOGGLE_PAUSE);
+        master.handleEvent(GameEvent.PAUSED);
         Thread.sleep(TICK_WAIT_MS);
         master.stop();
         assertTrue(spyView.frames.size() >= 2, "Frames should resume after resume");

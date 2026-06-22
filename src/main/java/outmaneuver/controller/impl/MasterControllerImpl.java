@@ -6,12 +6,11 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 import outmaneuver.controller.CollisionEngine;
-import outmaneuver.controller.CollisionEvent;
+import outmaneuver.controller.event.Event;
 import outmaneuver.controller.EntityController;
 import outmaneuver.controller.GameEventController;
-import outmaneuver.controller.GameState;
+import outmaneuver.controller.event.GameEvent;
 import outmaneuver.controller.MasterController;
-import outmaneuver.controller.OutmaneuverEvent;
 import outmaneuver.controller.RenderStateAssembler;
 import outmaneuver.controller.ScoreController;
 import outmaneuver.model.area.entity.Entity;
@@ -32,13 +31,13 @@ public final class MasterControllerImpl implements MasterController {
     private CollisionEngine collisionEngine;
     private Thread gameLoopThread;
     private volatile boolean running;
-    private volatile GameState gameState;
+    private volatile GameEvent gameState;
     private Runnable onGameOver;
     private Runnable onPause;
     private Runnable onResume;
 
     public MasterControllerImpl() {
-        this.gameState = GameState.PAUSED;
+        this.gameState = GameEvent.PAUSED;
     }
 
     public void setOnGameOver(final Runnable onGameOver) {
@@ -82,16 +81,16 @@ public final class MasterControllerImpl implements MasterController {
     }
 
     @Override
-    public void handleEvent(final OutmaneuverEvent event) {
+    public void handleEvent(final GameEvent event) {
         switch (event) {
-            case TOGGLE_PAUSE -> {
-                if (gameState == GameState.RUNNING) {
-                    gameState = GameState.PAUSED;
+            case PAUSED -> {
+                if (gameState == GameEvent.RUNNING) {
+                    gameState = GameEvent.PAUSED;
                     if (onPause != null) {
                         onPause.run();
                     }
-                } else if (gameState == GameState.PAUSED) {
-                    gameState = GameState.RUNNING;
+                } else if (gameState == GameEvent.PAUSED) {
+                    gameState = GameEvent.RUNNING;
                     if (onResume != null) {
                         onResume.run();
                     }
@@ -102,12 +101,13 @@ public final class MasterControllerImpl implements MasterController {
                 System.exit(0);
             }
             case GAME_OVER -> {
-                gameState = GameState.GAME_OVER;
+                gameState = GameEvent.GAME_OVER;
                 stop();
                 if (onGameOver != null) {
                     onGameOver.run();
                 }
             }
+            default -> { }
         }
     }
 
@@ -128,7 +128,7 @@ public final class MasterControllerImpl implements MasterController {
         if (running) {
             return;
         }
-        gameState = GameState.RUNNING;
+        gameState = GameEvent.RUNNING;
         stateAssembler.reset();
         if (scoreController != null) {
             scoreController.reset();
@@ -172,7 +172,7 @@ public final class MasterControllerImpl implements MasterController {
         while (running && !Thread.currentThread().isInterrupted()) {
             final long frameStart = System.nanoTime();
 
-            if (gameState == GameState.RUNNING) {
+            if (gameState == GameEvent.RUNNING) {
                 updateFrame();
             }
 
@@ -200,7 +200,7 @@ public final class MasterControllerImpl implements MasterController {
     }
 
     private void renderFrame() {
-        final RenderState state = stateAssembler.assemble(sceneEntities, gameState == GameState.PAUSED);
+        final RenderState state = stateAssembler.assemble(sceneEntities, gameState == GameEvent.PAUSED);
         notifyViews(v -> v.renderFrame(state));
     }
 
@@ -209,7 +209,7 @@ public final class MasterControllerImpl implements MasterController {
     }
 
     @Override
-    public void onInternalEvent(final CollisionEvent evt, final Object data) {
+    public void onInternalEvent(final Event evt, final Object data) {
         if (eventController != null) {
             eventController.onInternalEvent(evt, data);
         }

@@ -5,8 +5,9 @@ import java.util.Objects;
 import outmaneuver.controller.EntityController;
 import outmaneuver.controller.GameEventController;
 import outmaneuver.controller.HudController;
-import outmaneuver.controller.CollisionEvent;
 import outmaneuver.controller.ScoreController;
+import outmaneuver.controller.event.CollisionEvent;
+import outmaneuver.controller.event.Event;
 
 import outmaneuver.model.area.collision.CollisionData;
 import outmaneuver.model.area.entity.collectibles.Collectible;
@@ -31,13 +32,13 @@ public final class GameEventControllerImpl implements GameEventController {
     }
 
     @Override
-    public void onInternalEvent(final CollisionEvent evt, final Object data) {
+    public void onInternalEvent(final Event evt, final Object data) {
         if (!(data instanceof final CollisionData collisionData)) {
             return;
         }
         primaryEntityController.onInternalEvent(evt, collisionData);
 
-        switch (evt) {
+        switch ((CollisionEvent) evt) {
             case PLANE_MISSILE_COLLISION -> {
                 final Plane plane = (Plane) collisionData.getEntityB();
                 if (!plane.isShieldActive()) {

@@ -6,7 +6,7 @@ import java.util.Objects;
 
 import outmaneuver.controller.InputController;
 import outmaneuver.controller.MasterController;
-import outmaneuver.controller.OutmaneuverEvent;
+import outmaneuver.controller.event.GameEvent;
 
 public final class GameKeyListener extends KeyAdapter {
 
@@ -23,9 +23,9 @@ public final class GameKeyListener extends KeyAdapter {
     public void keyPressed(final KeyEvent e) {
         inputController.onKeyPressed(e.getKeyCode());
         switch (e.getKeyCode()) {
-            case KeyEvent.VK_ESCAPE -> masterController.handleEvent(OutmaneuverEvent.QUIT_APPLICATION);
-            case KeyEvent.VK_P      -> masterController.handleEvent(OutmaneuverEvent.TOGGLE_PAUSE);
-            case KeyEvent.VK_G      -> masterController.handleEvent(OutmaneuverEvent.GAME_OVER);
+            case KeyEvent.VK_ESCAPE -> masterController.handleEvent(GameEvent.QUIT_APPLICATION);
+            case KeyEvent.VK_P      -> masterController.handleEvent(GameEvent.PAUSED);
+            case KeyEvent.VK_G      -> masterController.handleEvent(GameEvent.GAME_OVER);
             default -> { }
         }
     }

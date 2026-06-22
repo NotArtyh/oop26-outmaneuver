@@ -2,8 +2,9 @@ package outmaneuver.controller.impl;
 
 import java.util.Objects;
 
-import outmaneuver.controller.CollisionEvent;
 import outmaneuver.controller.ScoreController;
+import outmaneuver.controller.event.CollisionEvent;
+import outmaneuver.controller.event.Event;
 import outmaneuver.model.area.entity.collectibles.StarCollectible;
 import outmaneuver.model.session.IGameSession;
 
@@ -32,8 +33,8 @@ public final class ScoreControllerImpl implements ScoreController {
     }
 
     @Override
-    public void onInternalEvent(final CollisionEvent evt, final Object data) {
-        switch (evt) {
+    public void onInternalEvent(final Event evt, final Object data) {
+        switch ((CollisionEvent) evt) {
             case PLANE_COLLECTIBLE_COLLISION -> {
                 if (data instanceof StarCollectible star) {
                     session.incrementScore(star.getScoreValue());

@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import outmaneuver.controller.event.InternalEventListener;
+import outmaneuver.controller.event.CollisionEvent;
+import outmaneuver.controller.event.Event;
 import outmaneuver.controller.impl.EntityControllerImpl;
 import outmaneuver.model.area.collision.CollisionData;
 import outmaneuver.model.area.entity.Entity;
@@ -47,8 +49,10 @@ class EntityControllerImplTest {
         final List<CollisionEvent> events = new ArrayList<>();
 
         @Override
-        public void onInternalEvent(final CollisionEvent evt, final Object data) {
-            events.add(evt);
+        public void onInternalEvent(final Event evt, final Object data) {
+            if (evt instanceof CollisionEvent) {
+                events.add((CollisionEvent) evt);
+            }
         }
     }
 

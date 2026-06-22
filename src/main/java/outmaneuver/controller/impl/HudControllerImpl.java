@@ -3,7 +3,8 @@ package outmaneuver.controller.impl;
 import java.util.Objects;
 
 import outmaneuver.controller.HudController;
-import outmaneuver.controller.CollisionEvent;
+import outmaneuver.controller.event.CollisionEvent;
+import outmaneuver.controller.event.Event;
 import outmaneuver.model.area.entity.plane.Plane;
 import outmaneuver.model.area.entity.collectibles.StarCollectible;
 import outmaneuver.view.HudSnapshot;
@@ -49,7 +50,7 @@ public final class HudControllerImpl implements HudController {
     }
 
     @Override
-    public void onInternalEvent(final CollisionEvent evt, final Object data) {
+    public void onInternalEvent(final Event evt, final Object data) {
         if (evt == CollisionEvent.PLANE_COLLECTIBLE_COLLISION && data instanceof StarCollectible) {
             stars++;
         }
