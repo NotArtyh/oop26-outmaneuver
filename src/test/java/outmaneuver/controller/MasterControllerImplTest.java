@@ -66,7 +66,7 @@ class MasterControllerImplTest {
         }
 
         @Override
-        public void onInternalEvent(final InternalEvent evt, final Object data) {
+        public void onInternalEvent(final CollisionEvent evt, final Object data) {
         }
     }
 

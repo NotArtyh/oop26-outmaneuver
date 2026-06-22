@@ -5,7 +5,7 @@ import java.util.Objects;
 import outmaneuver.controller.EntityController;
 import outmaneuver.controller.GameEventController;
 import outmaneuver.controller.HudController;
-import outmaneuver.controller.InternalEvent;
+import outmaneuver.controller.CollisionEvent;
 import outmaneuver.controller.ScoreController;
 
 import outmaneuver.model.area.collision.CollisionData;
@@ -31,7 +31,7 @@ public final class GameEventControllerImpl implements GameEventController {
     }
 
     @Override
-    public void onInternalEvent(final InternalEvent evt, final Object data) {
+    public void onInternalEvent(final CollisionEvent evt, final Object data) {
         if (!(data instanceof final CollisionData collisionData)) {
             return;
         }
@@ -46,15 +46,15 @@ public final class GameEventControllerImpl implements GameEventController {
             }
             case PLANE_COLLECTIBLE_COLLISION -> {
                 if (collisionData.getEntityB() instanceof final Collectible collectible) {
-                    hudController.onInternalEvent(InternalEvent.PLANE_COLLECTIBLE_COLLISION, collectible);
+                    hudController.onInternalEvent(CollisionEvent.PLANE_COLLECTIBLE_COLLISION, collectible);
                     if (scoreController != null) {
-                        scoreController.onInternalEvent(InternalEvent.PLANE_COLLECTIBLE_COLLISION, collectible);
+                        scoreController.onInternalEvent(CollisionEvent.PLANE_COLLECTIBLE_COLLISION, collectible);
                     }
                 }
             }
             case MISSILE_MISSILE_COLLISION -> {
                 if (scoreController != null) {
-                    scoreController.onInternalEvent(InternalEvent.MISSILE_MISSILE_COLLISION, collisionData);
+                    scoreController.onInternalEvent(CollisionEvent.MISSILE_MISSILE_COLLISION, collisionData);
                 }
             }
         }

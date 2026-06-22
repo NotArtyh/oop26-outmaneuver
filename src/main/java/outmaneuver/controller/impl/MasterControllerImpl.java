@@ -6,10 +6,11 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 import outmaneuver.controller.CollisionEngine;
+import outmaneuver.controller.CollisionEvent;
 import outmaneuver.controller.EntityController;
 import outmaneuver.controller.GameEventController;
 import outmaneuver.controller.GameState;
-import outmaneuver.controller.InternalEvent;
+import outmaneuver.controller.CollisionEvent;
 import outmaneuver.controller.MasterController;
 import outmaneuver.controller.OutmaneuverEvent;
 import outmaneuver.controller.RenderStateAssembler;
@@ -209,7 +210,7 @@ public final class MasterControllerImpl implements MasterController {
     }
 
     @Override
-    public void onInternalEvent(final InternalEvent evt, final Object data) {
+    public void onInternalEvent(final CollisionEvent evt, final Object data) {
         if (eventController != null) {
             eventController.onInternalEvent(evt, data);
         }
