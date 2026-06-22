@@ -110,6 +110,7 @@ public final class SwingGameView extends JPanel implements GameView {
                 (int) Math.round(screenY + dir.getY()));
     }
 
+    // [Alessio - missili] disegno dei missili (raggio e colore per tipo: vedi missileRadius / getMissileColor sotto)
     private void drawMissiles(final Graphics2D g2d,
                               final List<EntityRenderData> missiles,
                               final double cameraX, final double cameraY) {

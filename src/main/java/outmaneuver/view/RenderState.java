@@ -7,6 +7,7 @@ public final class RenderState {
 
     private final EntityRenderData plane;
     private final HudSnapshot hud;
+    // [Alessio - missili] lista dei dati di render dei missili
     private final List<EntityRenderData> missiles;
     private final List<EntityRenderData> collectibles;
 

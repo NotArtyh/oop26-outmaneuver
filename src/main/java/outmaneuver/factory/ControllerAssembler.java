@@ -51,6 +51,7 @@ public final class ControllerAssembler {
         final PlaneControllerImpl planeCtrl = new PlaneControllerImpl(input, sharedEntities, collision, session);
         final CollectibleControllerImpl collectibleCtrl = new CollectibleControllerImpl(
                 sharedEntities, collision, session);
+        // [Alessio - missili] carica i dati dal JSON e crea il controller dei missili (repository + director)
         final MissileRepository missileRepo = new JsonMissileRepository(
                 JsonResourceLoader.forList("missiles.json", MissileData.class, GsonProvider.create()));
         final MissileControllerImpl missileCtrl = new MissileControllerImpl(
@@ -59,6 +60,7 @@ public final class ControllerAssembler {
 
         master.addEntityController(planeCtrl);
         master.addEntityController(collectibleCtrl);
+        // [Alessio - missili] registra il controller dei missili nel master
         master.addEntityController(missileCtrl);
         master.setMissileController(missileCtrl);
         master.setCollisionEngine(collision);

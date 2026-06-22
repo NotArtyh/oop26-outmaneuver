@@ -89,9 +89,16 @@ public final class MissileControllerImpl extends EntityControllerImpl {
         }
         switch (evt) {
             case PLANE_MISSILE_COLLISION -> {
-                // Colpito il piano, il missile è consumato (il game over lo decide il master).
-                destroyIfMissile(cd.getEntityA());
-                destroyIfMissile(cd.getEntityB());
+                // Se l'aereo ha lo scudo l'impatto e' assorbito (niente game over, lo decide il master):
+                // il missile reagisce come in una collisione normale (clock rallenta, shield regge...).
+                // Senza scudo e' game over e il missile viene comunque consumato.
+                if (planeIsShielded(cd)) {
+                    reactIfMissile(cd.getEntityA());
+                    reactIfMissile(cd.getEntityB());
+                } else {
+                    destroyIfMissile(cd.getEntityA());
+                    destroyIfMissile(cd.getEntityB());
+                }
             }
             case MISSILE_MISSILE_COLLISION -> {
                 // Reazione polimorfica: shield regge, clock rallenta, gli altri esplodono.
@@ -156,6 +163,12 @@ public final class MissileControllerImpl extends EntityControllerImpl {
         if (e instanceof final Missile m) {
             m.onCollision(activeMissiles());
         }
+    }
+
+    /** True se uno dei due oggetti della collisione e' l'aereo con lo scudo attivo. */
+    private boolean planeIsShielded(final CollisionData cd) {
+        return cd.getEntityA() instanceof final Plane a && a.isShieldActive()
+            || cd.getEntityB() instanceof final Plane b && b.isShieldActive();
     }
 
     private List<Missile> activeMissiles() {

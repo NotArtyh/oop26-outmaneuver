@@ -30,6 +30,7 @@ public final class Vector2 {
         return new Vector2(this.x + other.x, this.y + other.y);
     }
 
+    // [Alessio - missili] aggiunto per steering e posizione relativa al bersaglio
     /** Vettore che va da {@code other} a questo: {@code this - other}. */
     public Vector2 subtract(final Vector2 other) {
         return new Vector2(this.x - other.x, this.y - other.y);
@@ -59,6 +60,7 @@ public final class Vector2 {
         return Math.atan2(this.y, this.x);
     }
 
+    // [Alessio - missili] reflectX/reflectY aggiunti per il rimbalzo del BounceMissile
     /** Inverte la componente orizzontale (rimbalzo su un bordo verticale). */
     public Vector2 reflectX() {
         return new Vector2(-this.x, this.y);

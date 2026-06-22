@@ -16,12 +16,11 @@ import outmaneuver.controller.InternalEvent;
 import outmaneuver.controller.MasterController;
 import outmaneuver.controller.OutmaneuverEvent;
 import outmaneuver.controller.ScoreController;
-
-import outmaneuver.model.area.entity.plane.Plane;
 import outmaneuver.model.area.collision.CollisionData;
 import outmaneuver.model.area.entity.Entity;
 import outmaneuver.model.area.entity.collectibles.Collectible;
 import outmaneuver.model.area.entity.missile.Missile;
+import outmaneuver.model.area.entity.plane.Plane;
 import outmaneuver.view.EntityRenderData;
 import outmaneuver.view.GameView;
 import outmaneuver.view.RenderState;
@@ -36,7 +35,7 @@ public final class MasterControllerImpl implements MasterController {
     private final HudController hudController;
     private ScoreController scoreController;
     private EntityController primaryEntityController;
-    // il controller che gestisce i missili: a lui il master instrada gli eventi di collisione dei missili
+    // [Alessio - missili] il controller che gestisce i missili: a lui il master instrada gli eventi di collisione dei missili
     private EntityController missileController;
     private CollisionEngine collisionEngine;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -198,6 +197,7 @@ public final class MasterControllerImpl implements MasterController {
                 .filter(e -> e instanceof Collectible)
                 .map(e -> new EntityRenderData(e.getPosition().getX(), e.getPosition().getY(), 0, "collectible"))
                 .toList();
+        // [Alessio - missili] estrae i dati di render dei missili per la view
         final List<EntityRenderData> missiles = entities.stream()
                 .filter(e -> e instanceof Missile)
                 .map(e -> ((Missile) e).getRenderData())
@@ -222,7 +222,6 @@ public final class MasterControllerImpl implements MasterController {
         }
         switch (evt) {
             case PLANE_COLLECTIBLE_COLLISION -> {
-                // Il controller del piano/collectible applica e rimuove il collectible.
                 if (primaryEntityController != null) {
                     primaryEntityController.onInternalEvent(evt, collisionData);
                 }
@@ -233,6 +232,7 @@ public final class MasterControllerImpl implements MasterController {
                     }
                 }
             }
+            // [Alessio - missili] instrada la collisione piano-missile al controller dei missili
             case PLANE_MISSILE_COLLISION -> {
                 // Il missile reagisce (shield/destroy); il piano va in game over se non ha lo scudo.
                 if (missileController != null) {
@@ -243,6 +243,7 @@ public final class MasterControllerImpl implements MasterController {
                     handleEvent(OutmaneuverEvent.GAME_OVER);
                 }
             }
+            // [Alessio - missili] instrada la collisione missile-missile al controller dei missili
             case MISSILE_MISSILE_COLLISION -> {
                 // I missili reagiscono in modo polimorfico (shield/clock/destroy); il master assegna il punteggio.
                 if (missileController != null) {
