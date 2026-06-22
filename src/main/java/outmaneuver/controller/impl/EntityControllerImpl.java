@@ -7,12 +7,13 @@ import outmaneuver.controller.CollisionEngine;
 import outmaneuver.controller.EntityController;
 import outmaneuver.controller.event.CollisionEvent;
 import outmaneuver.controller.event.Event;
+import outmaneuver.model.area.collision.CollisionData;
+import outmaneuver.model.area.collision.ICollidable;
+import outmaneuver.model.area.entity.Entity;
+import outmaneuver.model.area.entity.collectibles.Collectible;   //AGGIUNTO: serve a reactIfMissile
+import outmaneuver.model.area.entity.missile.Missile;
 import outmaneuver.model.area.entity.plane.Plane;
 import outmaneuver.model.area.entity.plane.TurnState;
-import outmaneuver.model.area.collision.CollisionData;
-import outmaneuver.model.area.entity.Entity;
-import outmaneuver.model.area.entity.collectibles.Collectible;
-import outmaneuver.model.area.entity.missile.Missile;
 import outmaneuver.model.session.IGameSession;
 import outmaneuver.util.Vector2;
 import outmaneuver.view.GameView;
@@ -86,38 +87,49 @@ public abstract class EntityControllerImpl implements EntityController {
     public List<Entity> getEntities() { return List.copyOf(entities); }
 
 
+    // [Collisioni] Reazione a TUTTE le collisioni in un unico posto. La reazione vera e' POLIMORFICA:
+    // ogni entita' decide da se' (missile.onCollision / collectible.apply); qui si smista soltanto.
     @Override
     public void onInternalEvent(final Event evt, final Object data) {
+        if (!(data instanceof final CollisionData cd)) {
+            return;
+        }
         switch ((CollisionEvent) evt) {
-            case PLANE_MISSILE_COLLISION -> {
-                if (data instanceof final CollisionData collisionData) {
-                    if (collisionData.getEntityA() instanceof Missile && collisionData.getEntityB() instanceof Plane) {
-                        removeEntity((Missile) collisionData.getEntityA());
-                        // Notify views or other controllers if needed
-                    }
-                }
+            //AGGIUNTO: piano-missile e missile-missile gestiti UGUALE -> reazione polimorfica del missile
+            // (shield regge, clock rallenta, gli altri esplodono). Il game over (se l'aereo non ha lo
+            // scudo) lo decide il GameEventController, quindi qui NON serve controllare lo scudo.
+            case PLANE_MISSILE_COLLISION, MISSILE_MISSILE_COLLISION -> {
+                reactIfMissile(cd.getEntityA());
+                reactIfMissile(cd.getEntityB());
             }
             case PLANE_COLLECTIBLE_COLLISION -> {
-                if (data instanceof final CollisionData collisionData) {
-                    if (collisionData.getEntityA() instanceof Plane && collisionData.getEntityB() instanceof Collectible) {
-                        final Plane plane = (Plane) collisionData.getEntityA();
-                        final Collectible collectible = (Collectible) collisionData.getEntityB();
-                        collectible.apply(plane, session);
-                        removeEntity(collectible);
-                        // Notify views or other controllers if needed
-                    }
+                // il collectible applica il suo effetto (polimorfico) e viene rimosso
+                if (cd.getEntityA() instanceof final Plane plane
+                        && cd.getEntityB() instanceof final Collectible collectible) {
+                    collectible.apply(plane, session);
+                    removeEntity(collectible);
                 }
             }
-            case MISSILE_MISSILE_COLLISION -> {
-                if (data instanceof final CollisionData collisionData) {
-                    if (collisionData.getEntityA() instanceof Missile && collisionData.getEntityB() instanceof Missile) {
-                        removeEntity((Missile) collisionData.getEntityA());
-                        removeEntity((Missile) collisionData.getEntityB());
-                        // Notify views or other controllers if needed
-                    }
-                }
-            }
-            
+            default -> { }
         }
+    }
+
+    //AGGIUNTO: fa reagire il missile (onCollision polimorfico) e lo rimuove se muore.
+    // Lo shield regge il primo colpo: in quel caso resta vivo e non viene rimosso.
+    private void reactIfMissile(final ICollidable e) {
+        if (e instanceof final Missile m) {
+            m.onCollision(activeMissiles());
+            if (!m.isAlive()) {
+                removeEntity(m);
+            }
+        }
+    }
+
+    //AGGIUNTO: lista dei missili vivi in scena (serve al clock per rallentare gli altri)
+    protected List<Missile> activeMissiles() {
+        return getEntities().stream()
+                .filter(e -> e instanceof Missile)
+                .map(e -> (Missile) e)
+                .toList();
     }
 }

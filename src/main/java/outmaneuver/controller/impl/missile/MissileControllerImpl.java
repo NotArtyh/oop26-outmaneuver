@@ -7,11 +7,7 @@ import java.util.Optional;
 import java.util.Random;
 
 import outmaneuver.controller.CollisionEngine;
-import outmaneuver.controller.event.CollisionEvent;
-import outmaneuver.controller.event.Event;
 import outmaneuver.controller.impl.EntityControllerImpl;
-import outmaneuver.model.area.collision.CollisionData;
-import outmaneuver.model.area.collision.ICollidable;
 import outmaneuver.model.area.entity.Entity;
 import outmaneuver.model.area.entity.missile.Missile;
 import outmaneuver.model.area.entity.missile.data.MissileData;
@@ -82,34 +78,6 @@ public final class MissileControllerImpl extends EntityControllerImpl {
         moveMissiles(plane, screen, dt);
     }
 
-    // TODO: sistemare la logica collisioni non va qui (fatta solo per fare funzionare)
-    @Override
-    public void onInternalEvent(final Event evt, final Object data) {
-        if (!(data instanceof final CollisionData cd)) {
-            return;
-        }
-        switch ((CollisionEvent) evt) {
-            case PLANE_MISSILE_COLLISION -> {
-                // Se l'aereo ha lo scudo l'impatto e' assorbito (niente game over, lo decide il master):
-                // il missile reagisce come in una collisione normale (clock rallenta, shield regge...).
-                // Senza scudo e' game over e il missile viene comunque consumato.
-                if (planeIsShielded(cd)) {
-                    reactIfMissile(cd.getEntityA());
-                    reactIfMissile(cd.getEntityB());
-                } else {
-                    destroyIfMissile(cd.getEntityA());
-                    destroyIfMissile(cd.getEntityB());
-                }
-            }
-            case MISSILE_MISSILE_COLLISION -> {
-                // Reazione polimorfica: shield regge, clock rallenta, gli altri esplodono.
-                reactIfMissile(cd.getEntityA());
-                reactIfMissile(cd.getEntityB());
-            }
-            default -> { }
-        }
-    }
-
     @Override
     public void clearAll() {
         super.clearAll();
@@ -150,33 +118,6 @@ public final class MissileControllerImpl extends EntityControllerImpl {
                 removeEntity(m);
             }
         }
-    }
-
-    // TODO: sistemare la logica collisioni non va qui (fatta solo per fare funzionare)
-    private void destroyIfMissile(final ICollidable e) {
-        if (e instanceof final Missile m) {
-            m.destroy();
-        }
-    }
-
-    // TODO: sistemare la logica collisioni non va qui (fatta solo per fare funzionare)
-    private void reactIfMissile(final ICollidable e) {
-        if (e instanceof final Missile m) {
-            m.onCollision(activeMissiles());
-        }
-    }
-
-    /** True se uno dei due oggetti della collisione e' l'aereo con lo scudo attivo. */
-    private boolean planeIsShielded(final CollisionData cd) {
-        return cd.getEntityA() instanceof final Plane a && a.isShieldActive()
-            || cd.getEntityB() instanceof final Plane b && b.isShieldActive();
-    }
-
-    private List<Missile> activeMissiles() {
-        return getEntities().stream()
-                .filter(e -> e instanceof Missile)
-                .map(e -> (Missile) e)
-                .toList();
     }
 
     private Optional<Plane> findPlane() {
