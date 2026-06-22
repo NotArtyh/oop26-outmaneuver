@@ -5,7 +5,8 @@ import java.util.Objects;
 
 import outmaneuver.controller.CollisionEngine;
 import outmaneuver.controller.EntityController;
-import outmaneuver.controller.InternalEvent;
+import outmaneuver.controller.event.CollisionEvent;
+import outmaneuver.controller.event.Event;
 import outmaneuver.model.area.entity.plane.Plane;
 import outmaneuver.model.area.entity.plane.TurnState;
 import outmaneuver.model.area.collision.CollisionData;
@@ -86,9 +87,8 @@ public abstract class EntityControllerImpl implements EntityController {
 
 
     @Override
-    public void onInternalEvent(final InternalEvent evt, final Object data) {
-        // No entity-specific events to handle for now
-        switch (evt) {
+    public void onInternalEvent(final Event evt, final Object data) {
+        switch ((CollisionEvent) evt) {
             case PLANE_MISSILE_COLLISION -> {
                 if (data instanceof final CollisionData collisionData) {
                     if (collisionData.getEntityA() instanceof Missile && collisionData.getEntityB() instanceof Plane) {

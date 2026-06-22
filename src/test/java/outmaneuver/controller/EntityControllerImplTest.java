@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import outmaneuver.controller.event.InternalEventListener;
+import outmaneuver.controller.event.CollisionEvent;
+import outmaneuver.controller.event.Event;
 import outmaneuver.controller.impl.EntityControllerImpl;
 import outmaneuver.model.area.collision.CollisionData;
 import outmaneuver.model.area.entity.Entity;
@@ -36,11 +38,13 @@ class EntityControllerImplTest {
     }
 
     private static class RecordingListener implements InternalEventListener {
-        final List<InternalEvent> events = new ArrayList<>();
+        final List<CollisionEvent> events = new ArrayList<>();
 
         @Override
-        public void onInternalEvent(final InternalEvent evt, final Object data) {
-            events.add(evt);
+        public void onInternalEvent(final Event evt, final Object data) {
+            if (evt instanceof CollisionEvent) {
+                events.add((CollisionEvent) evt);
+            }
         }
     }
 
@@ -98,7 +102,7 @@ class EntityControllerImplTest {
         entityCtrl.spawnEntity(b);
         collisionEngine.tick();
 
-        assertTrue(listener.events.contains(InternalEvent.MISSILE_MISSILE_COLLISION),
+        assertTrue(listener.events.contains(CollisionEvent.MISSILE_MISSILE_COLLISION),
                 "Missiles spawned through the controller should be registered with the collision engine");
     }
 
@@ -181,7 +185,7 @@ class EntityControllerImplTest {
         entityCtrl.spawnEntity(missile);
 
         final CollisionData data = new CollisionData(missile, plane, plane.getPosition());
-        entityCtrl.onInternalEvent(InternalEvent.PLANE_MISSILE_COLLISION, data);
+        entityCtrl.onInternalEvent(CollisionEvent.PLANE_MISSILE_COLLISION, data);
 
         assertFalse(entityCtrl.getEntities().contains(missile), "Missile should be removed on plane hit");
     }
@@ -193,7 +197,7 @@ class EntityControllerImplTest {
         entityCtrl.spawnEntity(col);
 
         final CollisionData data = new CollisionData(plane, col, plane.getPosition());
-        entityCtrl.onInternalEvent(InternalEvent.PLANE_COLLECTIBLE_COLLISION, data);
+        entityCtrl.onInternalEvent(CollisionEvent.PLANE_COLLECTIBLE_COLLISION, data);
 
         assertFalse(entityCtrl.getEntities().contains(col), "Collectible should be removed on pickup");
         assertTrue(col.applied, "apply() should have been called");
@@ -207,7 +211,7 @@ class EntityControllerImplTest {
         entityCtrl.spawnEntity(b);
 
         final CollisionData data = new CollisionData(a, b, Vector2.ZERO);
-        entityCtrl.onInternalEvent(InternalEvent.MISSILE_MISSILE_COLLISION, data);
+        entityCtrl.onInternalEvent(CollisionEvent.MISSILE_MISSILE_COLLISION, data);
 
         assertFalse(entityCtrl.getEntities().contains(a), "First missile should be removed");
         assertFalse(entityCtrl.getEntities().contains(b), "Second missile should be removed");

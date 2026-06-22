@@ -5,8 +5,9 @@ import java.util.Objects;
 import outmaneuver.controller.EntityController;
 import outmaneuver.controller.GameEventController;
 import outmaneuver.controller.HudController;
-import outmaneuver.controller.InternalEvent;
 import outmaneuver.controller.ScoreController;
+import outmaneuver.controller.event.CollisionEvent;
+import outmaneuver.controller.event.Event;
 
 import outmaneuver.model.area.collision.CollisionData;
 import outmaneuver.model.area.entity.collectibles.Collectible;
@@ -31,13 +32,13 @@ public final class GameEventControllerImpl implements GameEventController {
     }
 
     @Override
-    public void onInternalEvent(final InternalEvent evt, final Object data) {
+    public void onInternalEvent(final Event evt, final Object data) {
         if (!(data instanceof final CollisionData collisionData)) {
             return;
         }
         primaryEntityController.onInternalEvent(evt, collisionData);
 
-        switch (evt) {
+        switch ((CollisionEvent) evt) {
             case PLANE_MISSILE_COLLISION -> {
                 final Plane plane = (Plane) collisionData.getEntityB();
                 if (!plane.isShieldActive()) {
@@ -46,15 +47,15 @@ public final class GameEventControllerImpl implements GameEventController {
             }
             case PLANE_COLLECTIBLE_COLLISION -> {
                 if (collisionData.getEntityB() instanceof final Collectible collectible) {
-                    hudController.onInternalEvent(InternalEvent.PLANE_COLLECTIBLE_COLLISION, collectible);
+                    hudController.onInternalEvent(CollisionEvent.PLANE_COLLECTIBLE_COLLISION, collectible);
                     if (scoreController != null) {
-                        scoreController.onInternalEvent(InternalEvent.PLANE_COLLECTIBLE_COLLISION, collectible);
+                        scoreController.onInternalEvent(CollisionEvent.PLANE_COLLECTIBLE_COLLISION, collectible);
                     }
                 }
             }
             case MISSILE_MISSILE_COLLISION -> {
                 if (scoreController != null) {
-                    scoreController.onInternalEvent(InternalEvent.MISSILE_MISSILE_COLLISION, collisionData);
+                    scoreController.onInternalEvent(CollisionEvent.MISSILE_MISSILE_COLLISION, collisionData);
                 }
             }
         }

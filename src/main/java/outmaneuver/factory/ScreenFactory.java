@@ -7,7 +7,7 @@ import java.util.Map;
 import javax.swing.JPanel;
 
 import outmaneuver.controller.MasterController;
-import outmaneuver.controller.OutmaneuverEvent;
+import outmaneuver.controller.event.GameEvent;
 import outmaneuver.controller.impl.MasterControllerImpl;
 import outmaneuver.model.area.entity.plane.Plane;
 import outmaneuver.model.profile.PlayerProfile;
@@ -123,7 +123,7 @@ public final class ScreenFactory {
         });
 
         final PauseView pauseView = new PauseView(
-                () -> master.handleEvent(OutmaneuverEvent.TOGGLE_PAUSE),
+                () -> master.handleEvent(GameEvent.PAUSED),
                 () -> {
                     master.stop();
                     uiRef[0].showScreen(ScreenId.MENU);
