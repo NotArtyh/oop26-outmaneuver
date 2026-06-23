@@ -23,9 +23,7 @@ public final class GameKeyListener extends KeyAdapter {
     public void keyPressed(final KeyEvent e) {
         inputController.onKeyPressed(e.getKeyCode());
         switch (e.getKeyCode()) {
-            case KeyEvent.VK_ESCAPE -> masterController.handleEvent(GameEvent.QUIT_APPLICATION);
-            case KeyEvent.VK_P      -> masterController.handleEvent(GameEvent.PAUSED);
-            case KeyEvent.VK_G      -> masterController.handleEvent(GameEvent.GAME_OVER);
+            case KeyEvent.VK_ESCAPE -> masterController.handleEvent(GameEvent.PAUSED);
             default -> { }
         }
     }
