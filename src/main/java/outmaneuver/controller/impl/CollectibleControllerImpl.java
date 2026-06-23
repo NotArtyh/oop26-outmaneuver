@@ -81,8 +81,8 @@ public final class CollectibleControllerImpl extends EntityControllerImpl {
     private Collectible randomCollectible(final Vector2 pos) {
         return switch (random.nextInt(3)) {
             case 0  -> new StarCollectible(pos, 10);
-            case 1  -> new SpeedBoost(pos, 2.0, 3000L);
-            default -> new ShieldPowerUp(pos, 5000L);
+            case 1  -> new SpeedBoost(pos, new EffectImpl( 2.0, 3000L));
+            default -> new ShieldPowerUp(pos, new EffectImpl(5000L));
         };
     }
 
