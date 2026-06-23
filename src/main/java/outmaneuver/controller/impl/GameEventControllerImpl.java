@@ -56,6 +56,7 @@ public final class GameEventControllerImpl implements GameEventController {
             case MISSILE_MISSILE_COLLISION -> {
                 if (scoreController != null) {
                     scoreController.onInternalEvent(CollisionEvent.MISSILE_MISSILE_COLLISION, collisionData);
+                    
                 }
             }
         }

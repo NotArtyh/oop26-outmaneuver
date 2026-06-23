@@ -10,12 +10,10 @@ import outmaneuver.controller.event.Event;
 import outmaneuver.model.area.collision.CollisionData;
 import outmaneuver.model.area.collision.ICollidable;
 import outmaneuver.model.area.entity.Entity;
-import outmaneuver.model.area.entity.collectibles.Collectible;   //AGGIUNTO: serve a reactIfMissile
+import outmaneuver.model.area.entity.collectibles.Collectible;
 import outmaneuver.model.area.entity.missile.Missile;
 import outmaneuver.model.area.entity.plane.Plane;
-import outmaneuver.model.area.entity.plane.TurnState;
 import outmaneuver.model.session.IGameSession;
-import outmaneuver.util.Vector2;
 import outmaneuver.view.GameView;
 
 public abstract class EntityControllerImpl implements EntityController {
@@ -58,29 +56,19 @@ public abstract class EntityControllerImpl implements EntityController {
 
     @Override
     public void removeEntity(final Entity entity) {
-        if (!(entity instanceof Plane)) {
             collisionEngine.unregister(entity);
             entities.remove(entity);
-        }
-        // PLANE non viene mai rimosso
     }
 
     @Override
-    public void clearAll() {
-        entities.removeIf(e -> {
-            if (e instanceof Plane) {
-                planeReset((Plane) e);
-                return false; // tieni il piano
-            }
-            if (!(e instanceof Plane)) collisionEngine.unregister(e);
-            return true; // rimuovi tutto il resto
+    public void clearAll(){
+    entities.removeIf(e -> {
+        if (!(e instanceof Plane)) {
+            collisionEngine.unregister(e);
+            return true;
+        }
+        return false;
         });
-    }
-
-    private void planeReset(final Plane plane) {
-        plane.setPosition(Vector2.ZERO);
-        plane.setDirection(0);
-        plane.setTurnState(TurnState.NONE);
     }
 
     @Override

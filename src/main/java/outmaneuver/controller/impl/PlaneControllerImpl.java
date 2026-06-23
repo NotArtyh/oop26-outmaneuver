@@ -23,6 +23,14 @@ public final class PlaneControllerImpl extends EntityControllerImpl {
         super(entities, collisionEngine, session);
         this.inputController = Objects.requireNonNull(inputController);
     }
+
+    @Override
+    public void spawnEntity(final Entity entity) {
+        if (entity instanceof final Plane plane) {
+            planeReset(plane);
+        }
+        super.spawnEntity(entity);
+    }
     
 
     @Override
@@ -55,5 +63,10 @@ public final class PlaneControllerImpl extends EntityControllerImpl {
         }
         return normalised;
     }
-    
+
+    protected void planeReset(final Plane plane) {
+        plane.setPosition(Vector2.ZERO);
+        plane.setDirection(0);
+        plane.setTurnState(TurnState.NONE);
+    }
 }
