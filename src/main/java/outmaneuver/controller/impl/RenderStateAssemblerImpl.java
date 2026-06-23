@@ -50,7 +50,8 @@ public final class RenderStateAssemblerImpl implements RenderStateAssembler {
                         p.getPosition().getX(),
                         p.getPosition().getY(),
                         p.getDirection(),
-                        p.getStats().getSpriteId()))
+                        p.getStats().getSpriteId(),
+                        p.getHitbox().getRadius()))
                 .orElse(null);
     }
 
@@ -61,8 +62,9 @@ public final class RenderStateAssemblerImpl implements RenderStateAssembler {
                 .map(c -> new EntityRenderData(
                         c.getPosition().getX(),
                         c.getPosition().getY(),
-                        0,                       // i collectible non hanno orientamento
-                        c.getCollectibleType())) // tipo di dominio, come getMissileType()
+                        0,                        // i collectible non hanno orientamento
+                        c.getCollectibleType(),   // tipo di dominio, come getMissileType()
+                        c.getHitbox().getRadius()))
                 .toList();
     }
 
@@ -74,7 +76,8 @@ public final class RenderStateAssemblerImpl implements RenderStateAssembler {
                         m.getPosition().getX(),
                         m.getPosition().getY(),
                         m.getDirection(),
-                        m.getMissileType()))
+                        m.getMissileType(),
+                        m.getHitbox().getRadius()))
                 .toList();
     }
 

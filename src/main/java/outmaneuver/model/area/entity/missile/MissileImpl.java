@@ -183,7 +183,8 @@ public abstract class MissileImpl implements Missile {
         return new EntityRenderData(
                 position.getX(), position.getY(),
                 velocity.angle(),
-                type);
+                type,
+                hitboxRadius);
     }
 
     @Override

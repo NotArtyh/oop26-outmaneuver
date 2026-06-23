@@ -87,7 +87,7 @@ public final class SwingGameView extends JPanel implements GameView {
     private void drawCollectible(final Graphics2D g2d, final EntityRenderData data,
             final double cameraX, final double cameraY) {
         final BufferedImage sprite = assets.getSprite(collectibleSprite(data.getSpriteId()));
-        final double scale = 2.0 * collectibleRadius(data.getSpriteId()) / sprite.getWidth();
+        final double scale = 2.0 * COLLECTIBLE_RADIUS / sprite.getWidth();   // tutti uguali
         drawSprite(g2d, sprite, data.getX(), data.getY(), cameraX, cameraY, 0, scale);
     }
 
@@ -97,14 +97,6 @@ public final class SwingGameView extends JPanel implements GameView {
             case "speed"  -> SpriteId.COLLECTIBLE_SPEED;
             case "shield" -> SpriteId.COLLECTIBLE_SHIELD;
             default       -> SpriteId.COLLECTIBLE_STAR;
-        };
-    }
-
-    // Dimensione (raggio in px) per tipo di collectible: lo scudo e' un po' piu' grande.
-    private int collectibleRadius(final String type) {
-        return switch (type) {
-            case "shield" -> 14;
-            default -> COLLECTIBLE_RADIUS;
         };
     }
 
@@ -146,13 +138,14 @@ public final class SwingGameView extends JPanel implements GameView {
     }
 
     // [Alessio - asset loader] Ogni tipo di missile usa il proprio sprite (vedi missileSprite),
-    // ruotato verso la direzione di volo e scalato in base al tipo (missileRadius).
+    // ruotato verso la direzione di volo e scalato sulla misura del suo HITBOX (dal JSON, via DTO):
+    // cosi' sprite e collisione restano sempre allineati.
     private void drawMissiles(final Graphics2D g2d,
             final List<EntityRenderData> missiles,
             final double cameraX, final double cameraY) {
         for (final EntityRenderData m : missiles) {
             final BufferedImage sprite = assets.getSprite(missileSprite(m.getSpriteId()));
-            final double scale = 2.0 * missileRadius(m.getSpriteId()) / sprite.getWidth();
+            final double scale = 2.0 * m.getRadius() / sprite.getWidth();   // sprite = hitbox
             drawSprite(g2d, sprite, m.getX(), m.getY(), cameraX, cameraY,
                     m.getDirectionRad() + Math.PI / 2, scale);
         }
@@ -168,17 +161,6 @@ public final class SwingGameView extends JPanel implements GameView {
             case "shield" -> SpriteId.MISSILE_SHIELD;
             case "clock"  -> SpriteId.MISSILE_CLOCK;
             default       -> SpriteId.MISSILE_BASIC;
-        };
-    }
-
-    // Dimensione (raggio in px) per tipo di missile: i tipi piu' "leggeri" sono piu' piccoli.
-    private int missileRadius(final String type) {
-        return switch (type) {
-            case "fast" -> 8;
-            case "sniper" -> 6;
-            case "bounce", "shield" -> 11;
-            case "clock" -> 12;
-            default -> 10;
         };
     }
 }
