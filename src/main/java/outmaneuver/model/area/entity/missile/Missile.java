@@ -15,7 +15,6 @@ public interface Missile extends Entity {
     void setInitialDirection(Vector2 target);
 
     // --- STATO ---
-    void destroy();
     boolean isAlive();
 
     // --- COLLISIONE ---

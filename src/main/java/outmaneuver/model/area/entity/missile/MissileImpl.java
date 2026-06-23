@@ -135,8 +135,7 @@ public abstract class MissileImpl implements Missile {
     @Override
     public void checkBounce(final Vector2 planePos, final Dimension screenSize) { }
 
-    @Override
-    public void destroy()    { this.alive = false; }
+    protected void destroy() { this.alive = false; }
 
     @Override
     public boolean isAlive() { return alive; }
