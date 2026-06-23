@@ -50,7 +50,6 @@ public final class ControllerAssembler {
         final MasterControllerImpl master = new MasterControllerImpl();
         final CollisionEngine collision = new CollisionEngine(master);
         final ScoreControllerImpl score = new ScoreControllerImpl(session);
-
         final List<Entity> sharedEntities = new ArrayList<>();
         final PlaneControllerImpl planeCtrl = new PlaneControllerImpl(input, sharedEntities, collision);
         final CollectibleControllerImpl collectibleCtrl = new CollectibleControllerImpl(
@@ -63,17 +62,19 @@ public final class ControllerAssembler {
                 
         // [Alessio - missili] registra il controller dei missili nel master
         planeCtrl.spawnEntity(plane); //TODO: QUESTO NON VA BENE QUI, IL PLANE VA SPAWNATO ALTROVE
-        
+
         master.addEntityController(planeCtrl);
         master.addEntityController(collectibleCtrl);
         master.addEntityController(missileCtrl);
+        final GameEventControllerImpl eventController = new GameEventControllerImpl(
+                master, score, () -> master.handleEvent(GameEvent.GAME_OVER));
+        
         master.setCollisionEngine(collision);
         master.setScoreController(score); // va qui?
         master.setSceneEntities(sharedEntities);
         master.setStateAssembler(new RenderStateAssemblerImpl(hud)); // TODO: prender Hud, fix temporaneo, spostare
-        master.setEventController(new GameEventControllerImpl(
-                planeCtrl, hud, score, session,
-                () -> master.handleEvent(GameEvent.GAME_OVER)));
+        master.setEventController(eventController);
+
         return new Controllers(input, hud, master);
     }
 }
