@@ -6,13 +6,14 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 import outmaneuver.controller.CollisionEngine;
-import outmaneuver.controller.event.Event;
 import outmaneuver.controller.EntityController;
-import outmaneuver.controller.event.GameEvent;
-import outmaneuver.controller.event.InternalEventListener;
+import outmaneuver.controller.InputController;
 import outmaneuver.controller.MasterController;
 import outmaneuver.controller.RenderStateAssembler;
 import outmaneuver.controller.ScoreController;
+import outmaneuver.controller.event.Event;
+import outmaneuver.controller.event.GameEvent;
+import outmaneuver.controller.event.InternalEventListener;
 import outmaneuver.model.area.entity.Entity;
 
 import outmaneuver.view.GameView;
@@ -26,6 +27,7 @@ public final class MasterControllerImpl implements MasterController {
     private final List<EntityController> entityControllers = new ArrayList<>();
     private List<Entity> sceneEntities = List.of();
     private ScoreController scoreController;
+    private InputController inputController;
     private InternalEventListener eventController;
     private RenderStateAssembler stateAssembler;
     private CollisionEngine collisionEngine;
@@ -50,6 +52,10 @@ public final class MasterControllerImpl implements MasterController {
 
     public void setOnResume(final Runnable onResume) {
         this.onResume = Objects.requireNonNull(onResume);
+    }
+
+    public void setInputController(final InputController inputController) {
+        this.inputController = Objects.requireNonNull(inputController, "inputController must not be null");
     }
 
     public void setEventController(final InternalEventListener eventController) {
@@ -133,6 +139,7 @@ public final class MasterControllerImpl implements MasterController {
         if (scoreController != null) {
             scoreController.reset();
         }
+        inputController.reset();
         entityControllers.forEach(EntityController::clearAll);
         running = true;
         gameLoopThread = new Thread(this::gameLoop, "game-loop");

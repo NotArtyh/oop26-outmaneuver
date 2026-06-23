@@ -71,6 +71,7 @@ public final class ControllerAssembler {
         master.setScoreController(score); // va qui?
         master.setSceneEntities(sharedEntities);
         master.setStateAssembler(new RenderStateAssemblerImpl(hud)); // TODO: prender Hud, fix temporaneo, spostare
+        master.setInputController(input);
         master.setEventController(new EventController(
                 planeCtrl, hud, score, session,
                 () -> master.handleEvent(GameEvent.GAME_OVER)));
