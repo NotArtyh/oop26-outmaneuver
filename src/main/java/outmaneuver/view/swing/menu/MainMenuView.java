@@ -7,11 +7,13 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.awt.Insets;
 import java.util.Objects;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -19,7 +21,7 @@ import javax.swing.SwingConstants;
 
 public final class MainMenuView extends JPanel {
 
-    private static final int TITLE_FONT_SIZE    = 64;
+    private static final int LOGO_WIDTH          = 400;
     private static final int COINS_FONT_SIZE    = 16;
     private static final int USERNAME_FONT_SIZE = 14;
     private static final int BUTTON_FONT_SIZE   = 20;
@@ -79,9 +81,12 @@ public final class MainMenuView extends JPanel {
         final JPanel center = new JPanel(new GridBagLayout());
         center.setBackground(Color.BLACK);
 
-        final JLabel title = new JLabel("OUTMANEUVER", SwingConstants.CENTER);
-        title.setFont(new Font(Font.SANS_SERIF, Font.BOLD, TITLE_FONT_SIZE));
-        title.setForeground(Color.WHITE);
+        final ImageIcon logoIcon = new ImageIcon(
+            new ImageIcon(getClass().getResource("/assets/sprites/logo.png"))
+                .getImage()
+                .getScaledInstance(LOGO_WIDTH, -1, Image.SCALE_SMOOTH)
+        );
+        final JLabel title = new JLabel(logoIcon);
 
 
 
