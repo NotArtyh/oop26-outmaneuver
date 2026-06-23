@@ -11,7 +11,7 @@ public interface Missile extends Entity {
 
     // --- UPDATE E MOVIMENTO ---
     void update(Plane plane, double dt);
-    void redirectIfOutOfBounds(Plane plane, Dimension screenSize);
+    void redirectIfOutOfBounds(Plane plane, Dimension screenSize, double effectiveSpeed);
     void setInitialDirection(Vector2 target);
 
     // --- STATO ---

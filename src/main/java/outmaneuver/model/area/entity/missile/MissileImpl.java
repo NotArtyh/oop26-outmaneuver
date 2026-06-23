@@ -117,12 +117,12 @@ public abstract class MissileImpl implements Missile {
     }
 
     @Override
-    public void redirectIfOutOfBounds(final Plane plane, final Dimension screenSize) {
+    public void redirectIfOutOfBounds(final Plane plane, final Dimension screenSize, double effectiveSpeed) {
         if (!isOffScreen(plane, screenSize)) {
             return;
         }
         final Vector2 planeVel = Vector2.fromAngle(plane.getDirection())
-                .scale(plane.getEffectiveSpeed());
+                .scale(effectiveSpeed);
         final Vector2 predicted = plane.getPosition().add(planeVel.scale(predictionTime));
         setInitialDirection(predicted);
     }

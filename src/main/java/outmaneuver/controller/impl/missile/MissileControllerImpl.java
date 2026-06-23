@@ -18,7 +18,8 @@ import outmaneuver.util.Vector2;
 /**
  * Controller dei missili: decide quando e dove farli nascere, li muove e
  * reagisce alle loro collisioni. Il rilevamento delle collisioni spetta al
- * CollisionEngine; la reazione vera (shield/clock/destroy) ai metodi del missile.
+ * CollisionEngine; la reazione vera (shield/clock/destroy) ai metodi del
+ * missile.
  */
 public final class MissileControllerImpl extends EntityControllerImpl {
 
@@ -28,30 +29,35 @@ public final class MissileControllerImpl extends EntityControllerImpl {
     // Tarato (via simulazione) per una partita di ~5 minuti a chi gioca bene:
     // inizio morbido (6.5s), ritmo massimo (0.5s) verso i 5 minuti -> lo schermo
     // si riempie e si diventa ingiocabili.
-    private static final double START_DELAY      = 4.0;
+    private static final double START_DELAY = 4.0;
     private static final double INITIAL_INTERVAL = 6.5;
-    private static final double MIN_INTERVAL     = 0.5;
-    private static final double INTERVAL_SCALE   = 0.020;
-    private static final int    BORDER_MARGIN    = 60;
-    // Quota di spawn dal LATO CORTO dello schermo. Di solito il player si muove lungo il
-    // lato lungo (piu' pista); i missili dal lato corto gli arrivano lungo quell'asse, quindi
+    private static final double MIN_INTERVAL = 0.5;
+    private static final double INTERVAL_SCALE = 0.020;
+    private static final int BORDER_MARGIN = 60;
+    // Quota di spawn dal LATO CORTO dello schermo. Di solito il player si muove
+    // lungo il
+    // lato lungo (piu' pista); i missili dal lato corto gli arrivano lungo
+    // quell'asse, quindi
     // ha poco campo per schivare ed e' costretto a cambiare direzione.
-    private static final double SHORT_SIDE_BIAS  = 0.6;
+    private static final double SHORT_SIDE_BIAS = 0.6;
 
     private final MissileRepository missileRepo;
     private final MissileSpawnDirector spawnDirector;
     private final Random rng = new Random();
 
-    private double startDelay    = START_DELAY;
-    // timer "gia' pieno": il primo missile esce subito dopo START_DELAY (~4s), non dopo un intervallo intero
-    private double spawnTimer     = INITIAL_INTERVAL;
-    private double spawnInterval  = INITIAL_INTERVAL;
+    private double startDelay = START_DELAY;
+    // timer "gia' pieno": il primo missile esce subito dopo START_DELAY (~4s), non
+    // dopo un intervallo intero
+    private double spawnTimer = INITIAL_INTERVAL;
+    private double spawnInterval = INITIAL_INTERVAL;
     private double elapsedTime;
+    private boolean shieldActive;
+    private double speedMutltiplier = 1.0;
 
     public MissileControllerImpl(final List<Entity> entities,
-                                 final CollisionEngine collisionEngine,
-                                 final MissileRepository missileRepo,
-                                 final MissileSpawnDirector spawnDirector) {
+            final CollisionEngine collisionEngine,
+            final MissileRepository missileRepo,
+            final MissileSpawnDirector spawnDirector) {
         super(entities, collisionEngine);
         this.missileRepo = Objects.requireNonNull(missileRepo, "missileRepo must not be null");
         this.spawnDirector = Objects.requireNonNull(spawnDirector, "spawnDirector must not be null");
@@ -79,10 +85,22 @@ public final class MissileControllerImpl extends EntityControllerImpl {
     @Override
     public void clearAll() {
         super.clearAll();
-        startDelay    = START_DELAY;
-        spawnTimer    = INITIAL_INTERVAL;  // primo missile subito dopo la tregua anche a ogni nuova partita
-        elapsedTime   = 0;
+        startDelay = START_DELAY;
+        spawnTimer = INITIAL_INTERVAL; // primo missile subito dopo la tregua anche a ogni nuova partita
+        elapsedTime = 0;
         spawnInterval = INITIAL_INTERVAL;
+    }
+
+    private List<Missile> activeMissiles() {
+        return getEntities().stream().filter(Missile.class::isInstance).map(Missile.class::cast).toList();
+    }
+
+    public void setShieldActrive(final boolean active) {
+        this.shieldActive = active;
+    }
+
+    public void setSpeedMultiplier(double multiplier) {
+        this.speedMutltiplier = multiplier;
     }
 
     private void maybeSpawn(final double dt, final Plane plane, final Dimension screen) {
@@ -94,8 +112,9 @@ public final class MissileControllerImpl extends EntityControllerImpl {
         spawnInterval = Math.max(MIN_INTERVAL, INITIAL_INTERVAL - elapsedTime * INTERVAL_SCALE);
 
         final Vector2 planePos = plane.getPosition();
-        final MissileKind kind = spawnDirector.nextKind(elapsedTime, activeMissiles(), plane.isShieldActive());
-        // Il fast e' molto veloce: dal lato lungo, di fronte all'aereo, e' quasi inevitabile.
+        final MissileKind kind = spawnDirector.nextKind(elapsedTime, activeMissiles(), shieldActive);
+        // Il fast e' molto veloce: dal lato lungo, di fronte all'aereo, e' quasi
+        // inevitabile.
         // Lo costringo a nascere SEMPRE dal lato corto (piu' equo da schivare).
         final double shortBias = (kind == MissileKind.FAST) ? 1.0 : SHORT_SIDE_BIAS;
         final Missile m = createMissile(kind, randomBorderPosition(planePos, screen, shortBias));
@@ -104,13 +123,14 @@ public final class MissileControllerImpl extends EntityControllerImpl {
     }
 
     private void moveMissiles(final Plane plane, final Dimension screen, final double dt) {
+        final double effectiveSpeed = plane.getStats().getBaseSpeed() * speedMutltiplier;
         for (final Missile m : activeMissiles()) {
             if (m.isAlive()) {
                 m.update(plane, dt);
             }
             if (m.isAlive()) {
                 m.checkBounce(plane.getPosition(), screen);
-                m.redirectIfOutOfBounds(plane, screen);
+                m.redirectIfOutOfBounds(plane, screen, effectiveSpeed);
             }
             if (!m.isAlive()) {
                 removeEntity(m);
@@ -133,17 +153,20 @@ public final class MissileControllerImpl extends EntityControllerImpl {
     }
 
     private Vector2 randomBorderPosition(final Vector2 planePos, final Dimension screen,
-                                         final double shortSideProb) {
-        final double halfW = screen.width  / 2.0;
+            final double shortSideProb) {
+        final double halfW = screen.width / 2.0;
         final double halfH = screen.height / 2.0;
 
-        // Scelgo se nascere dal lato corto o lungo (probabilita' passata dal chiamante).
+        // Scelgo se nascere dal lato corto o lungo (probabilita' passata dal
+        // chiamante).
         final boolean fromShortSide = rng.nextDouble() < shortSideProb;
-        // In landscape il lato corto sono i bordi verticali (sx/dx); in portrait quelli orizzontali (su/giu').
+        // In landscape il lato corto sono i bordi verticali (sx/dx); in portrait quelli
+        // orizzontali (su/giu').
         final boolean landscape = screen.width >= screen.height;
         final boolean horizontalEdge = landscape != fromShortSide;
 
-        // Punto di spawn = posizione dell'aereo (centro schermo) + scostamento verso il bordo.
+        // Punto di spawn = posizione dell'aereo (centro schermo) + scostamento verso il
+        // bordo.
         if (horizontalEdge) {
             // bordo sopra o sotto: x casuale lungo la larghezza, y appena fuori
             final double offX = (rng.nextDouble() * 2 - 1) * halfW;
