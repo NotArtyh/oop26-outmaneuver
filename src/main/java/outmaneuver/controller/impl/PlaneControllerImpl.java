@@ -15,7 +15,7 @@ public final class PlaneControllerImpl extends EntityControllerImpl {
 
     private final InputController inputController;
     private Plane plane;
-    private double speedMutltiplier;
+    private double speedMutltiplier = 1.0;
 
     public PlaneControllerImpl(final InputController inputController,
             final List<Entity> entities,
