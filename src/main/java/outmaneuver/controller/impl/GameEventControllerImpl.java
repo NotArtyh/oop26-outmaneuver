@@ -37,6 +37,11 @@ public final class GameEventControllerImpl implements GameEventController {
 
     @Override
     public void onInternalEvent(final Event evt, final Object data) {
+        if (evt instanceof EffectEvent) {
+            handleEffectEvent((EffectEvent) evt, data);
+            return;
+        }
+
         if (!(data instanceof final CollisionData collisionData)) {
             return;
         }
@@ -63,6 +68,31 @@ public final class GameEventControllerImpl implements GameEventController {
                 missileController.removeEntity((Entity) collisionData.getEntityB());
                 if (scoreController != null) {
                     scoreController.onInternalEvent(CollisionEvent.MISSILE_MISSILE_COLLISION, collisionData);
+                }
+            }
+        }
+    }
+
+    private void handleEffectEvent(final EffectEvent evt, final Object data) {
+        switch (evt) {
+            case EFFECT_APPLIED -> {
+                if (data instanceof ShieldPowerUp) {
+                    shieldActive = true;
+                    missileController.setShieldActrive(true);
+                }
+                if (data instanceof final SpeedBoost boost) {
+                    planeController.setSpeedMultiplier(boost.getEffect().getMultiplier());
+                    missileController.setSpeedMultiplier(boost.getEffect().getMultiplier());
+                }
+            }
+            case EFFECT_EXPIRED -> {
+                if (data == ShieldPowerUp.class) {
+                    shieldActive = false;
+                    missileController.setShieldActrive(false);
+                }
+                if (data == SpeedBoost.class) {
+                    planeController.setSpeedMultiplier(1.0);
+                    missileController.setSpeedMultiplier(1.0);
                 }
             }
         }
