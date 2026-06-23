@@ -16,9 +16,4 @@ public final class SniperMissile extends MissileImpl {
     @Override
     protected void steer(final Vector2 target) {
     }
-
-    @Override
-    public void redirectIfOutOfBounds(final Plane plane, final Dimension screenSize) {
-        destroyIfOffScreen(plane, screenSize);
-    }
 }
