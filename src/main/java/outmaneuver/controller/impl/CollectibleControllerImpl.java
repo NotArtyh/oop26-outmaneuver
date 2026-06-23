@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 import outmaneuver.controller.CollisionEngine;
+import outmaneuver.model.area.effect.EffectImpl;
 import outmaneuver.model.area.entity.Entity;
 import outmaneuver.model.area.entity.collectibles.Collectible;
 import outmaneuver.model.area.entity.collectibles.ShieldPowerUp;
