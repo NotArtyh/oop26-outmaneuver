@@ -56,4 +56,10 @@ public final class PlaneControllerImpl extends EntityControllerImpl {
         return normalised;
     }
     
+
+      protected void planeReset(final Plane plane) {
+        plane.setPosition(Vector2.ZERO);
+        plane.setDirection(0);
+        plane.setTurnState(TurnState.NONE);
+    }
 }

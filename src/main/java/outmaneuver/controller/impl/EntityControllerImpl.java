@@ -57,29 +57,20 @@ public abstract class EntityControllerImpl implements EntityController {
 
     @Override
     public void removeEntity(final Entity entity) {
-        if (!(entity instanceof Plane)) {
             collisionEngine.unregister(entity);
             entities.remove(entity);
-        }
-        // PLANE non viene mai rimosso
     }
 
     @Override
     public void clearAll() {
         entities.removeIf(e -> {
             if (e instanceof Plane) {
-                planeReset((Plane) e);
+            
                 return false; // tieni il piano
             }
             if (!(e instanceof Plane)) collisionEngine.unregister(e);
             return true; // rimuovi tutto il resto
         });
-    }
-
-    private void planeReset(final Plane plane) {
-        plane.setPosition(Vector2.ZERO);
-        plane.setDirection(0);
-        plane.setTurnState(TurnState.NONE);
     }
 
     @Override
