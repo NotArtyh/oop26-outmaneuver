@@ -10,10 +10,10 @@ import outmaneuver.controller.event.Event;
 
 import outmaneuver.controller.impl.missile.MissileControllerImpl;
 import outmaneuver.model.area.collision.CollisionData;
+import outmaneuver.model.area.effect.Effect;
+import outmaneuver.model.area.effect.EffectType;
 import outmaneuver.model.area.entity.Entity;
 import outmaneuver.model.area.entity.collectibles.Collectible;
-import outmaneuver.model.area.entity.collectibles.ShieldPowerUp;
-import outmaneuver.model.area.entity.collectibles.SpeedBoost;
 
 public final class GameEventControllerImpl implements GameEventController {
 
@@ -74,23 +74,24 @@ public final class GameEventControllerImpl implements GameEventController {
     }
 
     private void handleEffectEvent(final EffectEvent evt, final Object data) {
+        final var effect = (Effect) data;
         switch (evt) {
             case EFFECT_APPLIED -> {
-                if (data instanceof ShieldPowerUp) {
+                if (effect.getType() == EffectType.SHIELD) {
                     shieldActive = true;
                     missileController.setShieldActrive(true);
                 }
-                if (data instanceof final SpeedBoost boost) {
-                    planeController.setSpeedMultiplier(boost.getEffect().getMultiplier());
-                    missileController.setSpeedMultiplier(boost.getEffect().getMultiplier());
+                if (effect.getType() == EffectType.SPEED_BOOST) {
+                    planeController.setSpeedMultiplier(effect.getMultiplier());
+                    missileController.setSpeedMultiplier(effect.getMultiplier());
                 }
             }
             case EFFECT_EXPIRED -> {
-                if (data == ShieldPowerUp.class) {
+                if (effect.getType() == EffectType.SHIELD) {
                     shieldActive = false;
                     missileController.setShieldActrive(false);
                 }
-                if (data == SpeedBoost.class) {
+                if (effect.getType() == EffectType.SPEED_BOOST) {
                     planeController.setSpeedMultiplier(1.0);
                     missileController.setSpeedMultiplier(1.0);
                 }
