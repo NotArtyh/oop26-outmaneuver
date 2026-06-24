@@ -14,9 +14,13 @@ public enum SpriteId {
     COLLECTIBLE_STAR,
     COLLECTIBLE_SPEED,
     COLLECTIBLE_SHIELD,
-    UI_BUTTON_NORMAL;
+    UI_BUTTON_NORMAL,
     // UI_BUTTON_HOVER,
-    // UI_BUTTON_PRESSED;
+    // UI_BUTTON_PRESSED,
+
+    CLOUD_1,
+    CLOUD_2,
+    CLOUD_3;
 
     public String getFilename() {
         return name().toLowerCase();

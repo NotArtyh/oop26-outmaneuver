@@ -3,12 +3,15 @@ package outmaneuver.view.swing;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.AlphaComposite;
 import java.awt.RenderingHints;
 import java.awt.event.KeyListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -23,12 +26,20 @@ import outmaneuver.view.swing.hud.IHudView;
 public final class SwingGameView extends JPanel implements GameView {
 
     private static final Color SKY_COLOR = new Color(180, 225, 245); // azzurrino chiaro (cielo)
+    private static final SpriteId[] CLOUD_SPRITES = {
+        SpriteId.CLOUD_1, SpriteId.CLOUD_2, SpriteId.CLOUD_3
+    };
+    private static final int CLOUD_TARGET = 30;
+    private static final double CLOUD_FAR = 600.0;
+    private static final double CLOUD_MARGIN = 250.0;
+    private static final Random RAND = new Random();
 
     private final KeyListener keyListener;
     private final IHudView hudView;
     /** Fornisce gli sprite gia' caricati in memoria; iniettato dall'esterno (Dependency Inversion). */
     private final AssetStore assets;
     private volatile RenderState latestState;
+    private final List<Cloud> clouds;
 
     public SwingGameView(final KeyListener keyListener, final IHudView hudView,
             final AssetStore assets) {
@@ -36,6 +47,7 @@ public final class SwingGameView extends JPanel implements GameView {
         this.hudView = Objects.requireNonNull(hudView, "hudView must not be null");
         this.assets = Objects.requireNonNull(assets, "assets must not be null");
         this.latestState = null;
+        this.clouds = new ArrayList<>(CLOUD_TARGET);
     }
 
     public void init() {
@@ -65,6 +77,8 @@ public final class SwingGameView extends JPanel implements GameView {
             final double cameraX = planeData.getX();
             final double cameraY = planeData.getY();
 
+            updateClouds(cameraX, cameraY);
+            drawClouds(g2d, cameraX, cameraY);
             drawMissiles(g2d, state.getMissiles(), cameraX, cameraY);
             drawPlane(g2d, planeData, cameraX, cameraY);
 
@@ -173,4 +187,51 @@ public final class SwingGameView extends JPanel implements GameView {
             default       -> SpriteId.MISSILE_BASIC;
         };
     }
+
+    private void updateClouds(final double cameraX, final double cameraY) {
+        final var hw = getWidth() / 2.0;
+        final var hh = getHeight() / 2.0;
+        clouds.removeIf(c -> {
+            final var dx = Math.abs(c.worldX - cameraX);
+            final var dy = Math.abs(c.worldY - cameraY);
+            return dx > hw + CLOUD_FAR || dy > hh + CLOUD_FAR;
+        });
+        while (clouds.size() < CLOUD_TARGET) {
+            final var sprite = CLOUD_SPRITES[RAND.nextInt(CLOUD_SPRITES.length)];
+            final var scale = 2.0 + RAND.nextDouble() * 5.0;
+            final var alpha = 0.15f + RAND.nextFloat() * 0.35f;
+            final double worldX;
+            final double worldY;
+            switch (RAND.nextInt(4)) {
+                case 0 -> { // top
+                    worldX = cameraX + (RAND.nextDouble() * 2 - 1) * (hw + CLOUD_MARGIN);
+                    worldY = cameraY - hh - CLOUD_MARGIN * (1 + RAND.nextDouble());
+                }
+                case 1 -> { // bottom
+                    worldX = cameraX + (RAND.nextDouble() * 2 - 1) * (hw + CLOUD_MARGIN);
+                    worldY = cameraY + hh + CLOUD_MARGIN * (1 + RAND.nextDouble());
+                }
+                case 2 -> { // left
+                    worldX = cameraX - hw - CLOUD_MARGIN * (1 + RAND.nextDouble());
+                    worldY = cameraY + (RAND.nextDouble() * 2 - 1) * (hh + CLOUD_MARGIN);
+                }
+                default -> { // right
+                    worldX = cameraX + hw + CLOUD_MARGIN * (1 + RAND.nextDouble());
+                    worldY = cameraY + (RAND.nextDouble() * 2 - 1) * (hh + CLOUD_MARGIN);
+                }
+            }
+            clouds.add(new Cloud(worldX, worldY, sprite, scale, alpha));
+        }
+    }
+
+    private void drawClouds(final Graphics2D g2d, final double cameraX, final double cameraY) {
+        for (final var cloud : clouds) {
+            g2d.setComposite(AlphaComposite.SrcOver.derive(cloud.alpha));
+            drawSprite(g2d, assets.getSprite(cloud.sprite), cloud.worldX, cloud.worldY,
+                    cameraX, cameraY, 0, cloud.scale);
+        }
+        g2d.setComposite(AlphaComposite.SrcOver.derive(1.0f));
+    }
+
+    private record Cloud(double worldX, double worldY, SpriteId sprite, double scale, float alpha) {}
 }
