@@ -21,7 +21,6 @@ public final class RenderStateAssemblerImpl implements RenderStateAssembler {
     private static final int EXPLOSION_LIFETIME_TICKS = 12;
 
     private final HudController hudController;
-    private final List<Vector2> pendingCollisionPoints = new ArrayList<>();
     private final List<ExplosionInstance> activeExplosions = new ArrayList<>();
 
     public RenderStateAssemblerImpl(final HudController hudController) {
@@ -29,12 +28,12 @@ public final class RenderStateAssemblerImpl implements RenderStateAssembler {
     }
 
     @Override
-    public RenderState assemble(final List<Entity> entities, final boolean paused) {
+    public RenderState assemble(final List<Entity> entities, final boolean paused, final List<Vector2> collisionPoints) {
         final EntityRenderData planeData = buildPlaneData(entities);
         final List<EntityRenderData> collectibles = buildCollectibleData(entities);
         final List<EntityRenderData> missiles = buildMissileData(entities);
         final HudSnapshot hud = buildHud(entities, paused);
-        final List<EntityRenderData> collisions = buildCollisionData();
+        final List<EntityRenderData> collisions = buildCollisionData(collisionPoints);
         return RenderState.builder()
                 .planeData(planeData)
                 .hud(hud)
@@ -45,14 +44,8 @@ public final class RenderStateAssemblerImpl implements RenderStateAssembler {
     }
 
     @Override
-    public void feedCollisionPoint(final Vector2 point) {
-        pendingCollisionPoints.add(point);
-    }
-
-    @Override
     public void reset() {
         hudController.reset();
-        pendingCollisionPoints.clear();
         activeExplosions.clear();
     }
 
@@ -105,11 +98,10 @@ public final class RenderStateAssemblerImpl implements RenderStateAssembler {
         return hudController.buildSnapshot(plane, paused);
     }
 
-    private List<EntityRenderData> buildCollisionData() {
-        for (final var point : pendingCollisionPoints) {
+    private List<EntityRenderData> buildCollisionData(final List<Vector2> collisionPoints) {
+        for (final var point : collisionPoints) {
             activeExplosions.add(new ExplosionInstance(point.getX(), point.getY(), 0));
         }
-        pendingCollisionPoints.clear();
         final List<EntityRenderData> result = new ArrayList<>();
         final var iterator = activeExplosions.listIterator();
         while (iterator.hasNext()) {

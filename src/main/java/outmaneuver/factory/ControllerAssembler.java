@@ -75,8 +75,7 @@ public final class ControllerAssembler {
         master.setInputController(input);
         master.setEventController(new EventController(
                 planeCtrl, hud, score, session,
-                () -> master.handleEvent(GameEvent.GAME_OVER),
-                stateAssembler));
+                () -> master.handleEvent(GameEvent.GAME_OVER)));
         return new Controllers(input, hud, master);
     }
 }

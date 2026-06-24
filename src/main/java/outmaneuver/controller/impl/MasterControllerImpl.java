@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 import outmaneuver.controller.CollisionEngine;
+import outmaneuver.controller.event.CollisionEvent;
 import outmaneuver.controller.EntityController;
 import outmaneuver.controller.InputController;
 import outmaneuver.controller.MasterController;
@@ -14,7 +15,9 @@ import outmaneuver.controller.ScoreController;
 import outmaneuver.controller.event.Event;
 import outmaneuver.controller.event.GameEvent;
 import outmaneuver.controller.event.InternalEventListener;
+import outmaneuver.model.area.collision.CollisionData;
 import outmaneuver.model.area.entity.Entity;
+import outmaneuver.util.Vector2;
 
 import outmaneuver.view.GameView;
 import outmaneuver.view.RenderState;
@@ -36,6 +39,7 @@ public final class MasterControllerImpl implements MasterController {
     private volatile boolean running;
     private volatile GameEvent gameState;
     private int gameOverDelayTicks = -1;
+    private final List<Vector2> pendingCollisionPoints = new ArrayList<>();
     private Runnable onGameOver;
     private Runnable onPause;
     private Runnable onResume;
@@ -136,6 +140,7 @@ public final class MasterControllerImpl implements MasterController {
         }
         gameState = GameEvent.RUNNING;
         gameOverDelayTicks = -1;
+        pendingCollisionPoints.clear();
         stateAssembler.reset();
         if (scoreController != null) {
             scoreController.reset();
@@ -197,6 +202,7 @@ public final class MasterControllerImpl implements MasterController {
             }
 
             renderFrame();
+            pendingCollisionPoints.clear();
 
             final long elapsedMs = (System.nanoTime() - frameStart) / 1_000_000;
             final long sleepMs = TICK_MS - elapsedMs;
@@ -220,7 +226,7 @@ public final class MasterControllerImpl implements MasterController {
     }
 
     private void renderFrame() {
-        final RenderState state = stateAssembler.assemble(sceneEntities, gameState == GameEvent.PAUSED);
+        final RenderState state = stateAssembler.assemble(sceneEntities, gameState == GameEvent.PAUSED, pendingCollisionPoints);
         notifyViews(v -> v.renderFrame(state));
     }
 
@@ -230,6 +236,11 @@ public final class MasterControllerImpl implements MasterController {
 
     @Override
     public void onInternalEvent(final Event evt, final Object data) {
+        if (data instanceof final CollisionData collisionData
+                && (evt == CollisionEvent.MISSILE_MISSILE_COLLISION
+                || evt == CollisionEvent.PLANE_MISSILE_COLLISION)) {
+            pendingCollisionPoints.add(collisionData.getCollisionPoint());
+        }
         if (eventController != null) {
             eventController.onInternalEvent(evt, data);
         }
