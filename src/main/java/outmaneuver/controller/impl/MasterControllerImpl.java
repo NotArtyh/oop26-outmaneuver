@@ -10,13 +10,18 @@ import outmaneuver.controller.CollisionEngine;
 import outmaneuver.controller.event.EffectEvent;
 import outmaneuver.controller.event.Event;
 import outmaneuver.controller.EntityController;
-import outmaneuver.controller.GameEventController;
+import outmaneuver.controller.event.EventController;
 import outmaneuver.controller.event.GameEvent;
 import outmaneuver.controller.HudController;
+import outmaneuver.controller.event.CollisionEvent;
+import outmaneuver.controller.InputController;
 import outmaneuver.controller.MasterController;
 import outmaneuver.controller.RenderStateAssembler;
 import outmaneuver.controller.ScoreController;
+import outmaneuver.controller.event.InternalEventListener;
+import outmaneuver.model.area.collision.CollisionData;
 import outmaneuver.model.area.entity.Entity;
+import outmaneuver.util.Vector2;
 
 import outmaneuver.view.GameView;
 import outmaneuver.view.RenderState;
@@ -24,18 +29,22 @@ import outmaneuver.view.RenderState;
 public final class MasterControllerImpl implements MasterController {
 
     private static final long TICK_MS = 16;
+    private static final int GAME_OVER_DELAY_TICKS = 80; // ~2 secondi per l'animazione esplosione
 
     private final List<GameView> views = new ArrayList<>();
     private final List<EntityController> entityControllers = new ArrayList<>();
     private List<Entity> sceneEntities = List.of();
     private HudController hudController;
     private ScoreController scoreController;
-    private GameEventController eventController;
+    private InputController inputController;
+    private InternalEventListener eventController;
     private RenderStateAssembler stateAssembler;
     private CollisionEngine collisionEngine;
     private Thread gameLoopThread;
     private volatile boolean running;
     private volatile GameEvent gameState;
+    private int gameOverDelayTicks = -1;
+    private final List<Vector2> pendingCollisionPoints = new ArrayList<>();
     private Runnable onGameOver;
     private Runnable onPause;
     private Runnable onResume;
@@ -56,7 +65,11 @@ public final class MasterControllerImpl implements MasterController {
         this.onResume = Objects.requireNonNull(onResume);
     }
 
-    public void setEventController(final GameEventController eventController) {
+    public void setInputController(final InputController inputController) {
+        this.inputController = Objects.requireNonNull(inputController, "inputController must not be null");
+    }
+
+    public void setEventController(final InternalEventListener eventController) {
         this.eventController = Objects.requireNonNull(eventController, "eventController must not be null");
     }
 
@@ -115,13 +128,12 @@ public final class MasterControllerImpl implements MasterController {
                 System.exit(0);
             }
             case GAME_OVER -> {
-                gameState = GameEvent.GAME_OVER;
-                stop();
-                if (onGameOver != null) {
-                    onGameOver.run();
+                if (gameOverDelayTicks < 0) {
+                    gameOverDelayTicks = GAME_OVER_DELAY_TICKS;
                 }
             }
-            default -> { }
+            default -> {
+            }
         }
     }
 
@@ -145,9 +157,14 @@ public final class MasterControllerImpl implements MasterController {
         }
         gameState = GameEvent.RUNNING;
         hudController.reset();
+        stateAssembler.reset();
+        gameOverDelayTicks = -1;
+        pendingCollisionPoints.clear();
         if (scoreController != null) {
             scoreController.reset();
         }
+        inputController.reset();
+        entityControllers.forEach(EntityController::removeAll);
         entityControllers.forEach(EntityController::clearAll);
         running = true;
         gameLoopThread = new Thread(this::gameLoop, "game-loop");
@@ -187,11 +204,23 @@ public final class MasterControllerImpl implements MasterController {
         while (running && !Thread.currentThread().isInterrupted()) {
             final long frameStart = System.nanoTime();
 
-            if (gameState == GameEvent.RUNNING) {
+            if (gameState == GameEvent.RUNNING && gameOverDelayTicks < 0) {
                 updateFrame();
             }
 
+            if (gameOverDelayTicks > 0) {
+                gameOverDelayTicks--;
+                if (gameOverDelayTicks == 0) {
+                    gameState = GameEvent.GAME_OVER;
+                    running = false;
+                    if (onGameOver != null) {
+                        onGameOver.run();
+                    }
+                }
+            }
+
             renderFrame();
+            pendingCollisionPoints.clear();
 
             final long elapsedMs = (System.nanoTime() - frameStart) / 1_000_000;
             final long sleepMs = TICK_MS - elapsedMs;
@@ -225,7 +254,8 @@ public final class MasterControllerImpl implements MasterController {
                 hudController.getElapsedMs(),
                 hudController.getStars(),
                 hudController.getSpeedMultiplier(),
-                hudController.isShieldActive());
+                hudController.isShieldActive(), 
+                pendingCollisionPoints);
         notifyViews(v -> v.renderFrame(state));
     }
 
@@ -238,6 +268,11 @@ public final class MasterControllerImpl implements MasterController {
         // do we need it?
         if (evt instanceof EffectEvent) {
             entityControllers.forEach(ec -> ec.onInternalEvent(evt, data));
+        }
+        if (data instanceof final CollisionData collisionData
+                && (evt == CollisionEvent.MISSILE_MISSILE_COLLISION
+                        || evt == CollisionEvent.PLANE_MISSILE_COLLISION)) {
+            pendingCollisionPoints.add(collisionData.getCollisionPoint());
         }
         if (eventController != null) {
             eventController.onInternalEvent(evt, data);

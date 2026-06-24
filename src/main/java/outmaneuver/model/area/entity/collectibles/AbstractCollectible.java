@@ -9,7 +9,7 @@ import outmaneuver.util.Vector2;
 
 public abstract class AbstractCollectible implements Collectible {
 
-    private static final double HITBOX_RADIUS = 10.0;
+    private static final double HITBOX_RADIUS = 15.0;
 
     Vector2 position;
     Effect effect;

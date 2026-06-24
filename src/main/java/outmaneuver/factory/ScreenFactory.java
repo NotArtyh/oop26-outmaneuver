@@ -1,6 +1,8 @@
 package outmaneuver.factory;
 
 import java.awt.Dimension;
+import java.awt.GraphicsEnvironment;
+import java.awt.Rectangle;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -13,6 +15,8 @@ import outmaneuver.model.area.entity.plane.Plane;
 import outmaneuver.model.profile.PlayerProfile;
 import outmaneuver.model.session.IGameSession;
 import outmaneuver.model.shop.IShop;
+import outmaneuver.util.assets.AssetStore;
+import outmaneuver.util.assets.ClasspathAssetStore;
 import outmaneuver.view.swing.GameKeyListener;
 import outmaneuver.view.swing.ScreenId;
 import outmaneuver.view.swing.SwingGameView;
@@ -31,8 +35,14 @@ import outmaneuver.view.swing.shop.ShopView;
  */
 public final class ScreenFactory {
 
-    private static final int GAME_WIDTH  = 800;
-    private static final int GAME_HEIGHT = 600;
+    /** Aspect ratio of the game world (1400 × 1000 = 1.4 : 1). */
+    private static final double ASPECT_RATIO = 1400.0 / 1000.0;
+
+    /**
+     * Maximum fraction of the screen that the game window may occupy on each axis.
+     * 0.9 leaves a small margin so the window fits comfortably inside the desktop.
+     */
+    private static final double SCREEN_FILL_FACTOR = 0.9;
 
     private ScreenFactory() { }
 
@@ -43,10 +53,36 @@ public final class ScreenFactory {
     public record Result(Map<ScreenId, JPanel> screens, SwingGameView gameView) { }
 
     /**
-     * Creates every screen, registers navigation callbacks that use {@code uiRef}
-     * (a one-element array populated by the caller immediately after this method
-     * returns), and configures lifecycle hooks on the master controller.
+     * Computes a game-window size that:
+     * <ol>
+     *   <li>Preserves the original 1.4 : 1 aspect ratio.</li>
+     *   <li>Scales proportionally to the usable screen area.</li>
+     *   <li>Never exceeds {@value #SCREEN_FILL_FACTOR} of the usable area on either axis.</li>
+     * </ol>
+     * Uses {@link GraphicsEnvironment#getMaximumWindowBounds()} which already
+     * excludes OS chrome (taskbar on Windows, Dock on macOS) and returns
+     * device-independent pixels, so this works correctly on HiDPI displays too.
      */
+    private static Dimension scaledGameSize() {
+        final Rectangle screenBounds = GraphicsEnvironment
+                .getLocalGraphicsEnvironment()
+                .getMaximumWindowBounds();
+
+        final int maxWidth  = (int) (screenBounds.width  * SCREEN_FILL_FACTOR);
+        final int maxHeight = (int) (screenBounds.height * SCREEN_FILL_FACTOR);
+
+        // Fit inside maxWidth × maxHeight while keeping the aspect ratio.
+        int width  = maxWidth;
+        int height = (int) Math.round(width / ASPECT_RATIO);
+
+        if (height > maxHeight) {
+            height = maxHeight;
+            width  = (int) Math.round(height * ASPECT_RATIO);
+        }
+
+        return new Dimension(width, height);
+    }
+
     public static Result build(
             final ControllerAssembler.Controllers ctrl,
             final PlayerProfile profile,
@@ -57,10 +93,14 @@ public final class ScreenFactory {
 
         final MasterControllerImpl master = ctrl.master();
 
+        // L'asset store carica tutti gli sprite una volta sola (cache eager) e li fornisce
+        // alla view: dipendenza iniettata dall'esterno, la view non sa COME sono caricati.
+        final AssetStore assets = new ClasspathAssetStore();
         final SwingGameView gameView = new SwingGameView(
                 new GameKeyListener(ctrl.input(), master),
-                new SwingHudView());
-        gameView.setPreferredSize(new Dimension(GAME_WIDTH, GAME_HEIGHT));
+                new SwingHudView(),
+                assets);
+        gameView.setPreferredSize(scaledGameSize());
         gameView.init();
         master.attachView(gameView);
 
@@ -68,6 +108,7 @@ public final class ScreenFactory {
         final LeaderboardView[] leaderboardRef = { null };
 
         final ShopView shopView = new ShopView(
+                assets,
                 shop.getCatalog(),
                 profile::getCoins,
                 plane::getStats,

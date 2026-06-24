@@ -35,8 +35,6 @@ public final class PlaneControllerImpl extends EntityControllerImpl {
 
     @Override
     public void clearAll() {
-        inputController.reset();
-        removeAll();
         if (plane != null) {
             spawnEntity(plane);
         }

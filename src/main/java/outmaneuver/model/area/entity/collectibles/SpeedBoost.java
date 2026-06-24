@@ -8,4 +8,9 @@ public final class SpeedBoost extends AbstractCollectible {
     public SpeedBoost(final Vector2 position, final Effect effect) {
         super(position, effect);
     }
+
+    @Override
+    public String getCollectibleType() {
+        return "speed";
+    }
 }

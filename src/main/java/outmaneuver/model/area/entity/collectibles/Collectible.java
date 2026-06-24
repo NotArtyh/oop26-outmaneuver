@@ -6,4 +6,6 @@ import outmaneuver.model.area.entity.Entity;
 public interface Collectible extends Entity {
 
     Effect getEffect();
+
+    String getCollectibleType();
 }

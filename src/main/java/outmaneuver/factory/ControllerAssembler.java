@@ -5,8 +5,8 @@ import java.util.List;
 
 import outmaneuver.controller.CollisionEngine;
 import outmaneuver.controller.event.GameEvent;
+import outmaneuver.controller.event.EventController;
 import outmaneuver.controller.impl.CollectibleControllerImpl;
-import outmaneuver.controller.impl.GameEventControllerImpl;
 import outmaneuver.controller.impl.HudControllerImpl;
 import outmaneuver.controller.impl.InputControllerImpl;
 import outmaneuver.controller.impl.MasterControllerImpl;
@@ -66,16 +66,17 @@ public final class ControllerAssembler {
         master.addEntityController(planeCtrl);
         master.addEntityController(collectibleCtrl);
         master.addEntityController(missileCtrl);
-        final GameEventControllerImpl eventController = new GameEventControllerImpl(
+        final EventController eventController = new EventController(
                 master, score, hud, () -> master.handleEvent(GameEvent.GAME_OVER));
         
         master.setCollisionEngine(collision);
         master.setScoreController(score); // va qui?
         master.setSceneEntities(sharedEntities);
         master.setHudController(hud);
+        master.setInputController(input);
         master.setStateAssembler(new RenderStateAssemblerImpl());
         master.setEventController(eventController);
-
+        
         planeCtrl.setEventListener(eventController);
         collectibleCtrl.setEventListener(eventController);
         missileCtrl.setEventListener(eventController);

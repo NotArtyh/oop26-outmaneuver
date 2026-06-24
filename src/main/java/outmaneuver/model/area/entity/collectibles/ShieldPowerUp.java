@@ -8,4 +8,9 @@ public final class ShieldPowerUp extends AbstractCollectible {
     public ShieldPowerUp(final Vector2 position, final Effect effect) {
         super(position, effect); // Initialize position with the provided value and effect
     }
+
+    @Override
+    public String getCollectibleType() {
+        return "shield";
+    }
 }

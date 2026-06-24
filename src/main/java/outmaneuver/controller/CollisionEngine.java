@@ -34,11 +34,6 @@ public class CollisionEngine {
         entities.remove(entity);
     }
 
-    public void clearAll() {
-        entities.clear();
-    }
-    // Tick — chiamato ogni frame dal game loop (game loop thread)
-
     /**
      * Itera su tutte le coppie rilevanti e verifica l'intersezione delle hitbox.
      * Quando rileva un hit chiama {@code eventListener.onInternalEvent()} con
