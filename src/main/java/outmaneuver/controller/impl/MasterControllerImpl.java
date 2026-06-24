@@ -12,6 +12,7 @@ import outmaneuver.controller.event.Event;
 import outmaneuver.controller.EntityController;
 import outmaneuver.controller.GameEventController;
 import outmaneuver.controller.event.GameEvent;
+import outmaneuver.controller.HudController;
 import outmaneuver.controller.MasterController;
 import outmaneuver.controller.RenderStateAssembler;
 import outmaneuver.controller.ScoreController;
@@ -27,6 +28,7 @@ public final class MasterControllerImpl implements MasterController {
     private final List<GameView> views = new ArrayList<>();
     private final List<EntityController> entityControllers = new ArrayList<>();
     private List<Entity> sceneEntities = List.of();
+    private HudController hudController;
     private ScoreController scoreController;
     private GameEventController eventController;
     private RenderStateAssembler stateAssembler;
@@ -56,6 +58,10 @@ public final class MasterControllerImpl implements MasterController {
 
     public void setEventController(final GameEventController eventController) {
         this.eventController = Objects.requireNonNull(eventController, "eventController must not be null");
+    }
+
+    public void setHudController(final HudController hudController) {
+        this.hudController = Objects.requireNonNull(hudController, "hudController must not be null");
     }
 
     public void setStateAssembler(final RenderStateAssembler stateAssembler) {
