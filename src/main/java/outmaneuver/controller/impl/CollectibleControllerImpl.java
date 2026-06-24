@@ -80,7 +80,7 @@ public final class CollectibleControllerImpl extends EntityControllerImpl {
             final Effect effect = it.next();
             effect.update(deltaMs);
             if (!effect.isActive()) {
-                onInternalEvent(EffectEvent.EFFECT_EXPIRED, effect.getClass());
+                onInternalEvent(EffectEvent.EFFECT_EXPIRED, effect);
                 it.remove();
             }
         }
