@@ -6,6 +6,7 @@ import java.util.Objects;
 import outmaneuver.controller.CollisionEngine;
 import outmaneuver.controller.EntityController;
 import outmaneuver.controller.event.Event;
+import outmaneuver.controller.event.InternalEventListener;
 import outmaneuver.model.area.entity.Entity;
 import outmaneuver.view.GameView;
 
@@ -13,6 +14,7 @@ public abstract class EntityControllerImpl implements EntityController {
 
     private final List<Entity> entities;
     private final CollisionEngine collisionEngine;
+    private InternalEventListener eventListener;
     private GameView view;
 
     protected EntityControllerImpl(final List<Entity> entities,
@@ -23,6 +25,10 @@ public abstract class EntityControllerImpl implements EntityController {
 
     public void setView(final GameView view) {
         this.view = view;
+    }
+
+    public void setEventListener(final InternalEventListener listener) {
+        this.eventListener = listener;
     }
 
     protected GameView getView() {
@@ -65,7 +71,9 @@ public abstract class EntityControllerImpl implements EntityController {
 
     @Override
     public void onInternalEvent(final Event evt, final Object data) {
-        // gestito da GameEventControllerImpl
+        if (eventListener != null) {
+            eventListener.onInternalEvent(evt, data);
+        }
     }
 
 }
