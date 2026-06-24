@@ -75,6 +75,10 @@ public final class ControllerAssembler {
         master.setStateAssembler(new RenderStateAssemblerImpl(hud)); // TODO: prender Hud, fix temporaneo, spostare
         master.setEventController(eventController);
 
+        planeCtrl.setEventListener(eventController);
+        collectibleCtrl.setEventListener(eventController);
+        missileCtrl.setEventListener(eventController);
+
         return new Controllers(input, hud, master);
     }
 }
