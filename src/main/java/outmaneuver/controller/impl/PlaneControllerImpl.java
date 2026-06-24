@@ -44,23 +44,22 @@ public final class PlaneControllerImpl extends EntityControllerImpl {
 
     @Override
     public void updateEntities(final long deltaMs) {
-        for (final Entity e : getEntities()) {
-            if (e instanceof final Plane p) {
-                final double deltaSec = deltaMs / 1000.0;
-                final double turnDir = inputController.getTurnDirection();
-
-                p.setTurnState(turnDir < 0 ? TurnState.LEFT
-                        : turnDir > 0 ? TurnState.RIGHT
-                                : TurnState.NONE);
-
-                final double newDir = p.getDirection() + turnDir * p.getStats().getTurnRate() * deltaSec;
-                p.setDirection(normaliseAngle(newDir));
-
-                final double speed = p.getStats().getBaseSpeed() * speedMutltiplier;
-                final Vector2 velocity = Vector2.fromAngle(p.getDirection()).scale(speed);
-                p.setPosition(p.getPosition().add(velocity.scale(deltaSec)));
-            }
+        if (plane == null) {
+            return;
         }
+        final double deltaSec = deltaMs / 1000.0;
+        final double turnDir = inputController.getTurnDirection();
+
+        plane.setTurnState(turnDir < 0 ? TurnState.LEFT
+                : turnDir > 0 ? TurnState.RIGHT
+                        : TurnState.NONE);
+
+        final double newDir = plane.getDirection() + turnDir * plane.getStats().getTurnRate() * deltaSec;
+        plane.setDirection(normaliseAngle(newDir));
+
+        final double speed = plane.getStats().getBaseSpeed() * speedMutltiplier;
+        final Vector2 velocity = Vector2.fromAngle(plane.getDirection()).scale(speed);
+        plane.setPosition(plane.getPosition().add(velocity.scale(deltaSec)));
     }
 
     public void setSpeedMultiplier(double multiplier) {
