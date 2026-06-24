@@ -64,6 +64,14 @@ public final class CollectibleControllerImpl extends EntityControllerImpl {
                 .orElse(1.0);
     }
 
+    @Override
+    public void clearAll() {
+        for (final Effect effect : activeEffects) {
+            onInternalEvent(EffectEvent.EFFECT_EXPIRED, effect);
+        }
+        activeEffects.clear();
+    }
+
     private void tickEffect(final long deltaMs) {
         activeEffects.forEach(e -> e.update(deltaMs));
 
