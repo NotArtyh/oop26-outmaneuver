@@ -16,7 +16,7 @@ import javax.swing.SwingConstants;
 
 public final class Theme {
 
-    public static final Color BACKGROUND     = new Color(120, 255, 255);
+    public static final Color BACKGROUND     = new Color(180, 225, 245);
 
     public static final Color TEXT_TITLE      = Color.WHITE;
     public static final Color TEXT_BODY       = Color.LIGHT_GRAY;

@@ -33,8 +33,8 @@ import outmaneuver.view.swing.shop.ShopView;
  */
 public final class ScreenFactory {
 
-    private static final int GAME_WIDTH  = 800;
-    private static final int GAME_HEIGHT = 600;
+    private static final int GAME_WIDTH  = 1400;
+    private static final int GAME_HEIGHT = 1000;
 
     private ScreenFactory() { }
 
