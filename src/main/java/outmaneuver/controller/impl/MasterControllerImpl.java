@@ -218,7 +218,14 @@ public final class MasterControllerImpl implements MasterController {
     }
 
     private void renderFrame() {
-        final RenderState state = stateAssembler.assemble(sceneEntities, gameState == GameEvent.PAUSED);
+        final boolean paused = gameState == GameEvent.PAUSED;
+        final RenderState state = stateAssembler.assemble(
+                sceneEntities,
+                paused,
+                hudController.getElapsedMs(),
+                hudController.getStars(),
+                hudController.getSpeedMultiplier(),
+                hudController.isShieldActive());
         notifyViews(v -> v.renderFrame(state));
     }
 
@@ -228,11 +235,15 @@ public final class MasterControllerImpl implements MasterController {
 
     @Override
     public void onInternalEvent(final Event evt, final Object data) {
+        // do we need it?
         if (evt instanceof EffectEvent) {
             entityControllers.forEach(ec -> ec.onInternalEvent(evt, data));
         }
         if (eventController != null) {
             eventController.onInternalEvent(evt, data);
+        }
+        if (hudController != null) {
+            hudController.onInternalEvent(evt, data);
         }
     }
 }
