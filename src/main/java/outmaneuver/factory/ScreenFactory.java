@@ -56,19 +56,17 @@ public final class ScreenFactory {
      * Computes a game-window size that:
      * <ol>
      *   <li>Preserves the original 1.4 : 1 aspect ratio.</li>
-     *   <li>Scales proportionally to the physical screen resolution.</li>
-     *   <li>Never exceeds {@value #SCREEN_FILL_FACTOR} of the screen on either axis.</li>
+     *   <li>Scales proportionally to the usable screen area.</li>
+     *   <li>Never exceeds {@value #SCREEN_FILL_FACTOR} of the usable area on either axis.</li>
      * </ol>
-     * On HiDPI / Retina displays the bounds returned by
-     * {@link java.awt.GraphicsConfiguration#getBounds()} are already in
-     * device-independent pixels, so no extra DPI scaling is needed here.
+     * Uses {@link GraphicsEnvironment#getMaximumWindowBounds()} which already
+     * excludes OS chrome (taskbar on Windows, Dock on macOS) and returns
+     * device-independent pixels, so this works correctly on HiDPI displays too.
      */
     private static Dimension scaledGameSize() {
         final Rectangle screenBounds = GraphicsEnvironment
                 .getLocalGraphicsEnvironment()
-                .getDefaultScreenDevice()
-                .getDefaultConfiguration()
-                .getBounds();
+                .getMaximumWindowBounds();
 
         final int maxWidth  = (int) (screenBounds.width  * SCREEN_FILL_FACTOR);
         final int maxHeight = (int) (screenBounds.height * SCREEN_FILL_FACTOR);
