@@ -13,8 +13,8 @@ import org.junit.jupiter.api.Test;
 import outmaneuver.controller.impl.InputControllerImpl;
 import outmaneuver.controller.impl.MasterControllerImpl;
 import outmaneuver.controller.impl.RenderStateAssemblerImpl;
-import outmaneuver.controller.impl.SessionState;
 import outmaneuver.controller.event.Event;
+import outmaneuver.model.session.Session;
 import outmaneuver.model.area.entity.Entity;
 import outmaneuver.model.area.entity.plane.Plane;
 import outmaneuver.model.area.entity.plane.PlaneData;
@@ -126,7 +126,7 @@ class MasterControllerImplTest {
         master.setSceneEntities(sharedEntities);
         master.setCollisionEngine(new CollisionEngine(master));
         master.setStateAssembler(new RenderStateAssemblerImpl());
-        master.setSessionState(new SessionState());
+        master.setSession(new Session());
         master.setEventController((evt, data) -> { });
         master.setInputController(new InputControllerImpl());
     }

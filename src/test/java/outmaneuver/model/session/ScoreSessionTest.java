@@ -7,11 +7,11 @@ import org.junit.jupiter.api.Test;
 
 class ScoreSessionTest {
 
-    private ScoreSession session;
+    private ISession session;
 
     @BeforeEach
     void setUp() {
-        session = new ScoreSession();
+        session = new Session();
     }
 
     @Test

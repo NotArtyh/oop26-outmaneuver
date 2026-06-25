@@ -19,8 +19,9 @@ import outmaneuver.controller.impl.InputControllerImpl;
 import outmaneuver.controller.impl.MasterControllerImpl;
 import outmaneuver.controller.impl.PlaneControllerImpl;
 import outmaneuver.controller.impl.ScoreControllerImpl;
-import outmaneuver.controller.impl.SessionState;
 import outmaneuver.controller.impl.missile.MissileControllerImpl;
+import outmaneuver.model.session.ISession;
+import outmaneuver.model.session.Session;
 import outmaneuver.controller.impl.missile.MissileSpawnDirector;
 import outmaneuver.model.area.collision.CollisionData;
 import outmaneuver.model.area.effect.EffectImpl;
@@ -35,7 +36,6 @@ import outmaneuver.model.area.entity.missile.data.MissileRepository;
 import outmaneuver.model.area.entity.plane.Plane;
 import outmaneuver.model.area.entity.plane.PlaneData;
 import outmaneuver.model.area.entity.plane.PlaneImpl;
-import outmaneuver.model.session.ScoreSession;
 import outmaneuver.util.Vector2;
 
 /**
@@ -58,13 +58,12 @@ class EventControllerTest {
     private static final MissileRepository EMPTY_MISSILE_REPO = type -> Optional.empty();
 
     private MasterControllerImpl master;
-    private SessionState session;
+    private ISession session;
     private List<Entity> sharedEntities;
     private Plane plane;
     private PlaneControllerImpl planeCtrl;
     private CollectibleControllerImpl collectibleCtrl;
     private MissileControllerImpl missileCtrl;
-    private ScoreSession scoreSession;
     private ScoreController scoreController;
     private AtomicBoolean gameOverTriggered;
     private EventController eventController;
@@ -87,10 +86,9 @@ class EventControllerTest {
         master.addEntityController(collectibleCtrl);
         master.addEntityController(missileCtrl);
 
-        session = new SessionState();
-        scoreSession = new ScoreSession();
-        master.setSessionState(session);
-        scoreController = new ScoreControllerImpl(scoreSession);
+        session = new Session();
+        master.setSession(session);
+        scoreController = new ScoreControllerImpl(session);
         gameOverTriggered = new AtomicBoolean(false);
 
         eventController = new EventController(master, session, scoreController, () -> gameOverTriggered.set(true));
@@ -146,7 +144,7 @@ class EventControllerTest {
         eventController.onInternalEvent(CollisionEvent.PLANE_COLLECTIBLE_COLLISION, data);
 
         assertFalse(sharedEntities.contains(star), "Collected star should be removed");
-        assertEquals(15, scoreSession.getScore());
+        assertEquals(15, session.getScore());
         assertFalse(collectibleCtrl.hasEffect(EffectImpl.class), "A star carries no effect to activate");
     }
 
@@ -189,7 +187,7 @@ class EventControllerTest {
 
         assertFalse(sharedEntities.contains(a), "First missile should be removed");
         assertFalse(sharedEntities.contains(b), "Second missile should be removed");
-        assertEquals(20, scoreSession.getScore());
+        assertEquals(20, session.getScore());
     }
 
     // ── EFFECT_EXPIRED ──────────────────────────────────────────────────
