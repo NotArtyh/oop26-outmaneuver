@@ -27,6 +27,8 @@ public final class EventController implements InternalEventListener {
     private final HudController hudController;
     private final Runnable onGameOver;
     private boolean shieldActive;
+    private double speedMultiplier = 1.0;
+    private int stars;
 
     public EventController(
             final MasterControllerImpl master,
@@ -68,6 +70,9 @@ public final class EventController implements InternalEventListener {
                 if (scoreController != null) {
                     scoreController.onInternalEvent(CollisionEvent.PLANE_COLLECTIBLE_COLLISION, collectible);
                 }
+                if (collectible instanceof StarCollectible) {
+                    stars++;
+                }
             }
             case MISSILE_MISSILE_COLLISION -> {
                 missileController.removeEntity((Entity) collisionData.getEntityA());
@@ -92,6 +97,7 @@ public final class EventController implements InternalEventListener {
                     planeController.setSpeedMultiplier(effect.getMultiplier());
                     missileController.setSpeedMultiplier(effect.getMultiplier());
                     hudController.setSpeedMultiplier(effect.getMultiplier());
+                    this.speedMultiplier = effect.getMultiplier();
                 }
             }
             case EFFECT_EXPIRED -> {
@@ -104,8 +110,27 @@ public final class EventController implements InternalEventListener {
                     planeController.setSpeedMultiplier(1.0);
                     missileController.setSpeedMultiplier(1.0);
                     hudController.setSpeedMultiplier(1.0);
+                    this.speedMultiplier = 1.0;
                 }
             }
         }
+    }
+
+    public int getStars() {
+        return stars;
+    }
+
+    public double getSpeedMultiplier() {
+        return speedMultiplier;
+    }
+
+    public boolean isShieldActive() {
+        return shieldActive;
+    }
+
+    public void reset() {
+        this.stars = 0;
+        this.speedMultiplier = 1.0;
+        this.shieldActive = false;
     }
 }
