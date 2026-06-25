@@ -14,13 +14,12 @@ import outmaneuver.controller.impl.missile.MissileSpawnDirector;
 import outmaneuver.controller.impl.PlaneControllerImpl;
 import outmaneuver.controller.impl.RenderStateAssemblerImpl;
 import outmaneuver.controller.impl.ScoreControllerImpl;
-import outmaneuver.controller.impl.SessionState;
 import outmaneuver.model.area.entity.Entity;
 import outmaneuver.model.area.entity.missile.data.JsonMissileRepository;
 import outmaneuver.model.area.entity.missile.data.MissileData;
 import outmaneuver.model.area.entity.missile.data.MissileRepository;
 import outmaneuver.model.area.entity.plane.Plane;
-import outmaneuver.model.session.ScoreSession;
+import outmaneuver.model.session.ISession;
 import outmaneuver.util.json.GsonProvider;
 import outmaneuver.util.json.JsonResourceLoader;
 
@@ -43,7 +42,7 @@ public final class ControllerAssembler {
     /**
      * Creates every controller, wires them together, and returns the bundle.
      */
-    public static Controllers assemble(final Plane plane, final ScoreSession session) {
+    public static Controllers assemble(final Plane plane, final ISession session) {
         final InputControllerImpl input = new InputControllerImpl();
         final MasterControllerImpl master = new MasterControllerImpl();
         final CollisionEngine collision = new CollisionEngine(master);
@@ -64,13 +63,12 @@ public final class ControllerAssembler {
         master.addEntityController(planeCtrl);
         master.addEntityController(collectibleCtrl);
         master.addEntityController(missileCtrl);
-        final SessionState sessionState = new SessionState();
         final EventController eventController = new EventController(
-                master, sessionState, score, () -> master.handleEvent(GameEvent.GAME_OVER));
+                master, session, score, () -> master.handleEvent(GameEvent.GAME_OVER));
         
         master.setCollisionEngine(collision);
         master.setScoreController(score); // va qui?
-        master.setSessionState(sessionState);
+        master.setSession(session);
         master.setSceneEntities(sharedEntities);
         master.setInputController(input);
         master.setStateAssembler(new RenderStateAssemblerImpl());

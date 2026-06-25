@@ -6,15 +6,15 @@ import outmaneuver.controller.ScoreController;
 import outmaneuver.controller.event.CollisionEvent;
 import outmaneuver.controller.event.Event;
 import outmaneuver.model.area.entity.collectibles.StarCollectible;
-import outmaneuver.model.session.IScoreSession;
+import outmaneuver.model.session.ISession;
 
 public final class ScoreControllerImpl implements ScoreController {
 
-    private final IScoreSession session;
+    private final ISession session;
     private long pendingMs;
     private int missilesScore = 20;
 
-    public ScoreControllerImpl(final IScoreSession session) {
+    public ScoreControllerImpl(final ISession session) {
         this.session = Objects.requireNonNull(session, "session must not be null");
     }
 

@@ -5,8 +5,8 @@ import java.util.Objects;
 import outmaneuver.controller.ScoreController;
 import outmaneuver.controller.impl.CollectibleControllerImpl;
 import outmaneuver.controller.impl.MasterControllerImpl;
-import outmaneuver.controller.impl.SessionState;
 import outmaneuver.controller.impl.PlaneControllerImpl;
+import outmaneuver.model.session.ISession;
 import outmaneuver.controller.impl.missile.MissileControllerImpl;
 import outmaneuver.model.area.collision.CollisionData;
 import outmaneuver.model.area.effect.Effect;
@@ -18,7 +18,7 @@ import outmaneuver.model.area.entity.missile.Missile;
 
 public final class EventController implements InternalEventListener {
 
-    private final SessionState session;
+    private final ISession session;
     private final PlaneControllerImpl planeController;
     private final CollectibleControllerImpl collectibleController;
     private final MissileControllerImpl missileController;
@@ -27,7 +27,7 @@ public final class EventController implements InternalEventListener {
 
     public EventController(
             final MasterControllerImpl master,
-            final SessionState session,
+            final ISession session,
             final ScoreController scoreController,
             final Runnable onGameOver) {
         this.session = Objects.requireNonNull(session);

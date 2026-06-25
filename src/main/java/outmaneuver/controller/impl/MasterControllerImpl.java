@@ -17,6 +17,7 @@ import outmaneuver.controller.InputController;
 import outmaneuver.controller.MasterController;
 import outmaneuver.controller.RenderStateAssembler;
 import outmaneuver.controller.ScoreController;
+import outmaneuver.model.session.ISession;
 import outmaneuver.model.area.collision.CollisionData;
 import outmaneuver.model.area.entity.Entity;
 import outmaneuver.util.Vector2;
@@ -41,7 +42,7 @@ public final class MasterControllerImpl implements MasterController {
     private volatile boolean running;
     private volatile GameEvent gameState;
     private int gameOverDelayTicks = -1;
-    private SessionState sessionState;
+    private ISession session;
     private final List<Vector2> pendingCollisionPoints = new ArrayList<>();
     private Runnable onGameOver;
     private Runnable onPause;
@@ -101,8 +102,8 @@ public final class MasterControllerImpl implements MasterController {
         this.scoreController = Objects.requireNonNull(scoreController, "scoreController must not be null");
     }
 
-    public void setSessionState(final SessionState sessionState) {
-        this.sessionState = Objects.requireNonNull(sessionState, "sessionState must not be null");
+    public void setSession(final ISession session) {
+        this.session = Objects.requireNonNull(session, "session must not be null");
     }
 
     @Override
@@ -148,13 +149,13 @@ public final class MasterControllerImpl implements MasterController {
         }
         Objects.requireNonNull(collisionEngine, "collisionEngine must be set before start()");
         Objects.requireNonNull(stateAssembler, "stateAssembler must be set before start()");
-        Objects.requireNonNull(sessionState, "sessionState must be set before start()");
+        Objects.requireNonNull(session, "session must be set before start()");
         if (running) {
             return;
         }
         gameState = GameEvent.RUNNING;
         stateAssembler.reset();
-        sessionState.reset();
+        session.reset();
         gameOverDelayTicks = -1;
         pendingCollisionPoints.clear();
         if (scoreController != null) {
@@ -238,7 +239,7 @@ public final class MasterControllerImpl implements MasterController {
         if (scoreController != null) {
             scoreController.onTick(TICK_MS);
         }
-        sessionState.addElapsed(TICK_MS);
+        session.addElapsed(TICK_MS);
     }
 
     private void renderFrame() {
@@ -246,10 +247,10 @@ public final class MasterControllerImpl implements MasterController {
         final RenderState state = stateAssembler.assemble(
                 sceneEntities,
                 paused,
-                sessionState.getElapsedMs(),
-                sessionState.getStars(),
-                sessionState.getSpeedMultiplier(),
-                sessionState.isShieldActive(),
+                session.getElapsedMs(),
+                session.getStars(),
+                session.getSpeedMultiplier(),
+                session.isShieldActive(),
                 pendingCollisionPoints);
         notifyViews(v -> v.renderFrame(state));
     }

@@ -15,7 +15,8 @@ import outmaneuver.model.area.entity.plane.PlaneRepository;
 import outmaneuver.model.profile.IPlayerProfileRepository;
 import outmaneuver.model.profile.JsonPlayerProfileRepository;
 import outmaneuver.model.profile.PlayerProfile;
-import outmaneuver.model.session.ScoreSession;
+import outmaneuver.model.session.ISession;
+import outmaneuver.model.session.Session;
 import outmaneuver.model.shop.IShop;
 import outmaneuver.model.shop.Shop;
 import outmaneuver.model.shop.ShopItem;
@@ -34,7 +35,7 @@ public final class AppBootstrapper {
                 JsonResourceLoader.forList("planes.json", PlaneData.class, GsonProvider.create()));
         final Plane plane = new PlaneImpl(planeRepo.loadById("standard").orElseThrow());
 
-        final ScoreSession session = new ScoreSession();
+        final ISession session = new Session();
         final ControllerAssembler.Controllers ctrl = ControllerAssembler.assemble(plane, session);
 
         // TODO: renderstate assembler as abstract factory here instead of
