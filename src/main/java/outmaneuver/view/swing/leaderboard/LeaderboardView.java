@@ -22,8 +22,8 @@ public final class LeaderboardView extends JPanel {
 
     private static final int TITLE_FONT_SIZE   = 48;
     private static final int VGAP              = 14;
-    private static final int SCROLL_PANE_WIDTH = 600;
-    private static final int SCROLL_PANE_HEIGHT = 220;
+    private static final int SCROLL_PANE_WIDTH = 800;
+    private static final int SCROLL_PANE_HEIGHT = 420;
 
     private final Supplier<List<ScoreEntry>> scoresSupplier;
     private final LeaderboardTablePanel tablePanel;
@@ -41,6 +41,7 @@ public final class LeaderboardView extends JPanel {
         gbc.insets = new Insets(VGAP, 0, 0, 0);
 
         final JLabel title = Theme.outlinedLabel("LEADERBOARD", new Font(Font.SANS_SERIF, Font.BOLD, TITLE_FONT_SIZE), Theme.TEXT_ACCENT);
+        final JLabel subtitle = Theme.outlinedLabel("TOP 20 SCORES", new Font(Font.SANS_SERIF, Font.BOLD, Theme.FONT_BODY), Theme.TEXT_ACCENT);
 
         tablePanel = new LeaderboardTablePanel(Integer.MAX_VALUE);
 
@@ -56,8 +57,9 @@ public final class LeaderboardView extends JPanel {
         backButton.addActionListener(e -> safeBack.run());
 
         gbc.gridy = 0; add(title,      gbc);
-        gbc.gridy = 1; add(scrollPane, gbc);
-        gbc.gridy = 2; add(backButton, gbc);
+        gbc.gridy = 1; add(subtitle,   gbc);
+        gbc.gridy = 2; add(scrollPane, gbc);
+        gbc.gridy = 3; add(backButton, gbc);
     }
 
     /** Ricarica e mostra i punteggi aggiornati. Chiamare prima di mostrare questa schermata. */

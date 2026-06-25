@@ -17,7 +17,7 @@ import outmaneuver.model.wallet.IWallet;
  */
 public final class PlayerProfile implements IWallet {
 
-    private static final int MAX_SCORES = 10;
+    private static final int MAX_SCORES = 20;
 
     private final IPlayerProfileRepository repository;
     private String playerName;
