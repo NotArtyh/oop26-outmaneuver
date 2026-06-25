@@ -1,7 +1,7 @@
 [
-  { "type": "basic",  "speed": 320.0, "maxTurn": 0.020, "radius": 15.0, "lifetime": 15.0, "predictionTime": 0.8, "outOfBoundsMargin": 150 },
-  { "type": "fast",   "speed": 560.0, "maxTurn": 0.016, "radius": 15.0,  "lifetime": 10.0,  "predictionTime": 0.8, "outOfBoundsMargin": 150 },
-  { "type": "sniper", "speed": 580.0, "maxTurn": 0.0,   "radius": 15.0,  "lifetime": -1,   "predictionTime": 0,   "outOfBoundsMargin": 150 },
+  { "type": "basic",  "speed": 320.0, "maxTurn": 0.016, "radius": 15.0, "lifetime": 15.0, "predictionTime": 0.8, "outOfBoundsMargin": 150 },
+  { "type": "fast",   "speed": 550.0, "maxTurn": 0.017, "radius": 15.0,  "lifetime": 10.0,  "predictionTime": 0.7, "outOfBoundsMargin": 150 },
+  { "type": "sniper", "speed": 680.0, "maxTurn": 0.0,   "radius": 15.0,  "lifetime": -1,   "predictionTime": 0,   "outOfBoundsMargin": 150 },
   { "type": "bounce", "speed": 440.0, "maxTurn": 0.0,   "radius": 15.0, "lifetime": -1,   "predictionTime": 0,   "outOfBoundsMargin": 10  },
   { "type": "shield", "speed": 350.0, "maxTurn": 0.015, "radius": 15.0, "lifetime": 14.0, "predictionTime": 0.8, "outOfBoundsMargin": 150 },
   { "type": "clock",  "speed": 350.0, "maxTurn": 0.008, "radius": 15.0, "lifetime": 22.0, "predictionTime": 0.8, "outOfBoundsMargin": 150, "slow": { "factor": 0.3, "duration": 3.0 } }

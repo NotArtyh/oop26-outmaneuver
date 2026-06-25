@@ -10,10 +10,10 @@
   {
     "id": "interceptor",
     "baseSpeed": 280.0,
-    "turnRate": 2.0,
+    "turnRate": 4.0,
     "hitboxRadius": 25.0,
     "spriteId": "plane_fast",
-    "price": 500
+    "price": 5000
   },
   {
     "id": "tanker",
@@ -21,6 +21,6 @@
     "turnRate": 1.5,
     "hitboxRadius": 25.0,
     "spriteId": "plane_heavy",
-    "price": 300
+    "price": 1200
   }
 ]
