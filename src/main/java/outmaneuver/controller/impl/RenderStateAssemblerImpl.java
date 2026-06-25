@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import outmaneuver.controller.RenderStateAssembler;
-import outmaneuver.controller.event.EventController;
 
 import outmaneuver.model.area.entity.Entity;
 import outmaneuver.model.area.entity.collectibles.Collectible;
@@ -17,26 +16,21 @@ import outmaneuver.view.RenderState;
 
 public final class RenderStateAssemblerImpl implements RenderStateAssembler {
 
-    private final EventController eventController;
-
-    public RenderStateAssemblerImpl(final EventController eventController) {
-        this.eventController = eventController;
-    }
+    private static final int EXPLOSION_LIFETIME_TICKS = 12;
+    private final List<ExplosionInstance> activeExplosions = new ArrayList<>();
 
     @Override
     public RenderState assemble(final List<Entity> entities, final boolean paused,
-            final long elapsedMs, final List<Vector2> collisionPoints) {
+            final long elapsedMs, final int stars, final double speedMultiplier,
+            final boolean shieldActive, final List<Vector2> collisionPoints) {
         return RenderState.builder()
                 .planeData(buildPlaneData(entities))
-                .hud(buildHud(entities, paused, elapsedMs))
+                .hud(buildHud(entities, paused, elapsedMs, stars, speedMultiplier, shieldActive))
                 .missiles(buildMissileData(entities))
                 .collectibles(buildCollectibleData(entities))
                 .collisions(buildCollisionData(collisionPoints))
                 .build();
     }
-
-    private static final int EXPLOSION_LIFETIME_TICKS = 12;
-    private final List<ExplosionInstance> activeExplosions = new ArrayList<>();
 
     @Override
     public void reset() {
@@ -83,19 +77,16 @@ public final class RenderStateAssemblerImpl implements RenderStateAssembler {
                 .toList();
     }
 
-    private HudSnapshot buildHud(final List<Entity> entities, final boolean paused, final long elapsedMs) {
+    private HudSnapshot buildHud(final List<Entity> entities, final boolean paused,
+            final long elapsedMs, final int stars, final double speedMultiplier,
+            final boolean shieldActive) {
         final double speed = entities.stream()
                 .filter(e -> e instanceof Plane)
                 .map(e -> (Plane) e)
                 .findFirst()
-                .map(p -> p.getStats().getBaseSpeed() * eventController.getSpeedMultiplier())
+                .map(p -> p.getStats().getBaseSpeed() * speedMultiplier)
                 .orElse(0.0);
-        return new HudSnapshot(
-                elapsedMs,
-                speed,
-                eventController.isShieldActive(),
-                paused,
-                eventController.getStars());
+        return new HudSnapshot(elapsedMs, speed, shieldActive, paused, stars);
     }
 
     private List<EntityRenderData> buildCollisionData(final List<Vector2> collisionPoints) {

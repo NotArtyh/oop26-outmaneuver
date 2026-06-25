@@ -10,8 +10,8 @@ import outmaneuver.controller.CollisionEngine;
 import outmaneuver.controller.event.EffectEvent;
 import outmaneuver.controller.event.Event;
 import outmaneuver.controller.EntityController;
-import outmaneuver.controller.event.EventController;
 import outmaneuver.controller.event.GameEvent;
+import outmaneuver.controller.event.InternalEventListener;
 import outmaneuver.controller.event.CollisionEvent;
 import outmaneuver.controller.InputController;
 import outmaneuver.controller.MasterController;
@@ -34,14 +34,14 @@ public final class MasterControllerImpl implements MasterController {
     private List<Entity> sceneEntities = List.of();
     private ScoreController scoreController;
     private InputController inputController;
-    private EventController eventController;
+    private InternalEventListener eventController;
     private RenderStateAssembler stateAssembler;
     private CollisionEngine collisionEngine;
     private Thread gameLoopThread;
     private volatile boolean running;
     private volatile GameEvent gameState;
     private int gameOverDelayTicks = -1;
-    private long elapsedMs;
+    private SessionState sessionState;
     private final List<Vector2> pendingCollisionPoints = new ArrayList<>();
     private Runnable onGameOver;
     private Runnable onPause;
@@ -67,7 +67,7 @@ public final class MasterControllerImpl implements MasterController {
         this.inputController = Objects.requireNonNull(inputController, "inputController must not be null");
     }
 
-    public void setEventController(final EventController eventController) {
+    public void setEventController(final InternalEventListener eventController) {
         this.eventController = Objects.requireNonNull(eventController, "eventController must not be null");
     }
 
@@ -99,6 +99,10 @@ public final class MasterControllerImpl implements MasterController {
 
     public void setScoreController(final ScoreController scoreController) {
         this.scoreController = Objects.requireNonNull(scoreController, "scoreController must not be null");
+    }
+
+    public void setSessionState(final SessionState sessionState) {
+        this.sessionState = Objects.requireNonNull(sessionState, "sessionState must not be null");
     }
 
     @Override
@@ -144,14 +148,13 @@ public final class MasterControllerImpl implements MasterController {
         }
         Objects.requireNonNull(collisionEngine, "collisionEngine must be set before start()");
         Objects.requireNonNull(stateAssembler, "stateAssembler must be set before start()");
-        Objects.requireNonNull(eventController, "eventController must be set before start()");
+        Objects.requireNonNull(sessionState, "sessionState must be set before start()");
         if (running) {
             return;
         }
         gameState = GameEvent.RUNNING;
-        eventController.reset();
         stateAssembler.reset();
-        elapsedMs = 0;
+        sessionState.reset();
         gameOverDelayTicks = -1;
         pendingCollisionPoints.clear();
         if (scoreController != null) {
@@ -235,7 +238,7 @@ public final class MasterControllerImpl implements MasterController {
         if (scoreController != null) {
             scoreController.onTick(TICK_MS);
         }
-        elapsedMs += TICK_MS;
+        sessionState.addElapsed(TICK_MS);
     }
 
     private void renderFrame() {
@@ -243,7 +246,10 @@ public final class MasterControllerImpl implements MasterController {
         final RenderState state = stateAssembler.assemble(
                 sceneEntities,
                 paused,
-                elapsedMs,
+                sessionState.getElapsedMs(),
+                sessionState.getStars(),
+                sessionState.getSpeedMultiplier(),
+                sessionState.isShieldActive(),
                 pendingCollisionPoints);
         notifyViews(v -> v.renderFrame(state));
     }
