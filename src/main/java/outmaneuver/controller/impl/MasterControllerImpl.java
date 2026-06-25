@@ -10,8 +10,8 @@ import outmaneuver.controller.CollisionEngine;
 import outmaneuver.controller.event.EffectEvent;
 import outmaneuver.controller.event.Event;
 import outmaneuver.controller.EntityController;
-import outmaneuver.controller.event.EventController;
 import outmaneuver.controller.event.GameEvent;
+import outmaneuver.controller.event.InternalEventListener;
 import outmaneuver.controller.event.CollisionEvent;
 import outmaneuver.controller.InputController;
 import outmaneuver.controller.MasterController;
@@ -34,7 +34,7 @@ public final class MasterControllerImpl implements MasterController {
     private List<Entity> sceneEntities = List.of();
     private ScoreController scoreController;
     private InputController inputController;
-    private EventController eventController;
+    private InternalEventListener eventController;
     private RenderStateAssembler stateAssembler;
     private CollisionEngine collisionEngine;
     private Thread gameLoopThread;
@@ -67,7 +67,7 @@ public final class MasterControllerImpl implements MasterController {
         this.inputController = Objects.requireNonNull(inputController, "inputController must not be null");
     }
 
-    public void setEventController(final EventController eventController) {
+    public void setEventController(final InternalEventListener eventController) {
         this.eventController = Objects.requireNonNull(eventController, "eventController must not be null");
     }
 
