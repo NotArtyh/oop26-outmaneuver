@@ -12,20 +12,25 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import outmaneuver.model.area.entity.plane.PlaneStats;
+import outmaneuver.model.area.entity.plane.PlaneData;
+import outmaneuver.model.area.entity.plane.PlaneRepository;
 import outmaneuver.model.wallet.IWallet;
 
 class ShopTest {
 
-    private PlaneStats stats;
+    private static final PlaneData PLANE_A = new PlaneData("a", 10, 5, 3, "sprite_a", 200);
+    private static final PlaneData PLANE_B = new PlaneData("b", 12, 6, 4, "sprite_b", 100);
+
+    private PlaneRepository repo;
     private ShopItem item;
     private IShop shop;
 
     @BeforeEach
     void setUp() {
-        stats = mock(PlaneStats.class);
-        item  = new ShopItem(stats, 200);
-        shop  = new Shop(List.of(item));
+        repo = mock(PlaneRepository.class);
+        when(repo.loadAll()).thenReturn(List.of(PLANE_A));
+        shop = new Shop(repo);
+        item = shop.getCatalog().getFirst();
     }
 
     @Test
@@ -56,20 +61,21 @@ class ShopTest {
 
     @Test
     void purchaseThrowsForItemNotInCatalog() {
-        final PlaneStats other = mock(PlaneStats.class);
-        final ShopItem unknown = new ShopItem(other, 100);
-        final IWallet wallet    = mock(IWallet.class);
+        final ShopItem unknown = new ShopItem(PLANE_B, 100);
+        final IWallet wallet   = mock(IWallet.class);
 
         assertThrows(IllegalArgumentException.class, () -> shop.purchase(unknown, wallet));
     }
 
     @Test
     void constructorRejectsEmptyCatalog() {
-        assertThrows(IllegalArgumentException.class, () -> new Shop(List.of()));
+        final PlaneRepository emptyRepo = mock(PlaneRepository.class);
+        when(emptyRepo.loadAll()).thenReturn(List.of());
+        assertThrows(IllegalArgumentException.class, () -> new Shop(emptyRepo));
     }
 
     @Test
-    void constructorRejectsNullCatalog() {
+    void constructorRejectsNullRepo() {
         assertThrows(NullPointerException.class, () -> new Shop(null));
     }
 }

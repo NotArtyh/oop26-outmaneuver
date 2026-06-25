@@ -22,7 +22,6 @@ import outmaneuver.model.session.ISession;
 import outmaneuver.model.session.Session;
 import outmaneuver.model.shop.IShop;
 import outmaneuver.model.shop.Shop;
-import outmaneuver.model.shop.ShopItem;
 import outmaneuver.util.json.GsonProvider;
 import outmaneuver.util.json.JsonResourceLoader;
 import outmaneuver.view.swing.ScreenId;
@@ -52,10 +51,7 @@ public final class AppBootstrapper {
         final IPlayerProfileRepository profileRepo = JsonPlayerProfileRepository.create(profilePath);
         final PlayerProfile profile = new PlayerProfile(profileRepo);
 
-        final IShop shop = new Shop(
-                planeRepo.loadAll().stream()
-                        .map(p -> new ShopItem(p, p.price()))
-                        .toList());
+        final IShop shop = new Shop(planeRepo);
 
         final UIManager[] uiRef = { null };
         final ScreenFactory.Result result = ScreenFactory.build(ctrl, profile, plane, shop, session, uiRef);
