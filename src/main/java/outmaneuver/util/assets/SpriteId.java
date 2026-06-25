@@ -1,5 +1,7 @@
 package outmaneuver.util.assets;
 
+import java.util.Locale;
+
 public enum SpriteId {
 
     PLANE_STANDARD,
@@ -24,10 +26,10 @@ public enum SpriteId {
     CLOUD_3;
 
     public String getFilename() {
-        return name().toLowerCase();
+        return name().toLowerCase(Locale.ROOT);
     }
 
     public static SpriteId fromFilename(final String filename) {
-        return valueOf(filename.toUpperCase());
+        return valueOf(filename.toUpperCase(Locale.ROOT));
     }
 }

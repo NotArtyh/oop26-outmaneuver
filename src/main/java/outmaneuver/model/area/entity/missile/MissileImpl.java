@@ -87,10 +87,15 @@ public abstract class MissileImpl implements Missile {
         velocity = Vector2.fromAngle(currentAngle + turn).scale(speed);
     }
 
-    protected final double normalizeAngle(double a) {
-        while (a >  Math.PI) a -= 2 * Math.PI;
-        while (a < -Math.PI) a += 2 * Math.PI;
-        return a;
+    protected final double normalizeAngle(final double a) {
+        final double twoPi = 2 * Math.PI;
+        double normalised = a % twoPi;
+        if (normalised > Math.PI) {
+            normalised -= twoPi;
+        } else if (normalised < -Math.PI) {
+            normalised += twoPi;
+        }
+        return normalised;
     }
 
     @Override

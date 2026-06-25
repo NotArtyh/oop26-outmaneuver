@@ -51,8 +51,9 @@ public final class JsonFileStore<T> {
     public void save(final T data) {
         Objects.requireNonNull(data, "data must not be null");
         try {
-            if (filePath.getParent() != null) {
-                Files.createDirectories(filePath.getParent());
+            final Path parent = filePath.getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
             }
             try (Writer writer = Files.newBufferedWriter(filePath, StandardCharsets.UTF_8)) {
                 gson.toJson(data, type, writer);

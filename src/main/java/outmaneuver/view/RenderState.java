@@ -19,25 +19,25 @@ public final class RenderState {
                         final List<EntityRenderData> collisions) {
         this.plane = plane;
         this.hud = hud;
-        this.missiles = missiles;
-        this.collectibles = collectibles;
-        this.collisions = collisions;
+        this.missiles = List.copyOf(missiles);
+        this.collectibles = List.copyOf(collectibles);
+        this.collisions = List.copyOf(collisions);
     }
 
     public EntityRenderData getPlane() { return plane; }
 
-    public List<EntityRenderData> getMissiles() { return missiles; }
+    public List<EntityRenderData> getMissiles() { return List.copyOf(missiles); }
 
     public HudSnapshot getHud() {
         return hud;
     }
 
     public List<EntityRenderData> getCollectibles() {
-        return collectibles;
+        return List.copyOf(collectibles);
     }
 
     public List<EntityRenderData> getCollisions() {
-        return collisions;
+        return List.copyOf(collisions);
     }
 
     public static Builder builder() {
@@ -65,17 +65,17 @@ public final class RenderState {
         }
 
         public Builder missiles(final List<EntityRenderData> missiles) {
-            this.missiles = missiles;
+            this.missiles = List.copyOf(missiles);
             return this;
         }
 
         public Builder collectibles(final List<EntityRenderData> collectibles) {
-            this.collectibles = collectibles;
+            this.collectibles = List.copyOf(collectibles);
             return this;
         }
 
         public Builder collisions(final List<EntityRenderData> collisions) {
-            this.collisions = collisions;
+            this.collisions = List.copyOf(collisions);
             return this;
         }
 

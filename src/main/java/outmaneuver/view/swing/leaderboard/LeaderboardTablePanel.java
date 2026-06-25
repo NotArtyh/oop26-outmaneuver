@@ -11,10 +11,14 @@ import java.util.Objects;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import outmaneuver.assembler.ScreenAssembler.ScreenMetrics;
 import outmaneuver.model.session.ScoreEntry;
 import outmaneuver.view.swing.Theme;
 
+@SuppressFBWarnings(
+        value = "SE_BAD_FIELD",
+        justification = "LeaderboardTablePanel is a Swing JPanel that is never actually serialized")
 public final class LeaderboardTablePanel extends JPanel {
 
     private final int maxEntries;

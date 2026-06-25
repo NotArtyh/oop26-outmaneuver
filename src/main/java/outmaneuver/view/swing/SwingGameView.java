@@ -16,6 +16,7 @@ import java.util.Random;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import outmaneuver.util.assets.AssetStore;
 import outmaneuver.util.assets.SpriteId;
 import outmaneuver.view.EntityRenderData;
@@ -23,6 +24,9 @@ import outmaneuver.view.GameView;
 import outmaneuver.view.RenderState;
 import outmaneuver.view.swing.hud.IHudView;
 
+@SuppressFBWarnings(
+        value = "SE_BAD_FIELD",
+        justification = "SwingGameView is a Swing JPanel that is never actually serialized")
 public final class SwingGameView extends JPanel implements GameView {
 
     private static final Color SKY_COLOR = new Color(180, 225, 245); // azzurrino chiaro (cielo)
@@ -230,8 +234,8 @@ public final class SwingGameView extends JPanel implements GameView {
         final int drawW = (int) (frameW * scale);
         final int drawH = (int) (sheet.getHeight() * scale);
         g2d.drawImage(sheet,
-                (int) (screenX - drawW / 2), (int) (screenY - drawH / 2),
-                (int) (screenX + drawW / 2), (int) (screenY + drawH / 2),
+                (int) (screenX - drawW / 2.0), (int) (screenY - drawH / 2.0),
+                (int) (screenX + drawW / 2.0), (int) (screenY + drawH / 2.0),
                 frame * frameW, 0,
                 (frame + 1) * frameW, sheet.getHeight(),
                 null);

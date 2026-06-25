@@ -31,7 +31,8 @@ class Vector2Test {
     @Test
     void testAddIsImmutable() {
         final var a = new Vector2(1, 2);
-        a.add(new Vector2(3, 4));
+        final var result = a.add(new Vector2(3, 4));
+        assertEquals(new Vector2(4, 6), result);
         assertEquals(new Vector2(1, 2), a);
     }
 
@@ -45,7 +46,8 @@ class Vector2Test {
     @Test
     void testScaleIsImmutable() {
         final var v = new Vector2(2, 3);
-        v.scale(2);
+        final var result = v.scale(2);
+        assertEquals(new Vector2(4, 6), result);
         assertEquals(new Vector2(2, 3), v);
     }
 
@@ -73,7 +75,8 @@ class Vector2Test {
     @Test
     void testNormalizeIsImmutable() {
         final var v = new Vector2(3, 4);
-        v.normalize();
+        final var result = v.normalize();
+        assertEquals(1.0, result.magnitude(), EPS);
         assertEquals(new Vector2(3, 4), v);
     }
 
@@ -116,8 +119,8 @@ class Vector2Test {
 
     @Test
     void testFromAngleUnitMagnitude() {
-        for (double a = 0; a < 2 * Math.PI; a += 0.1) {
-            final var v = Vector2.fromAngle(a);
+        for (int i = 0; i * 0.1 < 2 * Math.PI; i++) {
+            final var v = Vector2.fromAngle(i * 0.1);
             assertEquals(1.0, v.magnitude(), EPS);
         }
     }

@@ -96,11 +96,13 @@ class InputControllerImplTest {
             }
         });
         thread.start();
+        double direction = 0;
         for (int i = 0; i < 100; i++) {
-            input.getTurnDirection();
+            direction = input.getTurnDirection();
             input.onKeyReleased(VK_LEFT);
             input.onKeyReleased(VK_RIGHT);
         }
         thread.join();
+        assertTrue(direction >= -1.0 && direction <= 1.0);
     }
 }

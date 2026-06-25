@@ -8,6 +8,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.image.BufferedImage;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -19,6 +20,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import outmaneuver.assembler.ScreenAssembler.ScreenMetrics;
 import outmaneuver.model.area.entity.plane.PlaneStats;
 import outmaneuver.model.shop.ShopItem;
@@ -26,6 +28,9 @@ import outmaneuver.util.assets.AssetStore;
 import outmaneuver.util.assets.SpriteId;
 import outmaneuver.view.swing.Theme;
 
+@SuppressFBWarnings(
+        value = "SE_BAD_FIELD",
+        justification = "ShopView is a Swing JPanel that is never actually serialized")
 public final class ShopView extends JPanel {
 
     private final ScreenMetrics metrics;
@@ -154,7 +159,7 @@ public final class ShopView extends JPanel {
     private void refreshDisplay() {
         final ShopItem item = catalog.get(currentIndex);
         final String id = item.stats().getId();
-        nameLabel.setText(id.toUpperCase());
+        nameLabel.setText(id.toUpperCase(Locale.ROOT));
 
         final SpriteId spriteId = SpriteId.fromFilename(item.stats().getSpriteId());
         final BufferedImage img = assets.getSprite(spriteId);

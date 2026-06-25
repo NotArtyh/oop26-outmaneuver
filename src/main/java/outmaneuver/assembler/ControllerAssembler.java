@@ -3,6 +3,7 @@ package outmaneuver.assembler;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import outmaneuver.controller.CollisionEngine;
 import outmaneuver.controller.event.GameEvent;
 import outmaneuver.controller.event.EventController;
@@ -30,6 +31,9 @@ public final class ControllerAssembler {
     /**
      * Immutable bundle of the assembled controllers.
      */
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP",
+            justification = "input/master are live, shared controller singletons wired by the assembler")
     public record Controllers(
             InputControllerImpl input,
             MasterControllerImpl master) {

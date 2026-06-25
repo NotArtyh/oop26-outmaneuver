@@ -8,6 +8,7 @@ import java.util.Map;
 
 import javax.swing.JPanel;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import outmaneuver.controller.event.GameEvent;
 import outmaneuver.controller.impl.MasterControllerImpl;
 import outmaneuver.model.area.entity.plane.Plane;
@@ -45,11 +46,29 @@ public final class ScreenAssembler {
 
     private ScreenAssembler() { }
 
+    @SuppressFBWarnings(
+            value = "DM_EXIT",
+            justification = "the menu's Quit button must terminate the JVM")
+    private static void quitApplication() {
+        System.exit(0);
+    }
+
     /**
      * Carries the assembled screen map and the game view (needed by the caller to
      * request focus).
      */
-    public record Result(Map<ScreenId, JPanel> screens, SwingGameView gameView) { }
+    public record Result(
+            Map<ScreenId, JPanel> screens,
+            @SuppressFBWarnings(
+                    value = "EI_EXPOSE_REP",
+                    justification = "gameView is a live Swing component the caller must interact with directly")
+            SwingGameView gameView) {
+
+        public Result(final Map<ScreenId, JPanel> screens, final SwingGameView gameView) {
+            this.screens = Map.copyOf(screens);
+            this.gameView = gameView;
+        }
+    }
 
     /**
      * Provides proportional scaling from the reference 1400×1000 game size
@@ -185,7 +204,7 @@ public final class ScreenAssembler {
                     leaderboardRef[0].refresh();
                     uiRef[0].showScreen(ScreenId.LEADERBOARD);
                 },
-                () -> System.exit(0)
+                ScreenAssembler::quitApplication
         );
 
         master.setOnGameOver(() -> {

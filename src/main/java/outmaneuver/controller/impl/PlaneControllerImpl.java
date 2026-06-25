@@ -3,6 +3,7 @@ package outmaneuver.controller.impl;
 import java.util.List;
 import java.util.Objects;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import outmaneuver.controller.CollisionEngine;
 import outmaneuver.controller.InputController;
 
@@ -25,6 +26,9 @@ public final class PlaneControllerImpl extends EntityControllerImpl {
     }
 
     @Override
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP2",
+            justification = "the controller must mutate the very Plane instance it is given each frame")
     public void spawnEntity(final Entity entity) {
         if (entity instanceof final Plane p) {
             plane = p;

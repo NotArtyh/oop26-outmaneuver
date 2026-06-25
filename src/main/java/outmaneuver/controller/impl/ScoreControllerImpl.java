@@ -36,7 +36,10 @@ public final class ScoreControllerImpl implements ScoreController {
 
     @Override
     public void onInternalEvent(final Event evt, final Object data) {
-        switch ((CollisionEvent) evt) {
+        if (!(evt instanceof final CollisionEvent collisionEvent)) {
+            return;
+        }
+        switch (collisionEvent) {
             case PLANE_COLLECTIBLE_COLLISION -> {
                 if (data instanceof StarCollectible star) {
                     session.incrementScore(star.getScoreValue());

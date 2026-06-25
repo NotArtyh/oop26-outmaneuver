@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import outmaneuver.model.area.entity.missile.Missile;
 
 /**
@@ -56,6 +57,9 @@ public final class MissileSpawnDirector {
         this(new Random());
     }
 
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP2",
+            justification = "Random is intentionally shared so callers can inject a seeded instance for testing")
     public MissileSpawnDirector(final Random rng) {
         this.rng = rng;
     }

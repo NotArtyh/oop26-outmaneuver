@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import outmaneuver.controller.CollisionEngine;
 import outmaneuver.controller.event.EffectEvent;
 import outmaneuver.controller.event.Event;
@@ -42,8 +44,8 @@ public final class MasterControllerImpl implements MasterController {
     private Thread gameLoopThread;
     private volatile boolean running;
     private volatile GameEvent gameState;
-    private int gameOverDelayTicks = -1;
-    private ISession session;
+    private final AtomicInteger gameOverDelayTicks = new AtomicInteger(-1);
+    private volatile ISession session;
     private PlayerProfile playerProfile;
     private final List<Vector2> pendingCollisionPoints = new ArrayList<>();
     private Runnable onGameOver;
@@ -113,6 +115,9 @@ public final class MasterControllerImpl implements MasterController {
     }
 
     @Override
+    @SuppressFBWarnings(
+            value = "DM_EXIT",
+            justification = "QUIT_APPLICATION must terminate the JVM after a clean shutdown")
     public void handleEvent(final GameEvent event) {
         switch (event) {
             case PAUSED -> {
@@ -132,11 +137,7 @@ public final class MasterControllerImpl implements MasterController {
                 shutdown();
                 System.exit(0);
             }
-            case GAME_OVER -> {
-                if (gameOverDelayTicks < 0) {
-                    gameOverDelayTicks = GAME_OVER_DELAY_TICKS;
-                }
-            }
+            case GAME_OVER -> gameOverDelayTicks.compareAndSet(-1, GAME_OVER_DELAY_TICKS);
             default -> {
             }
         }
@@ -162,7 +163,7 @@ public final class MasterControllerImpl implements MasterController {
         gameState = GameEvent.RUNNING;
         stateAssembler.reset();
         session.reset();
-        gameOverDelayTicks = -1;
+        gameOverDelayTicks.set(-1);
         pendingCollisionPoints.clear();
         if (scoreController != null) {
             scoreController.reset();
@@ -204,17 +205,20 @@ public final class MasterControllerImpl implements MasterController {
         }
     }
 
+    @SuppressFBWarnings(
+            value = "AT_UNSAFE_RESOURCE_ACCESS_IN_THREAD",
+            justification = "session is only mutated by the dedicated game-loop thread while running; "
+                    + "external access only happens before start() or after the loop has stopped")
     private void gameLoop() {
         while (running && !Thread.currentThread().isInterrupted()) {
             final long frameStart = System.nanoTime();
 
-            if (gameState == GameEvent.RUNNING && gameOverDelayTicks < 0) {
+            if (gameState == GameEvent.RUNNING && gameOverDelayTicks.get() < 0) {
                 updateFrame();
             }
 
-            if (gameOverDelayTicks > 0) {
-                gameOverDelayTicks--;
-                if (gameOverDelayTicks == 0) {
+            if (gameOverDelayTicks.get() > 0) {
+                if (gameOverDelayTicks.decrementAndGet() == 0) {
                     gameState = GameEvent.GAME_OVER;
                     running = false;
                     final int finalScore = session.getScore();
@@ -246,6 +250,10 @@ public final class MasterControllerImpl implements MasterController {
         }
     }
 
+    @SuppressFBWarnings(
+            value = "AT_UNSAFE_RESOURCE_ACCESS_IN_THREAD",
+            justification = "session is only mutated by the dedicated game-loop thread while running; "
+                    + "external access only happens before start() or after the loop has stopped")
     private void updateFrame() {
         entityControllers.forEach(ec -> ec.updateEntities(TICK_MS));
         collisionEngine.tick();
