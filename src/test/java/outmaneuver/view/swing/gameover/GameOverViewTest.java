@@ -8,25 +8,28 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import outmaneuver.factory.ScreenFactory.ScreenMetrics;
 import outmaneuver.model.session.ScoreEntry;
 
 class GameOverViewTest {
+
+    private static final ScreenMetrics METRICS = new ScreenMetrics(1400, 1000);
 
     private GameOverView view;
 
     @BeforeEach
     void setUp() {
-        view = new GameOverView(() -> { }, () -> { });
+        view = new GameOverView(METRICS, () -> { }, () -> { });
     }
 
     @Test
     void constructorRejectsNullPlayAgain() {
-        assertThrows(NullPointerException.class, () -> new GameOverView(null, () -> { }));
+        assertThrows(NullPointerException.class, () -> new GameOverView(METRICS, null, () -> { }));
     }
 
     @Test
     void constructorRejectsNullMenu() {
-        assertThrows(NullPointerException.class, () -> new GameOverView(() -> { }, null));
+        assertThrows(NullPointerException.class, () -> new GameOverView(METRICS, () -> { }, null));
     }
 
     @Test
