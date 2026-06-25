@@ -41,7 +41,7 @@ public final class MasterControllerImpl implements MasterController {
     private volatile boolean running;
     private volatile GameEvent gameState;
     private int gameOverDelayTicks = -1;
-    private long elapsedMs;
+    private SessionState sessionState;
     private final List<Vector2> pendingCollisionPoints = new ArrayList<>();
     private Runnable onGameOver;
     private Runnable onPause;
@@ -101,6 +101,10 @@ public final class MasterControllerImpl implements MasterController {
         this.scoreController = Objects.requireNonNull(scoreController, "scoreController must not be null");
     }
 
+    public void setSessionState(final SessionState sessionState) {
+        this.sessionState = Objects.requireNonNull(sessionState, "sessionState must not be null");
+    }
+
     @Override
     public void handleEvent(final GameEvent event) {
         switch (event) {
@@ -144,14 +148,13 @@ public final class MasterControllerImpl implements MasterController {
         }
         Objects.requireNonNull(collisionEngine, "collisionEngine must be set before start()");
         Objects.requireNonNull(stateAssembler, "stateAssembler must be set before start()");
-        Objects.requireNonNull(eventController, "eventController must be set before start()");
+        Objects.requireNonNull(sessionState, "sessionState must be set before start()");
         if (running) {
             return;
         }
         gameState = GameEvent.RUNNING;
-        eventController.reset();
         stateAssembler.reset();
-        elapsedMs = 0;
+        sessionState.reset();
         gameOverDelayTicks = -1;
         pendingCollisionPoints.clear();
         if (scoreController != null) {
@@ -235,7 +238,7 @@ public final class MasterControllerImpl implements MasterController {
         if (scoreController != null) {
             scoreController.onTick(TICK_MS);
         }
-        elapsedMs += TICK_MS;
+        sessionState.addElapsed(TICK_MS);
     }
 
     private void renderFrame() {
@@ -243,7 +246,10 @@ public final class MasterControllerImpl implements MasterController {
         final RenderState state = stateAssembler.assemble(
                 sceneEntities,
                 paused,
-                elapsedMs,
+                sessionState.getElapsedMs(),
+                sessionState.getStars(),
+                sessionState.getSpeedMultiplier(),
+                sessionState.isShieldActive(),
                 pendingCollisionPoints);
         notifyViews(v -> v.renderFrame(state));
     }
