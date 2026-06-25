@@ -23,21 +23,21 @@ class PlaneControllerImplTest {
     private static final double EPS = 1e-9;
     private static final int KEY_LEFT_A = 65;
     private static final int KEY_RIGHT_D = 68;
+    private static final int PLANE_SPEED = 200;
+    private static final int PLANE_TURN_RATE = 20;
+    private static final double DIRECTION_AFTER_LEFT_TURN = -3.0;
+    private static final double DOUBLED_SPEED_X = 400.0;
+    private static final double START_X = 300;
+    private static final double START_Y = 400;
 
     private InputControllerImpl input;
     private Plane plane;
     private PlaneControllerImpl planeCtrl;
 
-    private static final class NoOpListener implements InternalEventListener {
-        @Override
-        public void onInternalEvent(final Event evt, final Object data) {
-        }
-    }
-
     @BeforeEach
     void setUp() {
         input = new InputControllerImpl();
-        plane = new PlaneImpl(new PlaneData("standard", 200, 3, 20, "plane_standard", 0));
+        plane = new PlaneImpl(new PlaneData("standard", PLANE_SPEED, 3, PLANE_TURN_RATE, "plane_standard", 0));
         planeCtrl = new PlaneControllerImpl(input, new ArrayList<>(), new CollisionEngine(new NoOpListener()));
         planeCtrl.spawnEntity(plane);
     }
@@ -45,7 +45,7 @@ class PlaneControllerImplTest {
     @Test
     void updateEntitiesMovesPlaneAlongItsDirection() {
         planeCtrl.updateEntities(1000);
-        assertEquals(200.0, plane.getPosition().getX(), EPS);
+        assertEquals((double) PLANE_SPEED, plane.getPosition().getX(), EPS);
         assertEquals(0.0, plane.getPosition().getY(), EPS);
     }
 
@@ -61,7 +61,7 @@ class PlaneControllerImplTest {
         input.onKeyPressed(KEY_LEFT_A);
         planeCtrl.updateEntities(1000);
         assertEquals(TurnState.LEFT, plane.getTurnState());
-        assertEquals(-3.0, plane.getDirection(), EPS);
+        assertEquals(DIRECTION_AFTER_LEFT_TURN, plane.getDirection(), EPS);
     }
 
     @Test
@@ -82,12 +82,12 @@ class PlaneControllerImplTest {
     void setSpeedMultiplierScalesMovementSpeed() {
         planeCtrl.setSpeedMultiplier(2.0);
         planeCtrl.updateEntities(1000);
-        assertEquals(400.0, plane.getPosition().getX(), EPS);
+        assertEquals(DOUBLED_SPEED_X, plane.getPosition().getX(), EPS);
     }
 
     @Test
     void clearAllResetsPlaneStateAndKeepsItRegistered() {
-        plane.setPosition(new Vector2(300, 400));
+        plane.setPosition(new Vector2(START_X, START_Y));
         plane.setDirection(Math.PI / 2);
         plane.setTurnState(TurnState.LEFT);
 
@@ -98,5 +98,11 @@ class PlaneControllerImplTest {
         assertEquals(Vector2.ZERO, plane.getPosition());
         assertEquals(0.0, plane.getDirection(), EPS);
         assertEquals(TurnState.NONE, plane.getTurnState());
+    }
+
+    private static final class NoOpListener implements InternalEventListener {
+        @Override
+        public void onInternalEvent(final Event evt, final Object data) {
+        }
     }
 }

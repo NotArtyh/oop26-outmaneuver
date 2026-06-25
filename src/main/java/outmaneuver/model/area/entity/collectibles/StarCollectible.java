@@ -2,7 +2,6 @@ package outmaneuver.model.area.entity.collectibles;
 
 import outmaneuver.util.Vector2;
 
-
 public final class StarCollectible extends AbstractCollectible {
 
     private final int scoreValue;

@@ -16,6 +16,12 @@ import outmaneuver.util.Vector2;
 
 class ScoreControllerImplTest {
 
+    private static final long PARTIAL_TICK_MS = 600;
+    private static final long MULTI_SECOND_TICK_MS = 3500;
+    private static final long RESET_TICK_MS = 900;
+    private static final int STAR_SCORE_VALUE = 25;
+    private static final int MISSILE_MISSILE_SCORE_VALUE = 20;
+
     private ISession session;
     private ScoreControllerImpl scoreCtrl;
 
@@ -43,38 +49,38 @@ class ScoreControllerImplTest {
 
     @Test
     void onTickAccumulatesPartialMillisecondsAcrossTicks() {
-        scoreCtrl.onTick(600);
+        scoreCtrl.onTick(PARTIAL_TICK_MS);
         assertEquals(0, session.getScore(), "Less than a second elapsed: no point yet");
-        scoreCtrl.onTick(600);
+        scoreCtrl.onTick(PARTIAL_TICK_MS);
         assertEquals(1, session.getScore(), "The two partial ticks sum to over a second");
     }
 
     @Test
     void onTickAwardsMultiplePointsForMultipleElapsedSeconds() {
-        scoreCtrl.onTick(3500);
+        scoreCtrl.onTick(MULTI_SECOND_TICK_MS);
         assertEquals(3, session.getScore());
     }
 
     @Test
     void resetClearsPendingAccumulatedTime() {
-        scoreCtrl.onTick(900);
+        scoreCtrl.onTick(RESET_TICK_MS);
         scoreCtrl.reset();
-        scoreCtrl.onTick(900);
+        scoreCtrl.onTick(RESET_TICK_MS);
         assertEquals(0, session.getScore(), "reset() should drop the 900ms accumulated before it");
     }
 
     @Test
     void onInternalEventStarCollectibleAddsItsScoreValue() {
-        final StarCollectible star = new StarCollectible(Vector2.ZERO, 25);
+        final StarCollectible star = new StarCollectible(Vector2.ZERO, STAR_SCORE_VALUE);
         scoreCtrl.onInternalEvent(CollisionEvent.PLANE_COLLECTIBLE_COLLISION, star);
-        assertEquals(25, session.getScore());
+        assertEquals(STAR_SCORE_VALUE, session.getScore());
     }
 
     @Test
     void onInternalEventMissileMissileCollisionAddsTwentyPoints() {
         scoreCtrl.onInternalEvent(CollisionEvent.MISSILE_MISSILE_COLLISION,
                 new CollisionData(null, null, Vector2.ZERO));
-        assertEquals(20, session.getScore());
+        assertEquals(MISSILE_MISSILE_SCORE_VALUE, session.getScore());
     }
 
     @Test

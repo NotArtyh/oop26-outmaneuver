@@ -48,7 +48,7 @@ public final class JsonResourceLoader<T> {
                         new IOException("Resource is empty or malformed: " + resourcePath));
             }
             return data;
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new UncheckedIOException("Failed to read resource: " + resourcePath, e);
         }
     }

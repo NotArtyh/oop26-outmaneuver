@@ -14,6 +14,14 @@ import org.junit.jupiter.api.io.TempDir;
 class PlayerProfileTest {
 
     private static final String FAST_PLANE_ID = "fast";
+    private static final String STANDARD_PLANE_ID = "standard";
+    private static final int COINS_SMALL = 200;
+    private static final int COINS_MEDIUM = 300;
+    private static final int COINS_LARGE = 400;
+    private static final int COINS_HUGE = 500;
+    private static final int SCORE_SMALL = 250;
+    private static final int SCORE_HIGH_TOP_SCORES = 15;
+    private static final int TOP_SCORES_TRIMMED_SIZE = 150;
 
     private PlayerProfile profile;
 
@@ -21,7 +29,7 @@ class PlayerProfileTest {
     void setUp(@TempDir final Path tmpDir) {
         final Path file = tmpDir.resolve("profile.json");
         final var repo = JsonPlayerProfileRepository.create(file);
-        repo.persist(new PlayerProfileData("", 0, List.of("standard"), List.of()));
+        repo.persist(new PlayerProfileData("", 0, List.of(STANDARD_PLANE_ID), List.of()));
         profile = new PlayerProfile(repo);
     }
 
@@ -34,7 +42,7 @@ class PlayerProfileTest {
 
     @Test
     void defaultOwnsStandardPlane() {
-        assertTrue(profile.ownsPlane("standard"));
+        assertTrue(profile.ownsPlane(STANDARD_PLANE_ID));
     }
 
     @Test
@@ -51,9 +59,9 @@ class PlayerProfileTest {
 
     @Test
     void addCoinsAccumulates() {
-        profile.addCoins(300);
-        profile.addCoins(200);
-        assertEquals(500, profile.getCoins());
+        profile.addCoins(COINS_MEDIUM);
+        profile.addCoins(COINS_SMALL);
+        assertEquals(COINS_HUGE, profile.getCoins());
     }
 
     @Test
@@ -63,15 +71,15 @@ class PlayerProfileTest {
 
     @Test
     void spendReturnsTrueAndDeducts() {
-        profile.addCoins(500);
-        assertTrue(profile.spend(200));
-        assertEquals(300, profile.getCoins());
+        profile.addCoins(COINS_HUGE);
+        assertTrue(profile.spend(COINS_SMALL));
+        assertEquals(COINS_MEDIUM, profile.getCoins());
     }
 
     @Test
     void spendReturnsFalseWhenInsufficient() {
         profile.addCoins(100);
-        assertFalse(profile.spend(200));
+        assertFalse(profile.spend(COINS_SMALL));
         assertEquals(100, profile.getCoins());
     }
 
@@ -94,27 +102,27 @@ class PlayerProfileTest {
 
     @Test
     void saveScoreAppearsInTopScores() {
-        profile.saveScore(300, "Alice");
+        profile.saveScore(COINS_MEDIUM, "Alice");
         assertEquals(1, profile.getTopScores().size());
-        assertEquals(300, profile.getTopScores().get(0).score());
+        assertEquals(COINS_MEDIUM, profile.getTopScores().get(0).score());
     }
 
     @Test
     void topScoresAreSortedDescending() {
         profile.saveScore(100, "A");
-        profile.saveScore(400, "B");
-        profile.saveScore(200, "C");
-        assertEquals(400, profile.getTopScores().get(0).score());
+        profile.saveScore(COINS_LARGE, "B");
+        profile.saveScore(COINS_SMALL, "C");
+        assertEquals(COINS_LARGE, profile.getTopScores().get(0).score());
         assertEquals(100, profile.getTopScores().get(2).score());
     }
 
     @Test
     void topScoresTrimmedToTen() {
-        for (int i = 1; i <= 15; i++) {
+        for (int i = 1; i <= SCORE_HIGH_TOP_SCORES; i++) {
             profile.saveScore(i * 10, "Player");
         }
-        assertEquals(15, profile.getTopScores().size());
-        assertEquals(150, profile.getTopScores().get(0).score());
+        assertEquals(SCORE_HIGH_TOP_SCORES, profile.getTopScores().size());
+        assertEquals(TOP_SCORES_TRIMMED_SIZE, profile.getTopScores().get(0).score());
     }
 
     @Test
@@ -130,15 +138,15 @@ class PlayerProfileTest {
     void profilePersistsAcrossInstances(@TempDir final Path tmpDir) {
         final Path file = tmpDir.resolve("profile.json");
         final var repo = JsonPlayerProfileRepository.create(file);
-        repo.persist(new PlayerProfileData("", 0, List.of("standard"), List.of()));
+        repo.persist(new PlayerProfileData("", 0, List.of(STANDARD_PLANE_ID), List.of()));
         final PlayerProfile p1 = new PlayerProfile(repo);
-        p1.addCoins(250);
+        p1.addCoins(SCORE_SMALL);
         p1.addOwnedPlane("heavy");
-        p1.saveScore(500, "Bob");
+        p1.saveScore(COINS_HUGE, "Bob");
 
         final PlayerProfile p2 = new PlayerProfile(JsonPlayerProfileRepository.create(file));
-        assertEquals(250, p2.getCoins());
+        assertEquals(SCORE_SMALL, p2.getCoins());
         assertTrue(p2.ownsPlane("heavy"));
-        assertEquals(500, p2.getTopScores().get(0).score());
+        assertEquals(COINS_HUGE, p2.getTopScores().get(0).score());
     }
 }

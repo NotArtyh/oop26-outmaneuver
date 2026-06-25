@@ -49,6 +49,12 @@ import outmaneuver.util.Vector2;
 class EventControllerTest {
 
     private static final MissileRepository EMPTY_MISSILE_REPO = type -> Optional.empty();
+    private static final int PLANE_SPEED = 200;
+    private static final int PLANE_TURN_RATE = 20;
+    private static final long SHIELD_DURATION_MS = 5000L;
+    private static final long SPEED_BOOST_DURATION_MS = 3000L;
+    private static final int STAR_SCORE_VALUE = 15;
+    private static final int MISSILE_COLLISION_SCORE = 20;
 
     private ISession session;
     private List<Entity> sharedEntities;
@@ -57,13 +63,6 @@ class EventControllerTest {
     private MissileControllerImpl missileCtrl;
     private AtomicBoolean gameOverTriggered;
     private EventController eventController;
-
-    /** Missile concreto minimale per i test: nessun comportamento di update necessario. */
-    private static final class TestMissile extends MissileImpl {
-        TestMissile(final Vector2 pos) {
-            super(pos, new MissileData("test", 1.0, 0.0, 8.0, -1.0, 0.0, 0, null));
-        }
-    }
 
     @BeforeEach
     void setUp() {
@@ -75,7 +74,7 @@ class EventControllerTest {
         collectibleCtrl = new CollectibleControllerImpl(sharedEntities, collisionEngine);
         missileCtrl = new MissileControllerImpl(sharedEntities, collisionEngine, EMPTY_MISSILE_REPO, new MissileSpawnDirector());
 
-        plane = new PlaneImpl(new PlaneData("standard", 200, 3, 20, "plane_standard", 0));
+        plane = new PlaneImpl(new PlaneData("standard", PLANE_SPEED, 3, PLANE_TURN_RATE, "plane_standard", 0));
         planeCtrl.spawnEntity(plane);
 
         final MasterControllerImpl master = new MasterControllerImpl();
@@ -84,7 +83,7 @@ class EventControllerTest {
         master.addEntityController(missileCtrl);
 
         session = new Session();
-        
+
         final ScoreController scoreController;
         scoreController = new ScoreControllerImpl(session, () -> 16L);
         gameOverTriggered = new AtomicBoolean(false);
@@ -114,7 +113,7 @@ class EventControllerTest {
 
     @Test
     void planeMissileCollisionWithActiveShieldRemovesMissileButDoesNotTriggerGameOver() {
-        eventController.onInternalEvent(EffectEvent.EFFECT_APPLIED, new EffectImpl(EffectType.SHIELD, 5000L));
+        eventController.onInternalEvent(EffectEvent.EFFECT_APPLIED, new EffectImpl(EffectType.SHIELD, SHIELD_DURATION_MS));
 
         final MissileImpl missile = new TestMissile(plane.getPosition());
         missileCtrl.spawnEntity(missile);
@@ -135,20 +134,21 @@ class EventControllerTest {
 
     @Test
     void planeCollectibleCollisionStarCollectibleRemovesItAndAwardsItsScoreValue() {
-        final StarCollectible star = new StarCollectible(plane.getPosition(), 15);
+        final StarCollectible star = new StarCollectible(plane.getPosition(), STAR_SCORE_VALUE);
         collectibleCtrl.spawnEntity(star);
 
         final CollisionData data = new CollisionData(plane, star, plane.getPosition());
         eventController.onInternalEvent(CollisionEvent.PLANE_COLLECTIBLE_COLLISION, data);
 
         assertFalse(sharedEntities.contains(star), "Collected star should be removed");
-        assertEquals(15, session.getScore());
+        assertEquals(STAR_SCORE_VALUE, session.getScore());
         assertFalse(collectibleCtrl.hasEffect(EffectImpl.class), "A star carries no effect to activate");
     }
 
     @Test
     void planeCollectibleCollisionSpeedBoostActivatesEffectAndAppliesMultiplier() {
-        final SpeedBoost boost = new SpeedBoost(plane.getPosition(), new EffectImpl(EffectType.SPEED_BOOST, 2.0, 3000L));
+        final SpeedBoost boost = new SpeedBoost(plane.getPosition(),
+                new EffectImpl(EffectType.SPEED_BOOST, 2.0, SPEED_BOOST_DURATION_MS));
         collectibleCtrl.spawnEntity(boost);
 
         final CollisionData data = new CollisionData(plane, boost, plane.getPosition());
@@ -162,7 +162,8 @@ class EventControllerTest {
 
     @Test
     void planeCollectibleCollisionShieldPowerUpActivatesShield() {
-        final ShieldPowerUp shield = new ShieldPowerUp(plane.getPosition(), new EffectImpl(EffectType.SHIELD, 5000L));
+        final ShieldPowerUp shield = new ShieldPowerUp(plane.getPosition(),
+                new EffectImpl(EffectType.SHIELD, SHIELD_DURATION_MS));
         collectibleCtrl.spawnEntity(shield);
 
         final CollisionData data = new CollisionData(plane, shield, plane.getPosition());
@@ -185,14 +186,14 @@ class EventControllerTest {
 
         assertFalse(sharedEntities.contains(a), "First missile should be removed");
         assertFalse(sharedEntities.contains(b), "Second missile should be removed");
-        assertEquals(20, session.getScore());
+        assertEquals(MISSILE_COLLISION_SCORE, session.getScore());
     }
 
     // ── EFFECT_EXPIRED ──────────────────────────────────────────────────
 
     @Test
     void shieldEffectExpiredClearsShield() {
-        eventController.onInternalEvent(EffectEvent.EFFECT_APPLIED, new EffectImpl(EffectType.SHIELD, 5000L));
+        eventController.onInternalEvent(EffectEvent.EFFECT_APPLIED, new EffectImpl(EffectType.SHIELD, SHIELD_DURATION_MS));
         assertTrue(session.isShieldActive());
 
         eventController.onInternalEvent(EffectEvent.EFFECT_EXPIRED, new EffectImpl(EffectType.SHIELD, 0L));
@@ -201,7 +202,8 @@ class EventControllerTest {
 
     @Test
     void speedBoostEffectExpiredResetsMultiplierToOne() {
-        eventController.onInternalEvent(EffectEvent.EFFECT_APPLIED, new EffectImpl(EffectType.SPEED_BOOST, 3.0, 3000L));
+        eventController.onInternalEvent(EffectEvent.EFFECT_APPLIED,
+                new EffectImpl(EffectType.SPEED_BOOST, 3.0, SPEED_BOOST_DURATION_MS));
         assertEquals(3.0, session.getSpeedMultiplier());
 
         eventController.onInternalEvent(EffectEvent.EFFECT_EXPIRED, new EffectImpl(EffectType.SPEED_BOOST, 1.0, 0L));
@@ -210,7 +212,7 @@ class EventControllerTest {
 
     @Test
     void shieldEffectExpiredAfterPlaneMissileCollisionAllowsGameOverAgain() {
-        eventController.onInternalEvent(EffectEvent.EFFECT_APPLIED, new EffectImpl(EffectType.SHIELD, 5000L));
+        eventController.onInternalEvent(EffectEvent.EFFECT_APPLIED, new EffectImpl(EffectType.SHIELD, SHIELD_DURATION_MS));
         eventController.onInternalEvent(EffectEvent.EFFECT_EXPIRED, new EffectImpl(EffectType.SHIELD, 0L));
 
         final MissileImpl missile = new TestMissile(plane.getPosition());
@@ -219,5 +221,12 @@ class EventControllerTest {
                 new CollisionData(missile, plane, plane.getPosition()));
 
         assertTrue(gameOverTriggered.get(), "Once the shield has expired, a plane hit should trigger game over again");
+    }
+
+    /** Missile concreto minimale per i test: nessun comportamento di update necessario. */
+    private static final class TestMissile extends MissileImpl {
+        TestMissile(final Vector2 pos) {
+            super(pos, new MissileData("test", 1.0, 0.0, 8.0, -1.0, 0.0, 0, null));
+        }
     }
 }

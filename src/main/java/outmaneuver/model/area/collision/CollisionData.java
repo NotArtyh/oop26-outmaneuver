@@ -9,12 +9,20 @@ public final class CollisionData {
 
     public CollisionData(final ICollidable entityA, final ICollidable entityB,
                          final Vector2 collisionPoint) {
-        this.entityA    = entityA;
-        this.entityB    = entityB;
+        this.entityA = entityA;
+        this.entityB = entityB;
         this.collisionPoint = collisionPoint;
     }
 
-    public ICollidable getEntityA()    { return entityA; }
-    public ICollidable getEntityB()    { return entityB; }
-    public Vector2     getCollisionPoint() { return collisionPoint; }
+    public ICollidable getEntityA() {
+        return entityA;
+    }
+
+    public ICollidable getEntityB() {
+        return entityB;
+    }
+
+    public Vector2 getCollisionPoint() {
+        return collisionPoint;
+    }
 }

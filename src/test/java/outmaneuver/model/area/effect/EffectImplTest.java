@@ -8,6 +8,10 @@ import org.junit.jupiter.api.Test;
 
 class EffectImplTest {
 
+    private static final long SHIELD_DURATION_HALF_MS = 50L;
+    private static final long SHIELD_DURATION_THIRD_MS = 40L;
+    private static final double SPEED_BOOST_MULTIPLIER = 2.5;
+
     @Test
     void isActiveImmediatelyAfterCreation() {
         final Effect effect = new EffectImpl(EffectType.SHIELD, 1000L);
@@ -24,18 +28,18 @@ class EffectImplTest {
     @Test
     void remainsActiveBeforeDurationElapses() {
         final Effect effect = new EffectImpl(EffectType.SHIELD, 100L);
-        effect.update(50L);
+        effect.update(SHIELD_DURATION_HALF_MS);
         assertTrue(effect.isActive());
     }
 
     @Test
     void durationIsConsumedAcrossMultipleUpdates() {
         final Effect effect = new EffectImpl(EffectType.SHIELD, 100L);
-        effect.update(40L);
+        effect.update(SHIELD_DURATION_THIRD_MS);
         assertTrue(effect.isActive());
-        effect.update(40L);
+        effect.update(SHIELD_DURATION_THIRD_MS);
         assertTrue(effect.isActive());
-        effect.update(40L);
+        effect.update(SHIELD_DURATION_THIRD_MS);
         assertFalse(effect.isActive());
     }
 
@@ -52,6 +56,7 @@ class EffectImplTest {
 
     @Test
     void multiplierReturnsConfiguredValue() {
-        assertEquals(2.5, new EffectImpl(EffectType.SPEED_BOOST, 2.5, 1000L).getMultiplier());
+        assertEquals(SPEED_BOOST_MULTIPLIER,
+                new EffectImpl(EffectType.SPEED_BOOST, SPEED_BOOST_MULTIPLIER, 1000L).getMultiplier());
     }
 }

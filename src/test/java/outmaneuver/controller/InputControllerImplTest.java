@@ -1,6 +1,7 @@
 package outmaneuver.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -85,7 +86,6 @@ class InputControllerImplTest {
         input.onKeyReleased(VK_A);
         assertEquals(-1.0, input.getTurnDirection());
     }
-
 
     @Test
     void testThreadSafety() throws InterruptedException {

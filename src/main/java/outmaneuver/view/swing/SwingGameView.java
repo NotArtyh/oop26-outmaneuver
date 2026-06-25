@@ -35,7 +35,7 @@ public final class SwingGameView extends JPanel implements GameView {
     private static final int EXPLOSION_FRAMES = 12;
     private static final double EXPLOSION_SIZE = 80.0;
     private static final SpriteId[] CLOUD_SPRITES = {
-        SpriteId.CLOUD_1, SpriteId.CLOUD_2, SpriteId.CLOUD_3
+        SpriteId.CLOUD_1, SpriteId.CLOUD_2, SpriteId.CLOUD_3,
     };
     private static final int CLOUD_TARGET = 30;
     private static final double CLOUD_FAR = 600.0;
@@ -113,7 +113,8 @@ public final class SwingGameView extends JPanel implements GameView {
     // Nessuna rotazione: i collectible non hanno un orientamento.
     private void drawCollectible(final Graphics2D g2d, final EntityRenderData data,
             final double cameraX, final double cameraY) {
-        final BufferedImage sprite = assets.getSprite(SpriteId.fromFilename(data.getSpriteId())); //AGGIUNTO: niente piu' switch, la view traduce solo il nome->enum (come l'aereo)
+        // AGGIUNTO: niente piu' switch, la view traduce solo il nome->enum (come l'aereo)
+        final BufferedImage sprite = assets.getSprite(SpriteId.fromFilename(data.getSpriteId()));
         // Scala = misura dell'hitbox (AbstractCollectible.HITBOX_RADIUS, via DTO): come aerei/missili.
         final double scale = 2.0 * data.getRadius() / sprite.getWidth();
         drawSprite(g2d, sprite, data.getX(), data.getY(), cameraX, cameraY, 0, scale);
@@ -182,8 +183,10 @@ public final class SwingGameView extends JPanel implements GameView {
             final List<EntityRenderData> missiles,
             final double cameraX, final double cameraY) {
         for (final EntityRenderData m : missiles) {
-            final BufferedImage sprite = assets.getSprite(SpriteId.fromFilename(m.getSpriteId())); //AGGIUNTO: niente piu' switch, la view traduce solo il nome->enum (come l'aereo); la scelta dello sprite la fa l'assembler
-            final double scale = 2.0 * m.getRadius() / sprite.getWidth();   // sprite = hitbox
+            // AGGIUNTO: niente piu' switch, la view traduce solo il nome->enum (come l'aereo);
+            // la scelta dello sprite la fa l'assembler
+            final BufferedImage sprite = assets.getSprite(SpriteId.fromFilename(m.getSpriteId()));
+            final double scale = 2.0 * m.getRadius() / sprite.getWidth(); // sprite = hitbox
             drawSprite(g2d, sprite, m.getX(), m.getY(), cameraX, cameraY,
                     m.getDirectionRad() + Math.PI / 2, scale);
         }
@@ -252,5 +255,5 @@ public final class SwingGameView extends JPanel implements GameView {
         g2d.setComposite(AlphaComposite.SrcOver.derive(1.0f));
     }
 
-    private record Cloud(double worldX, double worldY, SpriteId sprite, double scale, float alpha) {}
+    private record Cloud(double worldX, double worldY, SpriteId sprite, double scale, float alpha) { }
 }

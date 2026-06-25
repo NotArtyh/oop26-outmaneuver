@@ -18,7 +18,8 @@ import outmaneuver.model.wallet.IWallet;
 
 class ShopTest {
 
-    private static final PlaneData PLANE_A = new PlaneData("a", 10, 5, 3, "sprite_a", 200);
+    private static final int PLANE_A_PRICE = 200;
+    private static final PlaneData PLANE_A = new PlaneData("a", 10, 5, 3, "sprite_a", PLANE_A_PRICE);
     private static final PlaneData PLANE_B = new PlaneData("b", 12, 6, 4, "sprite_b", 100);
 
     private ShopItem item;
@@ -45,7 +46,7 @@ class ShopTest {
     @Test
     void purchaseSucceedsWhenWalletHasEnoughCoins() {
         final IWallet wallet = mock(IWallet.class);
-        when(wallet.spend(200)).thenReturn(true);
+        when(wallet.spend(PLANE_A_PRICE)).thenReturn(true);
 
         assertTrue(shop.purchase(item, wallet));
     }
@@ -53,7 +54,7 @@ class ShopTest {
     @Test
     void purchaseFailsWhenWalletHasInsufficientCoins() {
         final IWallet wallet = mock(IWallet.class);
-        when(wallet.spend(200)).thenReturn(false);
+        when(wallet.spend(PLANE_A_PRICE)).thenReturn(false);
 
         assertFalse(shop.purchase(item, wallet));
     }
@@ -61,7 +62,7 @@ class ShopTest {
     @Test
     void purchaseThrowsForItemNotInCatalog() {
         final ShopItem unknown = new ShopItem(PLANE_B, 100);
-        final IWallet wallet   = mock(IWallet.class);
+        final IWallet wallet = mock(IWallet.class);
 
         assertThrows(IllegalArgumentException.class, () -> shop.purchase(unknown, wallet));
     }

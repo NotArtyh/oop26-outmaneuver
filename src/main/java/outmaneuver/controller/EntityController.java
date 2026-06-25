@@ -7,7 +7,6 @@ import java.util.List;
 import outmaneuver.controller.event.InternalEventListener;
 import outmaneuver.view.GameView;
 
-
 public interface EntityController extends InternalEventListener {
 
     void updateEntities(long deltaMs);
@@ -22,6 +21,6 @@ public interface EntityController extends InternalEventListener {
 
     List<Entity> getEntities();
 
-    default void setView(GameView view) { }
+    default void setView(final GameView view) { }
 
 }

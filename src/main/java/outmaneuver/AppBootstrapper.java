@@ -53,7 +53,7 @@ public final class AppBootstrapper {
 
         final IShop shop = new Shop(planeRepo);
 
-        final UIManager[] uiRef = { null };
+        final UIManager[] uiRef = {null};
         final ScreenAssembler.Result result = ScreenAssembler.build(ctrl, profile, plane, shop, session, uiRef);
 
         final UIManager uiManager = new UIManager(result.screens());

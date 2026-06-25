@@ -24,6 +24,10 @@ public final class MainMenuView extends JPanel {
 
     private static final long serialVersionUID = 1L;
 
+    private static final int LOGO_WIDTH = 600;
+    private static final int BUTTONS_TOP_INSET = 20;
+    private static final int EXIT_BUTTON_ROW_GRIDY = 5;
+
     private final JLabel coinsLabel;
     private final JLabel userLabel;
     private final JLabel planeLabel;
@@ -37,25 +41,28 @@ public final class MainMenuView extends JPanel {
         Objects.requireNonNull(playerNameSupplier);
         Objects.requireNonNull(coinsSupplier);
         Objects.requireNonNull(equippedPlaneSupplier);
-        final Runnable safeStart       = Objects.requireNonNull(onStart);
-        final Runnable safeShop        = Objects.requireNonNull(onShop);
+        final Runnable safeStart = Objects.requireNonNull(onStart);
+        final Runnable safeShop = Objects.requireNonNull(onShop);
         final Runnable safeLeaderboard = Objects.requireNonNull(onLeaderboard);
-        final Runnable safeExit        = Objects.requireNonNull(onExit);
+        final Runnable safeExit = Objects.requireNonNull(onExit);
 
         setBackground(Theme.BACKGROUND);
         setLayout(new BorderLayout());
 
         // ── username top-right and wallet ──────────────────────────────────────────
-        userLabel = Theme.outlinedLabel("", new Font(Font.MONOSPACED, Font.PLAIN, metrics.sf(Theme.FONT_SMALL)), Theme.TEXT_BODY, SwingConstants.LEFT);
+        userLabel = Theme.outlinedLabel("",
+                new Font(Font.MONOSPACED, Font.PLAIN, metrics.sf(Theme.FONT_SMALL)), Theme.TEXT_BODY, SwingConstants.LEFT);
 
-        coinsLabel = Theme.outlinedLabel("Coins: 0", new Font(Font.MONOSPACED, Font.BOLD, metrics.sf(Theme.FONT_BODY)), Theme.TEXT_ACCENT, SwingConstants.CENTER);
+        coinsLabel = Theme.outlinedLabel("Coins: 0",
+                new Font(Font.MONOSPACED, Font.BOLD, metrics.sf(Theme.FONT_BODY)), Theme.TEXT_ACCENT, SwingConstants.CENTER);
 
         final JPanel topBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 6));
         topBar.setBackground(Theme.BACKGROUND);
         topBar.add(userLabel);
         topBar.add(coinsLabel);
 
-        planeLabel = Theme.outlinedLabel("", new Font(Font.MONOSPACED, Font.PLAIN, metrics.sf(Theme.FONT_SMALL)), Theme.TEXT_INFO, SwingConstants.LEFT);
+        planeLabel = Theme.outlinedLabel("",
+                new Font(Font.MONOSPACED, Font.PLAIN, metrics.sf(Theme.FONT_SMALL)), Theme.TEXT_INFO, SwingConstants.LEFT);
 
         final JPanel topLeft = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 6));
         topLeft.setBackground(Theme.BACKGROUND);
@@ -64,7 +71,7 @@ public final class MainMenuView extends JPanel {
         final JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(Theme.BACKGROUND);
         topPanel.add(topLeft, BorderLayout.WEST);
-        topPanel.add(topBar,  BorderLayout.EAST);
+        topPanel.add(topBar, BorderLayout.EAST);
         add(topPanel, BorderLayout.NORTH);
 
         // ── main content ────────────────────────────────────────────────
@@ -74,31 +81,38 @@ public final class MainMenuView extends JPanel {
         final ImageIcon logoIcon = new ImageIcon(
             new ImageIcon(getClass().getResource("/assets/sprites/logo.png"))
                 .getImage()
-                .getScaledInstance(metrics.sw(600), -1, Image.SCALE_SMOOTH)
+                .getScaledInstance(metrics.sw(LOGO_WIDTH), -1, Image.SCALE_SMOOTH)
         );
         final JLabel title = new JLabel(logoIcon);
 
-
-
-        final JButton startButton       = Theme.styledButton("START",       metrics.sf(Theme.FONT_BUTTON), metrics.sw(Theme.BUTTON_WIDTH), metrics.sh(Theme.BUTTON_HEIGHT));
-        final JButton shopButton        = Theme.styledButton("SHOP",        metrics.sf(Theme.FONT_BUTTON), metrics.sw(Theme.BUTTON_WIDTH), metrics.sh(Theme.BUTTON_HEIGHT));
-        final JButton leaderboardButton = Theme.styledButton("LEADERBOARD", metrics.sf(Theme.FONT_BUTTON), metrics.sw(Theme.BUTTON_WIDTH), metrics.sh(Theme.BUTTON_HEIGHT));
-        final JButton exitButton        = Theme.styledButton("EXIT",        metrics.sf(Theme.FONT_BUTTON), metrics.sw(Theme.BUTTON_WIDTH), metrics.sh(Theme.BUTTON_HEIGHT));
+        final JButton startButton = Theme.styledButton("START", metrics.sf(Theme.FONT_BUTTON),
+                metrics.sw(Theme.BUTTON_WIDTH), metrics.sh(Theme.BUTTON_HEIGHT));
+        final JButton shopButton = Theme.styledButton("SHOP", metrics.sf(Theme.FONT_BUTTON),
+                metrics.sw(Theme.BUTTON_WIDTH), metrics.sh(Theme.BUTTON_HEIGHT));
+        final JButton leaderboardButton = Theme.styledButton("LEADERBOARD", metrics.sf(Theme.FONT_BUTTON),
+                metrics.sw(Theme.BUTTON_WIDTH), metrics.sh(Theme.BUTTON_HEIGHT));
+        final JButton exitButton = Theme.styledButton("EXIT", metrics.sf(Theme.FONT_BUTTON),
+                metrics.sw(Theme.BUTTON_WIDTH), metrics.sh(Theme.BUTTON_HEIGHT));
         startButton.addActionListener(e -> safeStart.run());
         shopButton.addActionListener(e -> safeShop.run());
         leaderboardButton.addActionListener(e -> safeLeaderboard.run());
         exitButton.addActionListener(e -> safeExit.run());
 
         final GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx  = 0;
-        gbc.fill   = GridBagConstraints.NONE;
-        gbc.insets = new Insets(metrics.sh(20), 0, 0, 0);
+        gbc.gridx = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.insets = new Insets(metrics.sh(BUTTONS_TOP_INSET), 0, 0, 0);
 
-        gbc.gridy = 0; center.add(title,            gbc);
-        gbc.gridy = 2; center.add(startButton,      gbc);
-        gbc.gridy = 3; center.add(shopButton,        gbc);
-        gbc.gridy = 4; center.add(leaderboardButton, gbc);
-        gbc.gridy = 5; center.add(exitButton,        gbc);
+        gbc.gridy = 0;
+        center.add(title, gbc);
+        gbc.gridy = 2;
+        center.add(startButton, gbc);
+        gbc.gridy = 3;
+        center.add(shopButton, gbc);
+        gbc.gridy = 4;
+        center.add(leaderboardButton, gbc);
+        gbc.gridy = EXIT_BUTTON_ROW_GRIDY;
+        center.add(exitButton, gbc);
 
         add(center, BorderLayout.CENTER);
 

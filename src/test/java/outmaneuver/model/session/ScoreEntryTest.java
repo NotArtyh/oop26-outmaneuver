@@ -11,25 +11,26 @@ class ScoreEntryTest {
 
     private static final LocalDate DATE = LocalDate.of(2026, 6, 1);
     private static final String ALICE = "Alice";
+    private static final String BOB = "Bob";
 
     @Test
     void higherScoreComesFirst() {
         final var high = new ScoreEntry(100, ALICE, DATE);
-        final var low  = new ScoreEntry(50,  "Bob",   DATE);
+        final var low = new ScoreEntry(50, BOB, DATE);
         assertTrue(high.compareTo(low) < 0, "higher score should sort before lower score");
     }
 
     @Test
     void lowerScoreComesLast() {
         final var high = new ScoreEntry(100, ALICE, DATE);
-        final var low  = new ScoreEntry(50,  "Bob",   DATE);
+        final var low = new ScoreEntry(50, BOB, DATE);
         assertTrue(low.compareTo(high) > 0, "lower score should sort after higher score");
     }
 
     @Test
     void equalScoresCompareToZero() {
         final var a = new ScoreEntry(75, ALICE, DATE);
-        final var b = new ScoreEntry(75, "Bob",   DATE);
+        final var b = new ScoreEntry(75, BOB, DATE);
         assertEquals(0, a.compareTo(b));
     }
 

@@ -59,7 +59,8 @@ public final class RenderStateAssemblerImpl implements RenderStateAssembler {
                         c.getPosition().getX(),
                         c.getPosition().getY(),
                         0, // i collectible non hanno orientamento
-                        "collectible_" + c.getCollectibleType(), //AGGIUNTO: nome completo dello sprite, la view fa solo fromFilename (niente switch)
+                        //AGGIUNTO: nome completo dello sprite, la view fa solo fromFilename (niente switch)
+                        "collectible_" + c.getCollectibleType(),
                         c.getHitbox().getRadius()))
                 .toList();
     }
@@ -72,7 +73,9 @@ public final class RenderStateAssemblerImpl implements RenderStateAssembler {
                         m.getPosition().getX(),
                         m.getPosition().getY(),
                         m.getDirection(),
-                        "missile_" + m.getMissileType(), //AGGIUNTO: passo il NOME completo dello sprite, cosi' la view non deve piu' tradurre il tipo (niente switch)
+                        // AGGIUNTO: passo il NOME completo dello sprite, cosi' la view
+                        // non deve piu' tradurre il tipo (niente switch)
+                        "missile_" + m.getMissileType(),
                         m.getHitbox().getRadius()))
                 .toList();
     }

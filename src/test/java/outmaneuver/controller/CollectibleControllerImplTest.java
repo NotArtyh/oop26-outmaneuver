@@ -28,45 +28,26 @@ import outmaneuver.view.RenderState;
 class CollectibleControllerImplTest {
 
     private static final long SPAWN_INTERVAL_MS = 3000;
+    private static final int PLANE_SPEED = 200;
+    private static final int PLANE_TURN_RATE = 20;
+    private static final int VIEW_WIDTH = 800;
+    private static final int VIEW_HEIGHT = 600;
+    private static final long SPEED_BOOST_DURATION_MS = 3000L;
+    private static final long UPDATE_PAST_EXPIRY_MS = 150L;
 
     private CollisionEngine collisionEngine;
     private PlaneImpl plane;
     private RecordingListener listener;
     private CollectibleControllerImpl collectibleCtrl;
 
-    private static final class RecordingListener implements InternalEventListener {
-        final List<Event> events = new ArrayList<>();
-        final List<Object> payloads = new ArrayList<>();
-
-        @Override
-        public void onInternalEvent(final Event evt, final Object data) {
-            events.add(evt);
-            payloads.add(data);
-        }
-    }
-
-    private static final class StubGameView implements GameView {
-        private final int width;
-        private final int height;
-
-        StubGameView(final int width, final int height) {
-            this.width = width;
-            this.height = height;
-        }
-
-        @Override public void renderFrame(final RenderState state) { }
-        @Override public int getWidth() { return width; }
-        @Override public int getHeight() { return height; }
-    }
-
     @BeforeEach
     void setUp() {
-        plane = new PlaneImpl(new PlaneData("standard", 200, 3, 20, "aircraft_standard", 0));
+        plane = new PlaneImpl(new PlaneData("standard", PLANE_SPEED, 3, PLANE_TURN_RATE, "aircraft_standard", 0));
         listener = new RecordingListener();
         collisionEngine = new CollisionEngine(listener);
         collectibleCtrl = new CollectibleControllerImpl(new ArrayList<>(), collisionEngine);
         collectibleCtrl.setEventListener(listener);
-        collectibleCtrl.setView(new StubGameView(800, 600));
+        collectibleCtrl.setView(new StubGameView(VIEW_WIDTH, VIEW_HEIGHT));
     }
 
     // ── spawnEntity / removeEntity (inherited from EntityControllerImpl) ──
@@ -90,18 +71,18 @@ class CollectibleControllerImplTest {
 
     @Test
     void addEffectActivatesEffectAndFiresEffectApplied() {
-        final Effect effect = new EffectImpl(EffectType.SPEED_BOOST, 2.0, 3000L);
+        final Effect effect = new EffectImpl(EffectType.SPEED_BOOST, 2.0, SPEED_BOOST_DURATION_MS);
         collectibleCtrl.addEffect(effect);
 
         assertTrue(collectibleCtrl.hasEffect(EffectImpl.class));
         assertEquals(2.0, collectibleCtrl.getEffectMultiplier());
-        assertTrue(listener.events.contains(EffectEvent.EFFECT_APPLIED));
-        assertTrue(listener.payloads.contains(effect));
+        assertTrue(listener.getEvents().contains(EffectEvent.EFFECT_APPLIED));
+        assertTrue(listener.getPayloads().contains(effect));
     }
 
     @Test
     void addEffectSameTypeReplacesPreviousEffect() {
-        collectibleCtrl.addEffect(new EffectImpl(EffectType.SPEED_BOOST, 2.0, 3000L));
+        collectibleCtrl.addEffect(new EffectImpl(EffectType.SPEED_BOOST, 2.0, SPEED_BOOST_DURATION_MS));
         final Effect replacement = new EffectImpl(EffectType.SPEED_BOOST, 4.0, 1000L);
         collectibleCtrl.addEffect(replacement);
 
@@ -125,14 +106,14 @@ class CollectibleControllerImplTest {
     void updateEntitiesExpiresEffectAfterItsDurationAndFiresEffectExpired() {
         final Effect effect = new EffectImpl(EffectType.SHIELD, 100L);
         collectibleCtrl.addEffect(effect);
-        listener.events.clear();
-        listener.payloads.clear();
+        listener.getEvents().clear();
+        listener.getPayloads().clear();
 
-        collectibleCtrl.updateEntities(150L);
+        collectibleCtrl.updateEntities(UPDATE_PAST_EXPIRY_MS);
 
         assertFalse(collectibleCtrl.hasEffect(EffectImpl.class), "Expired effect should no longer be active");
-        assertTrue(listener.events.contains(EffectEvent.EFFECT_EXPIRED));
-        assertTrue(listener.payloads.contains(effect));
+        assertTrue(listener.getEvents().contains(EffectEvent.EFFECT_EXPIRED));
+        assertTrue(listener.getPayloads().contains(effect));
     }
 
     @Test
@@ -148,13 +129,13 @@ class CollectibleControllerImplTest {
     void clearAllClearsActiveEffectsAndFiresEffectExpired() {
         final Effect effect = new EffectImpl(EffectType.SHIELD, 5000L);
         collectibleCtrl.addEffect(effect);
-        listener.events.clear();
-        listener.payloads.clear();
+        listener.getEvents().clear();
+        listener.getPayloads().clear();
 
         collectibleCtrl.clearAll();
 
         assertFalse(collectibleCtrl.hasEffect(EffectImpl.class));
-        assertTrue(listener.events.contains(EffectEvent.EFFECT_EXPIRED));
+        assertTrue(listener.getEvents().contains(EffectEvent.EFFECT_EXPIRED));
     }
 
     @Test
@@ -224,5 +205,48 @@ class CollectibleControllerImplTest {
 
     private static Collectible star(final Vector2 position) {
         return new StarCollectible(position, 10);
+    }
+
+    private static final class RecordingListener implements InternalEventListener {
+        private final List<Event> events = new ArrayList<>();
+        private final List<Object> payloads = new ArrayList<>();
+
+        List<Event> getEvents() {
+            return events;
+        }
+
+        List<Object> getPayloads() {
+            return payloads;
+        }
+
+        @Override
+        public void onInternalEvent(final Event evt, final Object data) {
+            events.add(evt);
+            payloads.add(data);
+        }
+    }
+
+    private static final class StubGameView implements GameView {
+        private final int width;
+        private final int height;
+
+        StubGameView(final int width, final int height) {
+            this.width = width;
+            this.height = height;
+        }
+
+        @Override
+        public void renderFrame(final RenderState state) {
+        }
+
+        @Override
+        public int getWidth() {
+            return width;
+        }
+
+        @Override
+        public int getHeight() {
+            return height;
+        }
     }
 }

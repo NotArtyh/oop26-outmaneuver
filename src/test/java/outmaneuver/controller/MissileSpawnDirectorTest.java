@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import outmaneuver.model.area.entity.missile.Missile;
 import outmaneuver.controller.impl.missile.MissileSpawnDirector;
 import outmaneuver.controller.impl.missile.MissileKind;
+
 /**
  * Verifica le regole di selezione del tipo di missile: sblocco per tempo,
  * vincolo di "minimo missili attivi" (il clock) e robustezza dell'estrazione.
@@ -22,12 +23,14 @@ import outmaneuver.controller.impl.missile.MissileKind;
 class MissileSpawnDirectorTest {
 
     private static final int RUNS = 200;
+    private static final int FIXED_SEED = 42;
+    private static final double CLOCK_UNLOCK_TIME_SECONDS = 60.0;
 
     private MissileSpawnDirector director;
 
     @BeforeEach
     void setUp() {
-        director = new MissileSpawnDirector(new Random(42));
+        director = new MissileSpawnDirector(new Random(FIXED_SEED));
     }
 
     @Test
@@ -43,7 +46,7 @@ class MissileSpawnDirectorTest {
         // A 60s il clock e' sbloccato, ma richiede almeno 3 missili a schermo: con lista
         // vuota non deve mai uscire.
         for (int i = 0; i < RUNS; i++) {
-            assertNotEquals(MissileKind.CLOCK, director.nextKind(60.0, List.of(), false),
+            assertNotEquals(MissileKind.CLOCK, director.nextKind(CLOCK_UNLOCK_TIME_SECONDS, List.of(), false),
                     "il clock non deve uscire senza abbastanza missili attivi");
         }
     }

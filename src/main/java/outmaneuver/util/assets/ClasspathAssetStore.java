@@ -13,6 +13,7 @@ public final class ClasspathAssetStore implements AssetStore {
 
     private static final String BASE_PATH = "/assets/sprites/";
     private static final int PLACEHOLDER_SIZE = 64;
+    private static final int PLACEHOLDER_LABEL_BASELINE = 14;
 
     private final Map<SpriteId, BufferedImage> cache;
 
@@ -51,7 +52,7 @@ public final class ClasspathAssetStore implements AssetStore {
         g.setColor(Color.MAGENTA);
         g.fillRect(0, 0, PLACEHOLDER_SIZE, PLACEHOLDER_SIZE);
         g.setColor(Color.BLACK);
-        g.drawString(id.name(), 2, 14);
+        g.drawString(id.name(), 2, PLACEHOLDER_LABEL_BASELINE);
         g.dispose();
         return img;
     }

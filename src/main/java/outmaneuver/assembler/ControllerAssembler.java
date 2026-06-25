@@ -29,17 +29,6 @@ public final class ControllerAssembler {
     }
 
     /**
-     * Immutable bundle of the assembled controllers.
-     */
-    @SuppressFBWarnings(
-            value = "EI_EXPOSE_REP",
-            justification = "input/master are live, shared controller singletons wired by the assembler")
-    public record Controllers(
-            InputControllerImpl input,
-            MasterControllerImpl master) {
-    }
-
-    /**
      * Creates every controller, wires them together, and returns the bundle.
      */
     public static Controllers assemble(final Plane plane, final ISession session,
@@ -75,5 +64,16 @@ public final class ControllerAssembler {
         missileCtrl.setEventListener(eventController);
 
         return new Controllers(input, master);
+    }
+
+    /**
+     * Immutable bundle of the assembled controllers.
+     */
+    @SuppressFBWarnings(
+            value = "EI_EXPOSE_REP",
+            justification = "input/master are live, shared controller singletons wired by the assembler")
+    public record Controllers(
+            InputControllerImpl input,
+            MasterControllerImpl master) {
     }
 }

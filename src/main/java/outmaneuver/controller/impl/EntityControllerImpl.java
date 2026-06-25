@@ -10,7 +10,9 @@ import outmaneuver.controller.event.InternalEventListener;
 import outmaneuver.model.area.entity.Entity;
 import outmaneuver.view.GameView;
 
+// CHECKSTYLE: AbstractClassName OFF
 public abstract class EntityControllerImpl implements EntityController {
+    // CHECKSTYLE: AbstractClassName ON
 
     private final List<Entity> entities;
     private final CollisionEngine collisionEngine;
@@ -24,15 +26,15 @@ public abstract class EntityControllerImpl implements EntityController {
     }
 
     @Override
-    public void setView(final GameView view) {
+    public final void setView(final GameView view) {
         this.view = view;
     }
 
-    public void setEventListener(final InternalEventListener listener) {
+    public final void setEventListener(final InternalEventListener listener) {
         this.eventListener = listener;
     }
 
-    protected GameView getView() {
+    protected final GameView getView() {
         return view;
     }
 
@@ -41,18 +43,19 @@ public abstract class EntityControllerImpl implements EntityController {
         // ogni controller implementa il proprio updateEntities
     }
 
+    // CHECKSTYLE: DesignForExtension OFF
     @Override
     public void spawnEntity(final Entity entity) {
         Objects.requireNonNull(entity, "entity must not be null");
         entities.add(entity);
         collisionEngine.register(entity);
     }
-    
+    // CHECKSTYLE: DesignForExtension ON
 
     // Rimozione di una singola entity
 
     @Override
-    public void removeEntity(final Entity entity) {
+    public final void removeEntity(final Entity entity) {
             collisionEngine.unregister(entity);
             entities.remove(entity);
     }
@@ -63,16 +66,18 @@ public abstract class EntityControllerImpl implements EntityController {
     }
 
     @Override
-    public void removeAll() {
+    public final void removeAll() {
         entities.forEach(collisionEngine::unregister);
         entities.clear();
     }
 
     @Override
-    public List<Entity> getEntities() { return List.copyOf(entities); }
+    public final List<Entity> getEntities() {
+        return List.copyOf(entities);
+    }
 
     @Override
-    public void onInternalEvent(final Event evt, final Object data) {
+    public final void onInternalEvent(final Event evt, final Object data) {
         if (eventListener != null) {
             eventListener.onInternalEvent(evt, data);
         }

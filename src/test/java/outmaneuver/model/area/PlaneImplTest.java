@@ -1,6 +1,8 @@
 package outmaneuver.model.area;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,12 +15,20 @@ import outmaneuver.util.Vector2;
 class PlaneImplTest {
 
     private static final double EPS = 1e-12;
+    private static final int STANDARD_BASE_SPEED = 200;
+    private static final int STANDARD_HITBOX_RADIUS = 20;
+    private static final double CUSTOM_BASE_SPEED = 999;
+    private static final double CUSTOM_TURN_RATE = 5;
+    private static final double INTERCEPTOR_BASE_SPEED = 280.0;
+    private static final double INTERCEPTOR_HITBOX_RADIUS = 15.0;
+    private static final int INTERCEPTOR_PRICE = 500;
 
     private PlaneImpl plane;
 
     @BeforeEach
     void setUp() {
-        plane = new PlaneImpl(new PlaneData("standard", 200, 3, 20, "aircraft_standard", 0));
+        plane = new PlaneImpl(
+                new PlaneData("standard", STANDARD_BASE_SPEED, 3, STANDARD_HITBOX_RADIUS, "aircraft_standard", 0));
     }
 
     @Test
@@ -50,15 +60,34 @@ class PlaneImplTest {
     @Test
     void testSetStats() {
         final var customStats = new PlaneStats() {
-            @Override public String getId() { return "custom"; }
-            @Override public double getBaseSpeed() { return 999; }
-            @Override public double getTurnRate() { return 5; }
-            @Override public double getHitboxRadius() { return 10; }
-            @Override public String getSpriteId() { return "custom_sprite"; }
+            @Override
+            public String getId() {
+                return "custom";
+            }
+
+            @Override
+            public double getBaseSpeed() {
+                return CUSTOM_BASE_SPEED;
+            }
+
+            @Override
+            public double getTurnRate() {
+                return CUSTOM_TURN_RATE;
+            }
+
+            @Override
+            public double getHitboxRadius() {
+                return 10;
+            }
+
+            @Override
+            public String getSpriteId() {
+                return "custom_sprite";
+            }
         };
         plane.setStats(customStats);
         assertEquals("custom", plane.getStats().getId());
-        assertEquals(999, plane.getStats().getBaseSpeed());
+        assertEquals(CUSTOM_BASE_SPEED, plane.getStats().getBaseSpeed());
     }
 
     @Test
@@ -84,13 +113,14 @@ class PlaneImplTest {
 
     @Test
     void testPlaneData() {
-        final var stats = new PlaneData("interceptor", 280, 2, 15, "aircraft_interceptor", 500);
+        final var stats = new PlaneData("interceptor", INTERCEPTOR_BASE_SPEED, 2,
+                INTERCEPTOR_HITBOX_RADIUS, "aircraft_interceptor", INTERCEPTOR_PRICE);
         assertEquals("interceptor", stats.getId());
-        assertEquals(280.0, stats.getBaseSpeed());
+        assertEquals(INTERCEPTOR_BASE_SPEED, stats.getBaseSpeed());
         assertEquals(2.0, stats.getTurnRate());
-        assertEquals(15.0, stats.getHitboxRadius());
+        assertEquals(INTERCEPTOR_HITBOX_RADIUS, stats.getHitboxRadius());
         assertEquals("aircraft_interceptor", stats.getSpriteId());
-        assertEquals(500, stats.price());
+        assertEquals(INTERCEPTOR_PRICE, stats.price());
     }
 
     @Test

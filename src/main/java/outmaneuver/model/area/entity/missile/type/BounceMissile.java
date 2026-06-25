@@ -25,7 +25,7 @@ public final class BounceMissile extends MissileImpl {
     public void checkBounce(final Vector2 planePos, final Dimension screenSize) {
         final Vector2 pos = getPosition();
         final Vector2 rel = pos.subtract(planePos);   // posizione rispetto al centro (l'aereo)
-        final double halfW = screenSize.width  / 2.0;
+        final double halfW = screenSize.width / 2.0;
         final double halfH = screenSize.height / 2.0;
         final int margin = getOutOfBoundsMargin();
 

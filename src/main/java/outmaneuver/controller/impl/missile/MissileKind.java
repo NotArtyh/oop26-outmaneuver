@@ -30,13 +30,13 @@ import outmaneuver.util.Vector2;
  */
 public enum MissileKind {
 
-    // id        peso  sblocco(s)  cap  minAttivi  factory
-    BASIC ("basic",  1.0,   0.0,  99,  0, StandardMissile::new),
-    BOUNCE("bounce", 1.5,  12.0,   3,  0, BounceMissile::new),
-    SNIPER("sniper", 2.0,  28.0,   4,  0, SniperMissile::new),
-    FAST  ("fast",   3.0,  45.0,   2,  0, StandardMissile::new),
-    CLOCK ("clock",  0.8,  55.0,   2,  3, ClockMissile::new),
-    SHIELD("shield", 2.5,  55.0,   2,  0, ShieldMissile::new);
+    // id peso sblocco(s) cap minAttivi factory
+    BASIC("basic", 1.0, 0.0, 99, 0, StandardMissile::new),
+    BOUNCE("bounce", 1.5, 12.0, 3, 0, BounceMissile::new),
+    SNIPER("sniper", 2.0, 28.0, 4, 0, SniperMissile::new),
+    FAST("fast", 3.0, 45.0, 2, 0, StandardMissile::new),
+    CLOCK("clock", 0.8, 55.0, 2, 3, ClockMissile::new),
+    SHIELD("shield", 2.5, 55.0, 2, 0, ShieldMissile::new);
 
     private final String id;
     private final double weight;

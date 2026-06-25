@@ -43,7 +43,7 @@ public final class JsonFileStore<T> {
         }
         try (Reader reader = Files.newBufferedReader(filePath, StandardCharsets.UTF_8)) {
             return gson.fromJson(reader, type);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new UncheckedIOException("Failed to read file: " + filePath, e);
         }
     }
@@ -58,7 +58,7 @@ public final class JsonFileStore<T> {
             try (Writer writer = Files.newBufferedWriter(filePath, StandardCharsets.UTF_8)) {
                 gson.toJson(data, type, writer);
             }
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new UncheckedIOException("Failed to write file: " + filePath, e);
         }
     }

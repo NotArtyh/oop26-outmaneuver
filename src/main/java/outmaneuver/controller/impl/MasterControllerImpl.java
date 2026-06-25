@@ -184,7 +184,7 @@ public final class MasterControllerImpl implements MasterController {
             gameLoopThread.interrupt();
             try {
                 gameLoopThread.join(1000);
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
             gameLoopThread = null;
@@ -222,7 +222,7 @@ public final class MasterControllerImpl implements MasterController {
             if (sleepMs > 0) {
                 try {
                     Thread.sleep(sleepMs);
-                } catch (InterruptedException e) {
+                } catch (final InterruptedException e) {
                     Thread.currentThread().interrupt();
                     break;
                 }

@@ -23,6 +23,8 @@ public final class LeaderboardTablePanel extends JPanel {
 
     private static final long serialVersionUID = 1L;
 
+    private static final int ROW_INSET = 12;
+
     private final int maxEntries;
     private final ScreenMetrics metrics;
 
@@ -42,8 +44,8 @@ public final class LeaderboardTablePanel extends JPanel {
         removeAll();
 
         final GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(2, 12, 2, 12);
-        gbc.gridy  = 0;
+        gbc.insets = new Insets(2, ROW_INSET, 2, ROW_INSET);
+        gbc.gridy = 0;
 
         addRow(gbc, "#", "Name", "Score", "Date", true);
 

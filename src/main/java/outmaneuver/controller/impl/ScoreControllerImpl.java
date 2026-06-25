@@ -12,11 +12,11 @@ import outmaneuver.model.session.ISession;
 public final class ScoreControllerImpl implements ScoreController {
 
     private static final String NEGATIVE_DELTA = "delta must be positive, was: ";
+    private static final int MISSILES_SCORE = 20;
 
     private final ISession session;
     private final LongSupplier tickMsSupplier;
     private long pendingMs;
-    private static final int MISSILES_SCORE = 20;
 
     public ScoreControllerImpl(final ISession session, final LongSupplier tickMsSupplier) {
         this.session = Objects.requireNonNull(session, "session must not be null");

@@ -2,7 +2,6 @@ package outmaneuver.view;
 
 import java.util.List;
 
-
 public final class RenderState {
 
     private final EntityRenderData plane;
@@ -24,9 +23,13 @@ public final class RenderState {
         this.collisions = List.copyOf(collisions);
     }
 
-    public EntityRenderData getPlane() { return plane; }
+    public EntityRenderData getPlane() {
+        return plane;
+    }
 
-    public List<EntityRenderData> getMissiles() { return List.copyOf(missiles); }
+    public List<EntityRenderData> getMissiles() {
+        return List.copyOf(missiles);
+    }
 
     public HudSnapshot getHud() {
         return hud;
@@ -54,28 +57,28 @@ public final class RenderState {
 
         private Builder() { }
 
-        public Builder planeData(final EntityRenderData planeData) {
-            this.planeData = planeData;
+        public Builder planeData(final EntityRenderData value) {
+            this.planeData = value;
             return this;
         }
 
-        public Builder hud(final HudSnapshot hud) {
-            this.hud = hud;
+        public Builder hud(final HudSnapshot value) {
+            this.hud = value;
             return this;
         }
 
-        public Builder missiles(final List<EntityRenderData> missiles) {
-            this.missiles = List.copyOf(missiles);
+        public Builder missiles(final List<EntityRenderData> value) {
+            this.missiles = List.copyOf(value);
             return this;
         }
 
-        public Builder collectibles(final List<EntityRenderData> collectibles) {
-            this.collectibles = List.copyOf(collectibles);
+        public Builder collectibles(final List<EntityRenderData> value) {
+            this.collectibles = List.copyOf(value);
             return this;
         }
 
-        public Builder collisions(final List<EntityRenderData> collisions) {
-            this.collisions = List.copyOf(collisions);
+        public Builder collisions(final List<EntityRenderData> value) {
+            this.collisions = List.copyOf(value);
             return this;
         }
 

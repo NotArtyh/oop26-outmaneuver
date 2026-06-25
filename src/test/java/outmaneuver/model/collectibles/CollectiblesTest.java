@@ -18,6 +18,11 @@ import outmaneuver.util.Vector2;
 
 class CollectiblesTest {
 
+    private static final int STAR_SCORE_VALUE = 50;
+    private static final int STAR_SCORE_VALUE_HIGH = 30;
+    private static final int STAR_SCORE_VALUE_LOW = 20;
+    private static final int NEGATIVE_SCORE_VALUE = -5;
+
     // SpeedBoost
 
     @Test
@@ -37,13 +42,13 @@ class CollectiblesTest {
 
     @Test
     void starCollectibleHasNoEffect() {
-        assertNull(new StarCollectible(Vector2.ZERO, 50).getEffect());
+        assertNull(new StarCollectible(Vector2.ZERO, STAR_SCORE_VALUE).getEffect());
     }
 
     @Test
     void starCollectibleGetScoreValueReturnsConfiguredValue() {
-        assertEquals(30, new StarCollectible(Vector2.ZERO, 30).getScoreValue());
-        assertEquals(20, new StarCollectible(Vector2.ZERO, 20).getScoreValue());
+        assertEquals(STAR_SCORE_VALUE_HIGH, new StarCollectible(Vector2.ZERO, STAR_SCORE_VALUE_HIGH).getScoreValue());
+        assertEquals(STAR_SCORE_VALUE_LOW, new StarCollectible(Vector2.ZERO, STAR_SCORE_VALUE_LOW).getScoreValue());
     }
 
     @Test
@@ -54,7 +59,7 @@ class CollectiblesTest {
     @Test
     void starCollectibleThrowsOnNonPositiveValue() {
         assertThrows(IllegalArgumentException.class, () -> new StarCollectible(Vector2.ZERO, 0));
-        assertThrows(IllegalArgumentException.class, () -> new StarCollectible(Vector2.ZERO, -5));
+        assertThrows(IllegalArgumentException.class, () -> new StarCollectible(Vector2.ZERO, NEGATIVE_SCORE_VALUE));
     }
 
     // ShieldPowerUp

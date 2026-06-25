@@ -29,8 +29,16 @@ class SwingHudViewTest {
         g2d = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB).createGraphics();
         stubView = new GameView() {
             @Override public void renderFrame(final RenderState state) { }
-            @Override public int getWidth() { return WIDTH; }
-            @Override public int getHeight() { return HEIGHT; }
+
+            @Override
+            public int getWidth() {
+                return WIDTH;
+            }
+
+            @Override
+            public int getHeight() {
+                return HEIGHT;
+            }
         };
     }
 

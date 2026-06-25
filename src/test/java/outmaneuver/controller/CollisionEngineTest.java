@@ -21,24 +21,6 @@ class CollisionEngineTest {
     private RecordingListener listener;
     private CollisionEngine engine;
 
-    /** Missile concreto minimale per i test: raggio 8 cosi' due missili vicini collidono. */
-    private static final class TestMissile extends MissileImpl {
-        TestMissile(final Vector2 pos) {
-            super(pos, new MissileData("test", 1.0, 0.0, 8.0, -1.0, 0.0, 0, null));
-        }
-    }
-
-    private static final class RecordingListener implements InternalEventListener {
-        final List<Event> events = new ArrayList<>();
-        final List<Object> payloads = new ArrayList<>();
-
-        @Override
-        public void onInternalEvent(final Event evt, final Object data) {
-            events.add(evt);
-            payloads.add(data);
-        }
-    }
-
     @BeforeEach
     void setUp() {
         listener = new RecordingListener();
@@ -55,12 +37,12 @@ class CollisionEngineTest {
         engine.register(b);
         engine.tick();
 
-        assertTrue(listener.events.contains(CollisionEvent.MISSILE_MISSILE_COLLISION),
+        assertTrue(listener.getEvents().contains(CollisionEvent.MISSILE_MISSILE_COLLISION),
                 "Overlapping missiles should trigger a missile-missile collision event");
 
         final CollisionData data = (CollisionData) payloadFor(CollisionEvent.MISSILE_MISSILE_COLLISION);
-        assertTrue((data.getEntityA() == a && data.getEntityB() == b)
-                || (data.getEntityA() == b && data.getEntityB() == a));
+        assertTrue(data.getEntityA() == a && data.getEntityB() == b
+                || data.getEntityA() == b && data.getEntityB() == a);
     }
 
     @Test
@@ -72,7 +54,7 @@ class CollisionEngineTest {
         engine.register(b);
         engine.tick();
 
-        assertTrue(listener.events.isEmpty(), "Distant missiles should not trigger a collision event");
+        assertTrue(listener.getEvents().isEmpty(), "Distant missiles should not trigger a collision event");
     }
 
     @Test
@@ -85,7 +67,7 @@ class CollisionEngineTest {
         engine.unregister(b);
         engine.tick();
 
-        assertTrue(listener.events.isEmpty(), "Unregistered entities should not participate in collisions");
+        assertTrue(listener.getEvents().isEmpty(), "Unregistered entities should not participate in collisions");
     }
 
     @Test
@@ -99,7 +81,7 @@ class CollisionEngineTest {
         engine.unregister(b);
         engine.tick();
 
-        assertTrue(listener.events.isEmpty(), "Unregistering all entities should remove them from collision checks");
+        assertTrue(listener.getEvents().isEmpty(), "Unregistering all entities should remove them from collision checks");
     }
 
     @Test
@@ -109,12 +91,38 @@ class CollisionEngineTest {
         engine.register(a);
         engine.tick();
 
-        assertTrue(listener.events.isEmpty(), "A single entity must not collide with itself");
+        assertTrue(listener.getEvents().isEmpty(), "A single entity must not collide with itself");
     }
 
     private Object payloadFor(final CollisionEvent event) {
-        final int index = listener.events.indexOf(event);
+        final int index = listener.getEvents().indexOf(event);
         assertTrue(index >= 0);
-        return listener.payloads.get(index);
+        return listener.getPayloads().get(index);
+    }
+
+    /** Missile concreto minimale per i test: raggio 8 cosi' due missili vicini collidono. */
+    private static final class TestMissile extends MissileImpl {
+        TestMissile(final Vector2 pos) {
+            super(pos, new MissileData("test", 1.0, 0.0, 8.0, -1.0, 0.0, 0, null));
+        }
+    }
+
+    private static final class RecordingListener implements InternalEventListener {
+        private final List<Event> events = new ArrayList<>();
+        private final List<Object> payloads = new ArrayList<>();
+
+        List<Event> getEvents() {
+            return events;
+        }
+
+        List<Object> getPayloads() {
+            return payloads;
+        }
+
+        @Override
+        public void onInternalEvent(final Event evt, final Object data) {
+            events.add(evt);
+            payloads.add(data);
+        }
     }
 }

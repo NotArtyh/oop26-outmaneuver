@@ -84,18 +84,22 @@ public final class MissileControllerImpl extends EntityControllerImpl {
 
     @Override
     public void clearAll() {
-        startDelay      = START_DELAY;
-        spawnTimer      = INITIAL_INTERVAL;
-        elapsedTime     = 0;
-        spawnInterval   = INITIAL_INTERVAL;
+        startDelay = START_DELAY;
+        spawnTimer = INITIAL_INTERVAL;
+        elapsedTime = 0;
+        spawnInterval = INITIAL_INTERVAL;
         // azzero anche gli effetti: senza questo, dopo un "Play Again" restavano
         // lo scudo o lo speed boost dell'ultima partita (stato sporco)
-        shieldActive    = false;
+        shieldActive = false;
         speedMultiplier = 1.0;
     }
 
-    public List<Missile> activeMissiles() { //AGGIUNTO: reso public per far reagire i missili nell'EventController (lista passata a onCollision)
-        return getEntities().stream().filter(Missile.class::isInstance).map(Missile.class::cast).toList();
+    // AGGIUNTO: reso public per far reagire i missili nell'EventController (lista passata a onCollision)
+    public List<Missile> activeMissiles() {
+        return getEntities().stream()
+                .filter(Missile.class::isInstance)
+                .map(Missile.class::cast)
+                .toList();
     }
 
     public void setShieldActive(final boolean active) {

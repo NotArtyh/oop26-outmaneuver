@@ -35,18 +35,18 @@ import outmaneuver.model.area.entity.missile.Missile;
 public final class MissileSpawnDirector {
 
     // (1) STIMA: sigmoide della difficolta' media-per-missile desiderata.
-    private static final double D_MIN  = 1.0;    // inizio: missili in media facili
-    private static final double D_MAX  = 1.95;   // tardi: media piu' tosta
-    private static final double D_MID  = 140.0;  // flesso (s): meta' della crescita
+    private static final double D_MIN = 1.0; // inizio: missili in media facili
+    private static final double D_MAX = 1.95; // tardi: media piu' tosta
+    private static final double D_MID = 140.0; // flesso (s): meta' della crescita
     private static final double D_STEEP = 0.022; // ripidita' della S
 
     // (2) DIVARIO: ripidita' del tanh e sconto se il player ha lo scudo.
-    private static final double ALPHA         = 1.0;
-    private static final double SHIELD_RELIEF = 0.7;  // scudo attivo -> Savg abbassato
+    private static final double ALPHA = 1.0;
+    private static final double SHIELD_RELIEF = 0.7; // scudo attivo -> Savg abbassato
 
     // (3) SCELTA: nettezza del softmax e bonus al clock quando lo schermo e' pieno.
-    private static final double BETA         = 2.2;
-    private static final double CLOCK_RELIEF = 0.3;   // il clock aiuta: piu' probabile se p>0
+    private static final double BETA = 2.2;
+    private static final double CLOCK_RELIEF = 0.3; // il clock aiuta: piu' probabile se p>0
 
     // Peso massimo tra i tipi: serve a normalizzare le complessita' c_i in [0, 1].
     private static final double MAX_WEIGHT = maxWeight();

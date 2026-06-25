@@ -21,11 +21,12 @@ class ShopViewTest {
     private static final PlaneData STATS = new PlaneData("standard", 200, 3, 20, "plane_standard", 0);
     private static final ShopItem ITEM = new ShopItem(STATS, 100);
     private static final Supplier<PlaneStats> EQUIPPED = () -> STATS;
-    private static final Predicate<String> NOT_OWNED  = id -> false;
+    private static final Predicate<String> NOT_OWNED = id -> false;
     private static final AssetStore ASSETS = new ClasspathAssetStore();
+    private static final int COINS = 500;
 
     private ShopView build() {
-        return new ShopView(METRICS, ASSETS, List.of(ITEM), () -> 500, EQUIPPED, NOT_OWNED, item -> true, () -> { });
+        return new ShopView(METRICS, ASSETS, List.of(ITEM), () -> COINS, EQUIPPED, NOT_OWNED, item -> true, () -> { });
     }
 
     @Test

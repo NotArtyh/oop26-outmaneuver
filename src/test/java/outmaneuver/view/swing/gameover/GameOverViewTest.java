@@ -14,6 +14,8 @@ import outmaneuver.model.session.ScoreEntry;
 class GameOverViewTest {
 
     private static final ScreenMetrics METRICS = new ScreenMetrics(1400, 1000);
+    private static final int ELAPSED_WITH_SCORES = 420;
+    private static final int ELAPSED_WITH_MANY_SCORES = 350;
 
     private GameOverView view;
 
@@ -41,9 +43,9 @@ class GameOverViewTest {
     void showWithScoresDoesNotThrow() {
         final List<ScoreEntry> scores = List.of(
                 new ScoreEntry(500, "Alice", LocalDate.of(2026, 6, 1)),
-                new ScoreEntry(300, "Bob",   LocalDate.of(2026, 6, 2))
+                new ScoreEntry(300, "Bob", LocalDate.of(2026, 6, 2))
         );
-        assertDoesNotThrow(() -> view.show(420, scores, 0, 0));
+        assertDoesNotThrow(() -> view.show(ELAPSED_WITH_SCORES, scores, 0, 0));
     }
 
     @Test
@@ -61,6 +63,6 @@ class GameOverViewTest {
                 new ScoreEntry(500, "E", LocalDate.now()),
                 new ScoreEntry(400, "F", LocalDate.now())
         );
-        assertDoesNotThrow(() -> view.show(350, scores, 0, 0));
+        assertDoesNotThrow(() -> view.show(ELAPSED_WITH_MANY_SCORES, scores, 0, 0));
     }
 }

@@ -1,6 +1,6 @@
 package outmaneuver.view;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 
 import outmaneuver.model.area.entity.plane.PlaneData;
@@ -10,21 +10,27 @@ import outmaneuver.util.Vector2;
 class DtoTest {
 
     private static final double EPS = 1e-12;
+    private static final String AIRCRAFT_STANDARD = "aircraft_standard";
+    private static final int PLANE_HEALTH = 200;
+    private static final double PLANE_DIRECTION_RAD = 1.5;
+    private static final double POSITION_X = 150;
+    private static final double POSITION_Y = 250;
+    private static final double OTHER_POSITION = 999;
 
     @Test
     void testEntityRenderData() {
-        final var data = new EntityRenderData(100, 200, 1.5, "aircraft_test", 10);
+        final var data = new EntityRenderData(100, PLANE_HEALTH, PLANE_DIRECTION_RAD, "aircraft_test", 10);
         assertEquals(100, data.getX());
-        assertEquals(200, data.getY());
-        assertEquals(1.5, data.getDirectionRad(), EPS);
+        assertEquals(PLANE_HEALTH, data.getY());
+        assertEquals(PLANE_DIRECTION_RAD, data.getDirectionRad(), EPS);
         assertEquals("aircraft_test", data.getSpriteId());
         assertEquals(10, data.getRadius(), EPS);
     }
 
     @Test
     void testRenderStateBuilder() {
-        final var plane = new PlaneImpl(new PlaneData("standard", 200, 3, 20, "aircraft_standard", 0));
-        plane.setPosition(new Vector2(150, 250));
+        final var plane = new PlaneImpl(new PlaneData("standard", PLANE_HEALTH, 3, 20, AIRCRAFT_STANDARD, 0));
+        plane.setPosition(new Vector2(POSITION_X, POSITION_Y));
         plane.setDirection(Math.PI / 3);
 
         final var planeData = new EntityRenderData(
@@ -39,15 +45,15 @@ class DtoTest {
                 .build();
 
         final var result = state.getPlane();
-        assertEquals(150, result.getX(), EPS);
-        assertEquals(250, result.getY(), EPS);
+        assertEquals(POSITION_X, result.getX(), EPS);
+        assertEquals(POSITION_Y, result.getY(), EPS);
         assertEquals(Math.PI / 3, result.getDirectionRad(), EPS);
-        assertEquals("aircraft_standard", result.getSpriteId());
+        assertEquals(AIRCRAFT_STANDARD, result.getSpriteId());
     }
 
     @Test
     void testRenderStateImmutability() {
-        final var plane = new PlaneImpl(new PlaneData("standard", 200, 3, 20, "aircraft_standard", 0));
+        final var plane = new PlaneImpl(new PlaneData("standard", PLANE_HEALTH, 3, 20, AIRCRAFT_STANDARD, 0));
         final var planeData = new EntityRenderData(
                 plane.getPosition().getX(),
                 plane.getPosition().getY(),
@@ -62,7 +68,7 @@ class DtoTest {
         final var result = state.getPlane();
         assertEquals(0, result.getX(), EPS);
 
-        plane.setPosition(new Vector2(999, 999));
+        plane.setPosition(new Vector2(OTHER_POSITION, OTHER_POSITION));
         assertEquals(0, state.getPlane().getX(), EPS);
     }
 }

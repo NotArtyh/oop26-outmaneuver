@@ -6,7 +6,6 @@ import outmaneuver.model.area.entity.Entity;
 import outmaneuver.util.Vector2;
 import outmaneuver.view.RenderState;
 
-
 public interface RenderStateAssembler {
 
     RenderState assemble(List<Entity> entities, boolean paused,

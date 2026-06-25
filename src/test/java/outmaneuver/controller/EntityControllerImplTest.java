@@ -25,51 +25,19 @@ import outmaneuver.view.RenderState;
 
 class EntityControllerImplTest {
 
+    private static final int PLANE_SPEED = 200;
+    private static final int PLANE_TURN_RATE = 20;
+    private static final int VIEW_WIDTH = 800;
+    private static final int VIEW_HEIGHT = 600;
+
     // ── Fixtures ─────────────────────────────────────────────────────
 
     private PlaneImpl plane;
     private ConcreteEntityController entityCtrl;
 
-    // ── Test doubles ─────────────────────────────────────────────────
-
-    /** Bare concrete subclass: exercises the base-class behaviour with no overrides. */
-    private static final class ConcreteEntityController extends EntityControllerImpl {
-        ConcreteEntityController(final List<Entity> entities, final CollisionEngine collisionEngine) {
-            super(entities, collisionEngine);
-        }
-
-        GameView exposeView() {
-            return getView();
-        }
-    }
-
-    /** Missile concreto minimale per i test: raggio 8 cosi' due missili vicini collidono. */
-    private static final class TestMissile extends MissileImpl {
-        TestMissile(final Vector2 pos) {
-            super(pos, new MissileData("test", 1.0, 0.0, 8.0, -1.0, 0.0, 0, null));
-        }
-    }
-
-    private static final class RecordingListener implements InternalEventListener {
-        final List<Event> events = new ArrayList<>();
-        final List<Object> payloads = new ArrayList<>();
-
-        @Override
-        public void onInternalEvent(final Event evt, final Object data) {
-            events.add(evt);
-            payloads.add(data);
-        }
-    }
-
-    private static final class StubGameView implements GameView {
-        @Override public void renderFrame(final RenderState state) { }
-        @Override public int getWidth() { return 800; }
-        @Override public int getHeight() { return 600; }
-    }
-
     @BeforeEach
     void setUp() {
-        plane = new PlaneImpl(new PlaneData("standard", 200, 3, 20, "aircraft_standard", 0));
+        plane = new PlaneImpl(new PlaneData("standard", PLANE_SPEED, 3, PLANE_TURN_RATE, "aircraft_standard", 0));
         final CollisionEngine collisionEngine = new CollisionEngine(new RecordingListener());
         entityCtrl = new ConcreteEntityController(new ArrayList<>(), collisionEngine);
     }
@@ -94,7 +62,7 @@ class EntityControllerImplTest {
         ctrl.spawnEntity(b);
         engine.tick();
 
-        assertTrue(listener.events.contains(CollisionEvent.MISSILE_MISSILE_COLLISION),
+        assertTrue(listener.getEvents().contains(CollisionEvent.MISSILE_MISSILE_COLLISION),
                 "Entities spawned through the controller should be registered with the collision engine");
     }
 
@@ -126,7 +94,7 @@ class EntityControllerImplTest {
         ctrl.removeEntity(b);
         engine.tick();
 
-        assertTrue(listener.events.isEmpty(), "Removed entity should no longer participate in collisions");
+        assertTrue(listener.getEvents().isEmpty(), "Removed entity should no longer participate in collisions");
     }
 
     // ── removeAll ────────────────────────────────────────────────────
@@ -146,7 +114,7 @@ class EntityControllerImplTest {
         engine.tick();
 
         assertTrue(ctrl.getEntities().isEmpty(), "removeAll should leave no entities behind");
-        assertTrue(listener.events.isEmpty(), "Entities removed via removeAll should no longer collide");
+        assertTrue(listener.getEvents().isEmpty(), "Entities removed via removeAll should no longer collide");
     }
 
     // ── clearAll (default no-op, overridable by subclasses) ───────────
@@ -180,8 +148,8 @@ class EntityControllerImplTest {
         final Object payload = new Object();
         entityCtrl.onInternalEvent(CollisionEvent.MISSILE_MISSILE_COLLISION, payload);
 
-        assertEquals(List.of(CollisionEvent.MISSILE_MISSILE_COLLISION), listener.events);
-        assertEquals(List.of(payload), listener.payloads);
+        assertEquals(List.of(CollisionEvent.MISSILE_MISSILE_COLLISION), listener.getEvents());
+        assertEquals(List.of(payload), listener.getPayloads());
     }
 
     @Test
@@ -197,5 +165,60 @@ class EntityControllerImplTest {
         final StubGameView view = new StubGameView();
         entityCtrl.setView(view);
         assertEquals(view, entityCtrl.exposeView());
+    }
+
+    // ── Test doubles ─────────────────────────────────────────────────
+
+    /** Bare concrete subclass: exercises the base-class behaviour with no overrides. */
+    private static final class ConcreteEntityController extends EntityControllerImpl {
+        ConcreteEntityController(final List<Entity> entities, final CollisionEngine collisionEngine) {
+            super(entities, collisionEngine);
+        }
+
+        GameView exposeView() {
+            return getView();
+        }
+    }
+
+    /** Missile concreto minimale per i test: raggio 8 cosi' due missili vicini collidono. */
+    private static final class TestMissile extends MissileImpl {
+        TestMissile(final Vector2 pos) {
+            super(pos, new MissileData("test", 1.0, 0.0, 8.0, -1.0, 0.0, 0, null));
+        }
+    }
+
+    private static final class RecordingListener implements InternalEventListener {
+        private final List<Event> events = new ArrayList<>();
+        private final List<Object> payloads = new ArrayList<>();
+
+        List<Event> getEvents() {
+            return events;
+        }
+
+        List<Object> getPayloads() {
+            return payloads;
+        }
+
+        @Override
+        public void onInternalEvent(final Event evt, final Object data) {
+            events.add(evt);
+            payloads.add(data);
+        }
+    }
+
+    private static final class StubGameView implements GameView {
+        @Override
+        public void renderFrame(final RenderState state) {
+        }
+
+        @Override
+        public int getWidth() {
+            return VIEW_WIDTH;
+        }
+
+        @Override
+        public int getHeight() {
+            return VIEW_HEIGHT;
+        }
     }
 }

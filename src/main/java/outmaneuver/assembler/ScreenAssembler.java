@@ -54,40 +54,6 @@ public final class ScreenAssembler {
     }
 
     /**
-     * Carries the assembled screen map and the game view (needed by the caller to
-     * request focus).
-     */
-    public record Result(
-            Map<ScreenId, JPanel> screens,
-            @SuppressFBWarnings(
-                    value = "EI_EXPOSE_REP",
-                    justification = "gameView is a live Swing component the caller must interact with directly")
-            SwingGameView gameView) {
-
-        public Result(final Map<ScreenId, JPanel> screens, final SwingGameView gameView) {
-            this.screens = Map.copyOf(screens);
-            this.gameView = gameView;
-        }
-    }
-
-    /**
-     * Provides proportional scaling from the reference 1400×1000 game size
-     * to the actual panel dimensions.
-     */
-    public record ScreenMetrics(int width, int height) {
-        private static final int REF_W = 1400;
-        private static final int REF_H = 1000;
-
-        public double scaleX() { return (double) width / REF_W; }
-        public double scaleY() { return (double) height / REF_H; }
-        public double scale()  { return Math.min(scaleX(), scaleY()); }
-
-        public int sw(final int v) { return (int) Math.round(v * scaleX()); }
-        public int sh(final int v) { return (int) Math.round(v * scaleY()); }
-        public int sf(final int v) { return Math.max(12, (int) Math.round(v * scale())); }
-    }
-
-    /**
      * Computes a game-window size that:
      * <ol>
      *   <li>Preserves the original 1.4 : 1 aspect ratio.</li>
@@ -103,16 +69,16 @@ public final class ScreenAssembler {
                 .getLocalGraphicsEnvironment()
                 .getMaximumWindowBounds();
 
-        final int maxWidth  = (int) (screenBounds.width  * SCREEN_FILL_FACTOR);
+        final int maxWidth = (int) (screenBounds.width * SCREEN_FILL_FACTOR);
         final int maxHeight = (int) (screenBounds.height * SCREEN_FILL_FACTOR);
 
         // Fit inside maxWidth × maxHeight while keeping the aspect ratio.
-        int width  = maxWidth;
+        int width = maxWidth;
         int height = (int) Math.round(width / ASPECT_RATIO);
 
         if (height > maxHeight) {
             height = maxHeight;
-            width  = (int) Math.round(height * ASPECT_RATIO);
+            width = (int) Math.round(height * ASPECT_RATIO);
         }
 
         return new Dimension(width, height);
@@ -145,7 +111,7 @@ public final class ScreenAssembler {
         master.setPlayerProfile(profile);
 
         // Leaderboard ref needed for the refresh callback in MainMenuView
-        final LeaderboardView[] leaderboardRef = { null };
+        final LeaderboardView[] leaderboardRef = {null};
 
         final ShopView shopView = new ShopView(
                 metrics,
@@ -244,4 +210,54 @@ public final class ScreenAssembler {
         return new Result(screens, gameView);
     }
 
+    /**
+     * Carries the assembled screen map and the game view (needed by the caller to
+     * request focus).
+     */
+    public record Result(
+            Map<ScreenId, JPanel> screens,
+            @SuppressFBWarnings(
+                    value = "EI_EXPOSE_REP",
+                    justification = "gameView is a live Swing component the caller must interact with directly")
+            SwingGameView gameView) {
+
+        public Result(final Map<ScreenId, JPanel> screens, final SwingGameView gameView) {
+            this.screens = Map.copyOf(screens);
+            this.gameView = gameView;
+        }
+    }
+
+    /**
+     * Provides proportional scaling from the reference 1400×1000 game size
+     * to the actual panel dimensions.
+     */
+    public record ScreenMetrics(int width, int height) {
+        private static final int REF_W = 1400;
+        private static final int REF_H = 1000;
+        private static final int MIN_FONT_SIZE = 12;
+
+        public double scaleX() {
+            return (double) width / REF_W;
+        }
+
+        public double scaleY() {
+            return (double) height / REF_H;
+        }
+
+        public double scale() {
+            return Math.min(scaleX(), scaleY());
+        }
+
+        public int sw(final int v) {
+            return (int) Math.round(v * scaleX());
+        }
+
+        public int sh(final int v) {
+            return (int) Math.round(v * scaleY());
+        }
+
+        public int sf(final int v) {
+            return Math.max(MIN_FONT_SIZE, (int) Math.round(v * scale()));
+        }
+    }
 }

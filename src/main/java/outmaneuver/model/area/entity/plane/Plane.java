@@ -1,6 +1,5 @@
 package outmaneuver.model.area.entity.plane;
 
-
 import outmaneuver.model.area.entity.Entity;
 
 public interface Plane extends Entity {

@@ -23,7 +23,7 @@ public record PlayerProfileData(
             throw new IllegalArgumentException("coins must not be negative");
         }
         ownedPlaneIds = List.copyOf(ownedPlaneIds);
-        scores        = List.copyOf(scores);
+        scores = List.copyOf(scores);
     }
 
     /** Profilo di default per un nuovo giocatore: standard già posseduto. */

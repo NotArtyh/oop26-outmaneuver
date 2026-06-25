@@ -28,10 +28,10 @@ public final class PlayerProfile implements IWallet {
     public PlayerProfile(final IPlayerProfileRepository repository) {
         this.repository = Objects.requireNonNull(repository, "repository must not be null");
         final PlayerProfileData data = repository.load();
-        this.playerName   = data.playerName();
-        this.coins        = data.coins();
+        this.playerName = data.playerName();
+        this.coins = data.coins();
         this.ownedPlaneIds = new LinkedHashSet<>(data.ownedPlaneIds());
-        this.scores       = new ArrayList<>(data.scores());
+        this.scores = new ArrayList<>(data.scores());
     }
 
     public String getPlayerName() {

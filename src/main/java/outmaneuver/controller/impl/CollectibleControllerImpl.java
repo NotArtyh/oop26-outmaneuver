@@ -21,6 +21,8 @@ import outmaneuver.util.Vector2;
 public final class CollectibleControllerImpl extends EntityControllerImpl {
 
     private static final long SPAWN_INTERVAL_MS = 3000;
+    private static final long SPEED_BOOST_DURATION_MS = 3000L;
+    private static final long SHIELD_DURATION_MS = 5000L;
 
     private final Random random = new Random();
     private final List<Effect> activeEffects = new ArrayList<>();
@@ -124,8 +126,8 @@ public final class CollectibleControllerImpl extends EntityControllerImpl {
     private Collectible randomCollectible(final Vector2 pos) {
         return switch (random.nextInt(3)) {
             case 0 -> new StarCollectible(pos, 10);
-            case 1 -> new SpeedBoost(pos, new EffectImpl(EffectType.SPEED_BOOST, 2.0, 3000L));
-            default -> new ShieldPowerUp(pos, new EffectImpl(EffectType.SHIELD, 5000L));
+            case 1 -> new SpeedBoost(pos, new EffectImpl(EffectType.SPEED_BOOST, 2.0, SPEED_BOOST_DURATION_MS));
+            default -> new ShieldPowerUp(pos, new EffectImpl(EffectType.SHIELD, SHIELD_DURATION_MS));
         };
     }
 }

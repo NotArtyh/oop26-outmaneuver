@@ -16,26 +16,28 @@ import javax.swing.SwingConstants;
 
 public final class Theme {
 
-    public static final Color BACKGROUND     = new Color(180, 225, 245);
+    public static final Color BACKGROUND = new Color(180, 225, 245);
 
-    public static final Color TEXT_TITLE      = Color.WHITE;
-    public static final Color TEXT_BODY       = Color.LIGHT_GRAY;
-    public static final Color TEXT_ACCENT     = Color.YELLOW;
-    public static final Color TEXT_INFO       = Color.CYAN;
-    public static final Color TEXT_ERROR      = Color.RED;
-    public static final Color TEXT_SUCCESS    = Color.GREEN;
+    public static final Color TEXT_TITLE = Color.WHITE;
+    public static final Color TEXT_BODY = Color.LIGHT_GRAY;
+    public static final Color TEXT_ACCENT = Color.YELLOW;
+    public static final Color TEXT_INFO = Color.CYAN;
+    public static final Color TEXT_ERROR = Color.RED;
+    public static final Color TEXT_SUCCESS = Color.GREEN;
 
-    public static final int FONT_BUTTON      = 26;
-    public static final int FONT_BODY        = 26;
-    public static final int FONT_SMALL       = 20;
+    public static final int FONT_BUTTON = 26;
+    public static final int FONT_BODY = 26;
+    public static final int FONT_SMALL = 20;
 
-    public static final int BUTTON_WIDTH    = 200;
-    public static final int BUTTON_HEIGHT   = 50;
+    public static final int BUTTON_WIDTH = 200;
+    public static final int BUTTON_HEIGHT = 50;
 
-    private static final Color BTN_BG        = new Color(200, 70, 30);
-    private static final Color BTN_BG_HOVER  = new Color(230, 100, 50);
-    private static final Color BTN_FG        = Color.WHITE;
-    private static final Color BTN_BORDER    = new Color(160, 50, 20);
+    private static final Color BTN_BG = new Color(200, 70, 30);
+    private static final Color BTN_BG_HOVER = new Color(230, 100, 50);
+    private static final Color BTN_FG = Color.WHITE;
+    private static final Color BTN_BORDER = new Color(160, 50, 20);
+
+    private Theme() { }
 
     public static JButton styledButton(final String text, final int fontSize, final int width, final int height) {
         final JButton btn = new JButton(text);
@@ -54,6 +56,7 @@ public final class Theme {
             public void mouseEntered(final java.awt.event.MouseEvent e) {
                 btn.setBackground(BTN_BG_HOVER);
             }
+
             @Override
             public void mouseExited(final java.awt.event.MouseEvent e) {
                 btn.setBackground(BTN_BG);
@@ -62,7 +65,8 @@ public final class Theme {
         return btn;
     }
 
-    public static JLabel outlinedLabel(final String text, final Font font, final Color foreground, final int horizontalAlignment) {
+    public static JLabel outlinedLabel(final String text, final Font font, final Color foreground,
+            final int horizontalAlignment) {
         final JLabel label = new JLabel(text, horizontalAlignment) {
             @Override
             protected void paintComponent(final Graphics g) {
@@ -110,6 +114,4 @@ public final class Theme {
     public static JLabel outlinedLabel(final String text, final Font font, final Color foreground) {
         return outlinedLabel(text, font, foreground, SwingConstants.CENTER);
     }
-
-    private Theme() {}
 }

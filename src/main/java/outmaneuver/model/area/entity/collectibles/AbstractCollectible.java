@@ -10,41 +10,42 @@ import outmaneuver.util.Vector2;
 public abstract class AbstractCollectible implements Collectible {
 
     private static final double HITBOX_RADIUS = 15.0;
+    private static final String POSITION_NOT_NULL = "position must not be null";
 
-    Vector2 position;
-    Effect effect;
+    private Vector2 position;
+    private Effect effect;
 
     public AbstractCollectible(final Vector2 position) {
-        this.position = Objects.requireNonNull(position, "position must not be null");
+        this.position = Objects.requireNonNull(position, POSITION_NOT_NULL);
     }
 
     public AbstractCollectible(final Vector2 position, final Effect effect) {
-        this.position = Objects.requireNonNull(position, "position must not be null");
+        this.position = Objects.requireNonNull(position, POSITION_NOT_NULL);
         this.effect = Objects.requireNonNull(effect, "effect must not be null");
     }
 
     @Override
-    public Vector2 getPosition() {
+    public final Vector2 getPosition() {
         return position;
     }
 
     @Override
-    public void setPosition(final Vector2 position) {
-        this.position = Objects.requireNonNull(position, "position must not be null");
+    public final void setPosition(final Vector2 position) {
+        this.position = Objects.requireNonNull(position, POSITION_NOT_NULL);
     }
 
     @Override
-    public CollisionLayer getCollisionLayer() {
+    public final CollisionLayer getCollisionLayer() {
         return CollisionLayer.COLLECTIBLE;
     }
 
     @Override
-    public Hitbox getHitbox() {
+    public final Hitbox getHitbox() {
         return new Hitbox(position, HITBOX_RADIUS);
     }
 
     @Override
-    public Effect getEffect() {
+    public final Effect getEffect() {
         return this.effect;
     }
 }

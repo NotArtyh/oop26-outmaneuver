@@ -11,7 +11,9 @@ public interface Missile extends Entity {
 
     // --- UPDATE E MOVIMENTO ---
     void update(Plane plane, double dt);
+
     void redirectIfOutOfBounds(Plane plane, Dimension screenSize, double effectiveSpeed);
+
     void setInitialDirection(Vector2 target);
 
     // --- STATO ---
@@ -19,6 +21,7 @@ public interface Missile extends Entity {
 
     // --- COLLISIONE ---
     void onCollision(List<Missile> activeMissiles);
+
     void checkBounce(Vector2 planePos, Dimension screenSize);
 
     // --- EFFETTI ---

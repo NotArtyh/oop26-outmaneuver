@@ -31,10 +31,128 @@ class MasterControllerImplTest {
     /** Longer than one TICK_MS (16ms), so any tick already in flight when handleEvent() is
      * called has time to land before the test samples "during pause" state. */
     private static final long PAUSE_SETTLE_MS = 30;
+    private static final long SHORT_SLEEP_MS = 50;
+    private static final int PLANE_SPEED = 200;
+    private static final int PLANE_TURN_RATE = 20;
+    private static final double PAUSE_TEST_START_X = 400;
+    private static final double PAUSE_TEST_START_Y = 300;
+    private static final double RESUME_TEST_START_X = 200;
+    private static final double RESUME_TEST_START_Y = 300;
+    private static final double EPS_LOOSE = 1e-6;
+    private static final double EPS_TIGHT = 1e-9;
 
     private Plane plane;
     private MasterControllerImpl master;
     private SpyView spyView;
+
+    @BeforeEach
+    void setUp() {
+        plane = new PlaneImpl(new PlaneData("standard", PLANE_SPEED, 3, PLANE_TURN_RATE, "aircraft_standard", 0));
+        spyView = new SpyView();
+        master = new MasterControllerImpl();
+        final List<Entity> sharedEntities = new ArrayList<>();
+        final FakeEntityController entityCtrl = new FakeEntityController(sharedEntities);
+        entityCtrl.spawnEntity(plane);
+        master.addEntityController(entityCtrl);
+        master.setSceneEntities(sharedEntities);
+        master.setCollisionEngine(new CollisionEngine(master));
+        master.setStateAssembler(new RenderStateAssemblerImpl());
+        master.setScoreController(new ScoreControllerImpl(new Session(), () -> 16L));
+        master.setEventController((evt, data) -> { });
+        master.setInputController(new InputControllerImpl());
+    }
+
+    @Test
+    void testAttachViewAndTickProducesFrames() throws InterruptedException {
+        master.attachView(spyView);
+        master.start();
+        Thread.sleep(TICK_WAIT_MS);
+        master.stop();
+        assertFalse(spyView.getFrames().isEmpty(), "View should receive frames after starting");
+    }
+
+    @Test
+    void testFrameContainsPlaneData() throws InterruptedException {
+        master.attachView(spyView);
+        master.start();
+        Thread.sleep(TICK_WAIT_MS);
+        master.stop();
+        final RenderState state = spyView.getFrames().get(0);
+        assertNotNull(state.getPlane());
+    }
+
+    @Test
+    void testPauseStopsMovement() throws InterruptedException {
+        plane.setPosition(new Vector2(PAUSE_TEST_START_X, PAUSE_TEST_START_Y));
+
+        master.attachView(spyView);
+        master.start();
+        Thread.sleep(SHORT_SLEEP_MS);
+        spyView.getFrames().clear();
+
+        master.handleEvent(GameEvent.PAUSED);
+        // Let any tick already in flight on the game-loop thread land before sampling,
+        // otherwise it can race with handleEvent() and sneak in one extra move.
+        Thread.sleep(PAUSE_SETTLE_MS);
+        final Vector2 posBefore = plane.getPosition();
+        Thread.sleep(TICK_WAIT_MS);
+        master.stop();
+        final Vector2 posAfter = plane.getPosition();
+        assertEquals(posBefore.getX(), posAfter.getX(), EPS_LOOSE,
+                "Position should not change while paused");
+    }
+
+    @Test
+    void testResumeResumesMovement() throws InterruptedException {
+        plane.setPosition(new Vector2(RESUME_TEST_START_X, RESUME_TEST_START_Y));
+
+        master.attachView(spyView);
+        master.start();
+        Thread.sleep(PAUSE_SETTLE_MS);
+        master.handleEvent(GameEvent.PAUSED);
+        Thread.sleep(PAUSE_SETTLE_MS);
+
+        final Vector2 posBefore = plane.getPosition();
+        master.handleEvent(GameEvent.PAUSED);
+        Thread.sleep(SHORT_SLEEP_MS);
+        master.stop();
+
+        final Vector2 posAfter = plane.getPosition();
+        assertTrue(posAfter.getX() > posBefore.getX(),
+                "Position should advance after resume");
+    }
+
+    @Test
+    void testPauseAndResumeToggle() throws InterruptedException {
+        master.attachView(spyView);
+        master.start();
+        Thread.sleep(PAUSE_SETTLE_MS);
+
+        spyView.getFrames().clear();
+        master.handleEvent(GameEvent.PAUSED);
+        Thread.sleep(PAUSE_SETTLE_MS);
+        final Vector2 posDuringPause1 = plane.getPosition();
+        Thread.sleep(TICK_WAIT_MS);
+        final Vector2 posDuringPause2 = plane.getPosition();
+        assertFalse(spyView.getFrames().isEmpty(), "Frames should still arrive while paused (HUD overlay)");
+        assertEquals(posDuringPause1.getX(), posDuringPause2.getX(), EPS_TIGHT,
+                "Plane should not move while paused");
+
+        spyView.getFrames().clear();
+        master.handleEvent(GameEvent.PAUSED);
+        Thread.sleep(TICK_WAIT_MS);
+        master.stop();
+        assertTrue(spyView.getFrames().size() >= 2, "Frames should resume after resume");
+    }
+
+    @Test
+    void testStartStopCanBeCalledMultipleTimes() {
+        master.attachView(spyView);
+        master.start();
+        master.stop();
+        master.start();
+        master.stop();
+    }
 
     /**
      * Minimal EntityController double: advances any spawned plane along +X by
@@ -95,7 +213,11 @@ class MasterControllerImplTest {
     }
 
     private static final class SpyView implements GameView {
-        final List<RenderState> frames = new ArrayList<>();
+        private final List<RenderState> frames = new ArrayList<>();
+
+        List<RenderState> getFrames() {
+            return frames;
+        }
 
         @Override
         public void renderFrame(final RenderState state) {
@@ -111,114 +233,5 @@ class MasterControllerImplTest {
         public int getHeight() {
             return 0;
         }
-    }
-
-    @BeforeEach
-    void setUp() {
-        plane = new PlaneImpl(new PlaneData("standard", 200, 3, 20, "aircraft_standard", 0));
-        spyView = new SpyView();
-        master = new MasterControllerImpl();
-        final List<Entity> sharedEntities = new ArrayList<>();
-        final FakeEntityController entityCtrl = new FakeEntityController(sharedEntities);
-        entityCtrl.spawnEntity(plane);
-        master.addEntityController(entityCtrl);
-        master.setSceneEntities(sharedEntities);
-        master.setCollisionEngine(new CollisionEngine(master));
-        master.setStateAssembler(new RenderStateAssemblerImpl());
-        master.setScoreController(new ScoreControllerImpl(new Session(), () -> 16L));
-        master.setEventController((evt, data) -> { });
-        master.setInputController(new InputControllerImpl());
-    }
-
-    @Test
-    void testAttachViewAndTickProducesFrames() throws InterruptedException {
-        master.attachView(spyView);
-        master.start();
-        Thread.sleep(TICK_WAIT_MS);
-        master.stop();
-        assertFalse(spyView.frames.isEmpty(), "View should receive frames after starting");
-    }
-
-    @Test
-    void testFrameContainsPlaneData() throws InterruptedException {
-        master.attachView(spyView);
-        master.start();
-        Thread.sleep(TICK_WAIT_MS);
-        master.stop();
-        final RenderState state = spyView.frames.get(0);
-        assertNotNull(state.getPlane());
-    }
-
-    @Test
-    void testPauseStopsMovement() throws InterruptedException {
-        plane.setPosition(new Vector2(400, 300));
-
-        master.attachView(spyView);
-        master.start();
-        Thread.sleep(50);
-        spyView.frames.clear();
-
-        master.handleEvent(GameEvent.PAUSED);
-        // Let any tick already in flight on the game-loop thread land before sampling,
-        // otherwise it can race with handleEvent() and sneak in one extra move.
-        Thread.sleep(PAUSE_SETTLE_MS);
-        final Vector2 posBefore = plane.getPosition();
-        Thread.sleep(TICK_WAIT_MS);
-        master.stop();
-        final Vector2 posAfter = plane.getPosition();
-        assertEquals(posBefore.getX(), posAfter.getX(), 1e-6,
-                "Position should not change while paused");
-    }
-
-    @Test
-    void testResumeResumesMovement() throws InterruptedException {
-        plane.setPosition(new Vector2(200, 300));
-
-        master.attachView(spyView);
-        master.start();
-        Thread.sleep(30);
-        master.handleEvent(GameEvent.PAUSED);
-        Thread.sleep(30);
-
-        final Vector2 posBefore = plane.getPosition();
-        master.handleEvent(GameEvent.PAUSED);
-        Thread.sleep(50);
-        master.stop();
-
-        final Vector2 posAfter = plane.getPosition();
-        assertTrue(posAfter.getX() > posBefore.getX(),
-                "Position should advance after resume");
-    }
-
-    @Test
-    void testPauseAndResumeToggle() throws InterruptedException {
-        master.attachView(spyView);
-        master.start();
-        Thread.sleep(30);
-
-        spyView.frames.clear();
-        master.handleEvent(GameEvent.PAUSED);
-        Thread.sleep(PAUSE_SETTLE_MS);
-        final Vector2 posDuringPause1 = plane.getPosition();
-        Thread.sleep(TICK_WAIT_MS);
-        final Vector2 posDuringPause2 = plane.getPosition();
-        assertFalse(spyView.frames.isEmpty(), "Frames should still arrive while paused (HUD overlay)");
-        assertEquals(posDuringPause1.getX(), posDuringPause2.getX(), 1e-9,
-                "Plane should not move while paused");
-
-        spyView.frames.clear();
-        master.handleEvent(GameEvent.PAUSED);
-        Thread.sleep(TICK_WAIT_MS);
-        master.stop();
-        assertTrue(spyView.frames.size() >= 2, "Frames should resume after resume");
-    }
-
-    @Test
-    void testStartStopCanBeCalledMultipleTimes() {
-        master.attachView(spyView);
-        master.start();
-        master.stop();
-        master.start();
-        master.stop();
     }
 }

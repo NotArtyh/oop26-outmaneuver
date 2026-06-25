@@ -21,6 +21,12 @@ public final class GameOverView extends JPanel {
 
     private static final long serialVersionUID = 1L;
 
+    private static final int TITLE_INSET = 14;
+    private static final int SCORE_FONT_SIZE = 28;
+    private static final int RECAP_LEADERBOARD_MAX_ENTRIES = 5;
+    private static final int PLAY_AGAIN_ROW_GRIDY = 5;
+    private static final int MENU_ROW_GRIDY = 6;
+
     private final JLabel scoreLabel;
     private final JLabel recapStarsLabel;
     private final JLabel recapMissilesLabel;
@@ -28,38 +34,49 @@ public final class GameOverView extends JPanel {
 
     public GameOverView(final ScreenMetrics metrics, final Runnable onPlayAgain, final Runnable onMenu) {
         final Runnable safePlayAgain = Objects.requireNonNull(onPlayAgain);
-        final Runnable safeMenu      = Objects.requireNonNull(onMenu);
+        final Runnable safeMenu = Objects.requireNonNull(onMenu);
 
         setBackground(Theme.BACKGROUND);
         setLayout(new GridBagLayout());
 
         final GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx  = 0;
-        gbc.fill   = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(metrics.sh(14), 0, 0, 0);
+        gbc.gridx = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(metrics.sh(TITLE_INSET), 0, 0, 0);
 
-        final JLabel title = Theme.outlinedLabel("GAME OVER", new Font(Font.SANS_SERIF, Font.BOLD, metrics.sf(64)), Theme.TEXT_ERROR);
+        final JLabel title = Theme.outlinedLabel("GAME OVER",
+                new Font(Font.SANS_SERIF, Font.BOLD, metrics.sf(64)), Theme.TEXT_ERROR);
 
-        scoreLabel = Theme.outlinedLabel("Score: 0", new Font(Font.MONOSPACED, Font.BOLD, metrics.sf(28)), Theme.TEXT_TITLE);
+        scoreLabel = Theme.outlinedLabel("Score: 0",
+                new Font(Font.MONOSPACED, Font.BOLD, metrics.sf(SCORE_FONT_SIZE)), Theme.TEXT_TITLE);
 
         final var recapFont = new Font(Font.MONOSPACED, Font.BOLD, metrics.sf(22));
-        recapStarsLabel    = Theme.outlinedLabel("Stelle collezionate + 0", recapFont, Theme.TEXT_TITLE);
+        recapStarsLabel = Theme.outlinedLabel("Stelle collezionate + 0", recapFont, Theme.TEXT_TITLE);
         recapMissilesLabel = Theme.outlinedLabel("Missili fatti scontrare + 0", recapFont, Theme.TEXT_TITLE);
 
-        tablePanel = new LeaderboardTablePanel(metrics, 5);
+        tablePanel = new LeaderboardTablePanel(metrics, RECAP_LEADERBOARD_MAX_ENTRIES);
 
-        final JButton playAgainButton = Theme.styledButton("PLAY AGAIN", metrics.sf(Theme.FONT_BUTTON), metrics.sw(Theme.BUTTON_WIDTH), metrics.sh(Theme.BUTTON_HEIGHT));
-        final JButton menuButton      = Theme.styledButton("MENU",       metrics.sf(Theme.FONT_BUTTON), metrics.sw(Theme.BUTTON_WIDTH), metrics.sh(Theme.BUTTON_HEIGHT));
+        final JButton playAgainButton = Theme.styledButton("PLAY AGAIN", metrics.sf(Theme.FONT_BUTTON),
+                metrics.sw(Theme.BUTTON_WIDTH), metrics.sh(Theme.BUTTON_HEIGHT));
+        final JButton menuButton = Theme.styledButton("MENU", metrics.sf(Theme.FONT_BUTTON),
+                metrics.sw(Theme.BUTTON_WIDTH), metrics.sh(Theme.BUTTON_HEIGHT));
         playAgainButton.addActionListener(e -> safePlayAgain.run());
         menuButton.addActionListener(e -> safeMenu.run());
 
-        gbc.gridy = 0; add(title,              gbc);
-        gbc.gridy = 1; add(scoreLabel,          gbc);
-        gbc.gridy = 2; add(recapStarsLabel,     gbc);
-        gbc.gridy = 3; add(recapMissilesLabel,  gbc);
-        gbc.gridy = 4; add(tablePanel,          gbc);
-        gbc.gridy = 5; add(playAgainButton,     gbc);
-        gbc.gridy = 6; add(menuButton,          gbc);
+        gbc.gridy = 0;
+        add(title, gbc);
+        gbc.gridy = 1;
+        add(scoreLabel, gbc);
+        gbc.gridy = 2;
+        add(recapStarsLabel, gbc);
+        gbc.gridy = 3;
+        add(recapMissilesLabel, gbc);
+        gbc.gridy = 4;
+        add(tablePanel, gbc);
+        gbc.gridy = PLAY_AGAIN_ROW_GRIDY;
+        add(playAgainButton, gbc);
+        gbc.gridy = MENU_ROW_GRIDY;
+        add(menuButton, gbc);
     }
 
     /**

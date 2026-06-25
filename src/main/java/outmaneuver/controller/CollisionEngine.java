@@ -12,7 +12,7 @@ import outmaneuver.model.area.collision.Hitbox;
 import outmaneuver.model.area.collision.ICollidable;
 import outmaneuver.util.Vector2;
 
-public class CollisionEngine {
+public final class CollisionEngine {
 
      private final InternalEventListener eventListener;
 
@@ -25,7 +25,7 @@ public class CollisionEngine {
     }
 
     // Registrazione entità (chiamato da EntityController / GameScene)
-    
+
     public void register(final ICollidable entity) {
         entities.add(Objects.requireNonNull(entity));
     }
@@ -41,20 +41,20 @@ public class CollisionEngine {
      */
     public void tick() {
         final List<ICollidable> missiles = filterByLayer(CollisionLayer.MISSILE);
-        final List<ICollidable> planes   = filterByLayer(CollisionLayer.PLANE);
+        final List<ICollidable> planes = filterByLayer(CollisionLayer.PLANE);
         final List<ICollidable> collectibles = filterByLayer(CollisionLayer.COLLECTIBLE);
 
         // Missile × Missile
         checkPairs(missiles, missiles, CollisionEvent.MISSILE_MISSILE_COLLISION);
 
         // Missile × Plane
-     
+
         checkPairs(missiles, planes, CollisionEvent.PLANE_MISSILE_COLLISION);
 
         // Plane × Collectible
         checkPairs(planes, collectibles, CollisionEvent.PLANE_COLLECTIBLE_COLLISION);
     }
-     
+
     private List<ICollidable> filterByLayer(final CollisionLayer layer) {
         return entities.stream()
                 .filter(e -> e.getCollisionLayer() == layer)

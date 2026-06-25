@@ -9,7 +9,9 @@ import outmaneuver.model.area.entity.missile.data.MissileData;
 import outmaneuver.model.area.entity.plane.Plane;
 import outmaneuver.util.Vector2;
 
+// CHECKSTYLE: AbstractClassName OFF
 public abstract class MissileImpl implements Missile {
+    // CHECKSTYLE: AbstractClassName ON
 
     // --- POSIZIONE E MOVIMENTO ---
     private Vector2 position;
@@ -29,24 +31,24 @@ public abstract class MissileImpl implements Missile {
 
     // --- SLOW ---
     private boolean slowed;
-    private double  slowTimer;
-    private double  slowFactor = 1.0;
+    private double slowTimer;
+    private double slowFactor = 1.0;
 
     protected MissileImpl(final Vector2 spawnPos, final MissileData data) {
-        this.position          = spawnPos;
-        this.velocity          = Vector2.ZERO;
-        this.type              = data.type();
-        this.speed             = data.speed();
-        this.maxTurnAngle      = data.maxTurn();
-        this.hitboxRadius      = data.radius();
-        this.lifetime          = data.lifetime();
-        this.predictionTime    = data.predictionTime();
+        this.position = spawnPos;
+        this.velocity = Vector2.ZERO;
+        this.type = data.type();
+        this.speed = data.speed();
+        this.maxTurnAngle = data.maxTurn();
+        this.hitboxRadius = data.radius();
+        this.lifetime = data.lifetime();
+        this.predictionTime = data.predictionTime();
         this.outOfBoundsMargin = data.outOfBoundsMargin();
-        this.alive             = true;
+        this.alive = true;
     }
 
     @Override
-    public void update(final Plane plane, final double dt) {
+    public final void update(final Plane plane, final double dt) {
         if (shouldSkipUpdate(dt)) {
             return;
         }
@@ -70,7 +72,7 @@ public abstract class MissileImpl implements Missile {
         if (slowed) {
             slowTimer -= dt;
             if (slowTimer <= 0) {
-                slowed     = false;
+                slowed = false;
                 slowFactor = 1.0;
             }
         }
@@ -83,13 +85,15 @@ public abstract class MissileImpl implements Missile {
         position = position.add(velocity.scale(dt * factor));
     }
 
+    // CHECKSTYLE: DesignForExtension OFF
     protected void steer(final Vector2 target) {
         final double desiredAngle = target.subtract(position).angle();
         final double currentAngle = velocity.angle();
-        final double diff         = normalizeAngle(desiredAngle - currentAngle);
-        final double turn         = Math.max(-maxTurnAngle, Math.min(maxTurnAngle, diff));
+        final double diff = normalizeAngle(desiredAngle - currentAngle);
+        final double turn = Math.max(-maxTurnAngle, Math.min(maxTurnAngle, diff));
         velocity = Vector2.fromAngle(currentAngle + turn).scale(speed);
     }
+    // CHECKSTYLE: DesignForExtension ON
 
     protected final double normalizeAngle(final double a) {
         final double twoPi = 2 * Math.PI;
@@ -103,30 +107,30 @@ public abstract class MissileImpl implements Missile {
     }
 
     @Override
-    public void setInitialDirection(final Vector2 target) {
+    public final void setInitialDirection(final Vector2 target) {
         velocity = Vector2.fromAngle(target.subtract(position).angle()).scale(speed);
     }
 
-    protected void setVelocity(final Vector2 vel) {
+    protected final void setVelocity(final Vector2 vel) {
         this.velocity = vel;
     }
 
-    protected Vector2 getVelocity() {
+    protected final Vector2 getVelocity() {
         return velocity;
     }
 
     @Override
-    public Vector2 getPosition() {
+    public final Vector2 getPosition() {
         return position;
     }
 
     @Override
-    public void setPosition(final Vector2 pos) {
+    public final void setPosition(final Vector2 pos) {
         this.position = pos;
     }
 
     @Override
-    public void redirectIfOutOfBounds(final Plane plane, final Dimension screenSize, final double effectiveSpeed) {
+    public final void redirectIfOutOfBounds(final Plane plane, final Dimension screenSize, final double effectiveSpeed) {
         if (!isOffScreen(plane, screenSize)) {
             return;
         }
@@ -136,24 +140,34 @@ public abstract class MissileImpl implements Missile {
         setInitialDirection(predicted);
     }
 
-    protected int getOutOfBoundsMargin() { return outOfBoundsMargin; }
+    protected final int getOutOfBoundsMargin() {
+        return outOfBoundsMargin;
+    }
 
+    // CHECKSTYLE: DesignForExtension OFF
     @Override
-    public void onCollision(final List<Missile> activeMissiles) { destroy(); }
+    public void onCollision(final List<Missile> activeMissiles) {
+        destroy();
+    }
+    // CHECKSTYLE: DesignForExtension ON
 
     @Override
     public void checkBounce(final Vector2 planePos, final Dimension screenSize) { }
 
-    protected void destroy() { this.alive = false; }
+    protected final void destroy() {
+        this.alive = false;
+    }
 
     @Override
-    public boolean isAlive() { return alive; }
+    public final boolean isAlive() {
+        return alive;
+    }
 
     @Override
-    public void slowDown(final double factor, final double duration) {
-        this.slowed     = true;
+    public final void slowDown(final double factor, final double duration) {
+        this.slowed = true;
         this.slowFactor = factor;
-        this.slowTimer  = duration;
+        this.slowTimer = duration;
     }
 
     protected final void destroyIfOffScreen(final Plane plane, final Dimension screenSize) {
@@ -164,28 +178,28 @@ public abstract class MissileImpl implements Missile {
 
     private boolean isOffScreen(final Plane plane, final Dimension screenSize) {
         final Vector2 delta = position.subtract(plane.getPosition());
-        return Math.abs(delta.getX()) > screenSize.width  / 2.0 + outOfBoundsMargin
+        return Math.abs(delta.getX()) > screenSize.width / 2.0 + outOfBoundsMargin
             || Math.abs(delta.getY()) > screenSize.height / 2.0 + outOfBoundsMargin;
     }
 
     // --- ICollidable ---
     @Override
-    public Hitbox getHitbox() {
+    public final Hitbox getHitbox() {
         return new Hitbox(position, hitboxRadius);
     }
 
     @Override
-    public CollisionLayer getCollisionLayer() {
+    public final CollisionLayer getCollisionLayer() {
         return CollisionLayer.MISSILE;
     }
 
     @Override
-    public String getMissileType() {
+    public final String getMissileType() {
         return type;
     }
 
     @Override
-    public double getDirection() {
+    public final double getDirection() {
         return this.velocity.angle();
     }
 }

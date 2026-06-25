@@ -21,6 +21,15 @@ import outmaneuver.util.json.JsonResourceLoader;
  */
 class JsonMissileRepositoryTest {
 
+    private static final String BASIC_TYPE = "basic";
+    private static final double EPSILON = 1e-9;
+    private static final double CLOCK_SLOW_FACTOR = 0.3;
+    private static final double CLOCK_SLOW_DURATION = 3.0;
+    private static final double BASIC_SPEED = 320.0;
+    private static final double BASIC_RADIUS = 15.0;
+    private static final double BASIC_LIFETIME = 15.0;
+    private static final int BASIC_OUT_OF_BOUNDS_MARGIN = 150;
+
     private MissileRepository repo;
 
     @BeforeEach
@@ -31,7 +40,7 @@ class JsonMissileRepositoryTest {
 
     @Test
     void allKnownTypesLoad() {
-        for (final String type : List.of("basic", "fast", "sniper", "bounce", "shield", "clock")) {
+        for (final String type : List.of(BASIC_TYPE, "fast", "sniper", "bounce", "shield", "clock")) {
             assertTrue(repo.loadByType(type).isPresent(), "manca il tipo: " + type);
         }
     }
@@ -43,7 +52,7 @@ class JsonMissileRepositoryTest {
 
     @Test
     void basicHasNoSlowEffect() {
-        final MissileData basic = repo.loadByType("basic").orElseThrow();
+        final MissileData basic = repo.loadByType(BASIC_TYPE).orElseThrow();
         assertNull(basic.slow(), "solo il clock deve avere l'effetto slow");
     }
 
@@ -52,18 +61,18 @@ class JsonMissileRepositoryTest {
         final MissileData clock = repo.loadByType("clock").orElseThrow();
         final MissileData.SlowEffect slow = clock.slow();
         assertNotNull(slow, "il clock deve avere l'effetto slow");
-        assertEquals(0.3, slow.factor(), 1e-9);
-        assertEquals(3.0, slow.duration(), 1e-9);
+        assertEquals(CLOCK_SLOW_FACTOR, slow.factor(), EPSILON);
+        assertEquals(CLOCK_SLOW_DURATION, slow.duration(), EPSILON);
     }
 
     @Test
     void commonFieldsAreParsed() {
-        final Optional<MissileData> basic = repo.loadByType("basic");
+        final Optional<MissileData> basic = repo.loadByType(BASIC_TYPE);
         assertTrue(basic.isPresent());
         final MissileData data = basic.get();
-        assertEquals(320.0, data.speed(), 1e-9);
-        assertEquals(15.0, data.radius(), 1e-9);
-        assertEquals(15.0, data.lifetime(), 1e-9);
-        assertEquals(150, data.outOfBoundsMargin());
+        assertEquals(BASIC_SPEED, data.speed(), EPSILON);
+        assertEquals(BASIC_RADIUS, data.radius(), EPSILON);
+        assertEquals(BASIC_LIFETIME, data.lifetime(), EPSILON);
+        assertEquals(BASIC_OUT_OF_BOUNDS_MARGIN, data.outOfBoundsMargin());
     }
 }

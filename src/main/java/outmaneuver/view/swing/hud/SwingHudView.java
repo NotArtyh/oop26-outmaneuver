@@ -11,6 +11,8 @@ import outmaneuver.view.HudSnapshot;
 
 public final class SwingHudView implements IHudView {
 
+    private static final int PAUSED_TEXT_RGB_COMPONENT = 255;
+
     private final ScreenMetrics metrics;
 
     public SwingHudView(final ScreenMetrics metrics) {
@@ -29,13 +31,13 @@ public final class SwingHudView implements IHudView {
         final FontMetrics fm = g2d.getFontMetrics();
 
         final long totalSec = hud.elapsedMs() / 1000;
-        final String timeStr   = String.format("Time:   %02d:%02d", totalSec / 60, totalSec % 60);
-        final String speedStr  = String.format("Speed:  %.1f", hud.speed());
+        final String timeStr = String.format("Time:   %02d:%02d", totalSec / 60, totalSec % 60);
+        final String speedStr = String.format("Speed:  %.1f", hud.speed());
         final String shieldStr = "Shield: " + (hud.shieldActive() ? "ON" : "OFF");
-        final String starsStr  = "Stars: " + hud.stars();
+        final String starsStr = "Stars: " + hud.stars();
 
         g2d.setColor(Color.WHITE);
-        g2d.drawString(timeStr,  hudMargin, hudMargin + hudLineHeight);
+        g2d.drawString(timeStr, hudMargin, hudMargin + hudLineHeight);
         g2d.drawString(speedStr, hudMargin, hudMargin + hudLineHeight * 2);
 
         g2d.setColor(hud.shieldActive() ? Color.CYAN : Color.GRAY);
@@ -49,7 +51,7 @@ public final class SwingHudView implements IHudView {
             g2d.setFont(pausedFont);
             final FontMetrics pfm = g2d.getFontMetrics();
             final String pausedStr = "PAUSED";
-            g2d.setColor(new Color(255, 255, 255, 180));
+            g2d.setColor(new Color(PAUSED_TEXT_RGB_COMPONENT, PAUSED_TEXT_RGB_COMPONENT, PAUSED_TEXT_RGB_COMPONENT, 180));
             g2d.drawString(pausedStr, (width - pfm.stringWidth(pausedStr)) / 2, height / 2);
         }
     }
